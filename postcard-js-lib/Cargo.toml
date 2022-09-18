@@ -1,0 +1,8 @@
+[package]
+name = "postcard-js-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+genco = "0.17.2"
+convert_case = "0.6.0"
