@@ -59,3 +59,40 @@ pub fn export_js_bindings(
     file.write(js_string.as_str().as_bytes())?;
     Ok(())
 }
+
+pub trait StringExt {
+    fn trim_all(self) -> Self;
+    fn is_signed_pref(self) -> Option<bool>;
+}
+
+pub trait StrExt {
+    fn is_signed_pref(self) -> Option<bool>;
+}
+
+impl StringExt for String {
+    fn trim_all(mut self) -> Self {
+        self.retain(|c| !c.is_whitespace());
+        self
+    }
+
+    fn is_signed_pref(self) -> Option<bool> {
+        is_signed_pref(self.as_str())
+    }
+}
+
+impl<'a> StrExt for &'a str {
+    fn is_signed_pref(self) -> Option<bool> {
+        is_signed_pref(self)
+    }
+}
+
+fn is_signed_pref(s: &str) -> Option<bool> {
+    if s.len() != 1 {
+        return None;
+    }
+    match s.chars().next().unwrap() {
+        'i' => Some(true),
+        'u' => Some(false),
+        _ => None,
+    }
+}

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "postcard-js-proc-macro",
-    "postcard-js-lib",
-    "postcard-js-test"
+    "postcard-bindings-proc-macro",
+    "postcard-bindings-core",
+    "postcard-bindings"
 ]

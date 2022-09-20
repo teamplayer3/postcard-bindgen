@@ -1,5 +1,5 @@
 [package]
-name = "postcard-js-proc-macro"
+name = "postcard-bindings-proc-macro"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-postcard-js-lib = { version = "0.1.0", path = "../postcard-js-lib"}
+postcard-bindings-core = { version = "0.1.0", path = "../postcard-bindings-core"}
 
 quote = "1.0.21"
 serde_derive_internals = "0.26"
@@ -16,3 +16,5 @@ serde = "1"
 proc-macro2 = "1.0.43"
 genco = "0.17.2"
 convert_case = "0.6.0"
+regex = "1.6.0"
+regex-macro = "0.2.0"

@@ -1,0 +1,12 @@
+[package]
+name = "postcard-bindings"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+postcard-bindings-proc-macro = {path = "../postcard-bindings-proc-macro"}
+postcard-bindings-core = {path = "../postcard-bindings-core"}
+
+[dev-dependencies]
+serde = "1"
+serde_derive = "1"

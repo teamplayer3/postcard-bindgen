@@ -11,8 +11,8 @@ use syn::DeriveInput;
 
 mod generate_js;
 
-#[proc_macro_derive(TypescriptDefinition)]
-pub fn derive_typescript_definition(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(TypescriptBindings)]
+pub fn typescript_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     derive_js_implementation(input).into()
 }
 
@@ -38,7 +38,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
 
     let expanded = if cfg!(any(debug_assertions, feature = "export-js")) {
         quote! {
-            impl postcard_js_lib::JsExportable for #container_ident {
+            impl postcard_bindings::JsExportable for #container_ident {
                 const JS_STRING : &'static str = #typescript_string;
                 const TYPE_IDENT: &'static str = #container_ident_str;
             }
