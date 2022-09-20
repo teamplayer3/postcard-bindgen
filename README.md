@@ -13,12 +13,12 @@ This `crate` can generate bindings from the rust structures for other languages 
 
 ## Usage
 
-The structs for which bindings should be generated must be annotated with the `TypescriptBindings` macro. This macro understands `serde` annotation. This means renaming fields and other functionality by `serde` is supported.
+The structs for which bindings should be generated must be annotated with the `PostcardBindings` macro. This macro understands `serde` annotation. This means renaming fields and other functionality by `serde` is supported.
 
 ## Example
 
 ```rust
-#[derive(Serialize, TypescriptBindings)]
+#[derive(Serialize, PostcardBindings)]
 struct Test {
     name: u8,
     other: u16,

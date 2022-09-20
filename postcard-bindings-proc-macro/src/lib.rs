@@ -11,8 +11,8 @@ use syn::DeriveInput;
 
 mod generate_js;
 
-#[proc_macro_derive(TypescriptBindings)]
-pub fn typescript_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(PostcardBindings)]
+pub fn postcard_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     derive_js_implementation(input).into()
 }
 

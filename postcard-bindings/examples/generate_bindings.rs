@@ -1,17 +1,17 @@
 use std::path::Path;
 
-use postcard_bindings::{export_js_bindings, ArchPointerLen, JsExportable, TypescriptBindings};
+use postcard_bindings::{export_js_bindings, ArchPointerLen, JsExportable, PostcardBindings};
 use serde_derive::Serialize;
 
 extern crate alloc;
 
-#[derive(Serialize, TypescriptBindings)]
+#[derive(Serialize, PostcardBindings)]
 struct Test {
     name: u8,
     other: u16,
 }
 
-#[derive(Serialize, TypescriptBindings)]
+#[derive(Serialize, PostcardBindings)]
 struct OtherTest {
     name: u8,
     other: u16,
