@@ -4,7 +4,7 @@ The [postcard crate](https://github.com/jamesmunns/postcard) serializes and dese
 
 This `crate` can generate bindings from the rust structures for other languages than rust. This allows to use the `postcard crate` from other languages.
 
-> `Crate` is work in progress. By now it couldn't be used for productions.
+> `Crate` is work in progress. By now it can't be used for productions.
 
 ## Supported languages
 
