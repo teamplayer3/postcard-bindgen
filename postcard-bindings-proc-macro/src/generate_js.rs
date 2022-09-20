@@ -10,7 +10,7 @@ enum Direction {
     Deserialize,
 }
 
-pub fn gen_ser_der_funcs(obj_name: impl AsRef<str>, fields: &Vec<Field>) -> Tokens {
+pub fn gen_ser_der_funcs(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens {
     let obj_name = obj_name.as_ref();
 
     let mut ser_body = Tokens::new();

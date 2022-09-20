@@ -3,7 +3,7 @@ use genco::{lang::js::Tokens, quote, quote_in};
 
 use crate::JsTyping;
 
-pub fn gen_deserialize_func(defines: &Vec<JsTyping>) -> Tokens {
+pub fn gen_deserialize_func(defines: &[JsTyping]) -> Tokens {
     quote!(
         module.exports.deserialize = (type, bytes) => {
             if (!(typeof type === "string")) {
@@ -17,7 +17,7 @@ pub fn gen_deserialize_func(defines: &Vec<JsTyping>) -> Tokens {
     )
 }
 
-fn gen_des_cases(defines: &Vec<JsTyping>) -> Tokens {
+fn gen_des_cases(defines: &[JsTyping]) -> Tokens {
     let mut tokens = Tokens::new();
     defines.iter().for_each(|define| {
         gen_des_case(&mut tokens, define);

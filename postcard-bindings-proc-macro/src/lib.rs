@@ -49,7 +49,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
 
     cx.check().unwrap();
 
-    expanded.into()
+    expanded
 }
 
 #[cfg(test)]

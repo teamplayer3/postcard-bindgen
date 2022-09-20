@@ -33,7 +33,7 @@ pub enum ArchPointerLen {
 }
 
 impl ArchPointerLen {
-    pub(crate) fn into_bytes(&self) -> usize {
+    pub(crate) fn into_bytes(self) -> usize {
         match self {
             ArchPointerLen::U32 => 4,
             ArchPointerLen::U64 => 8,
@@ -56,17 +56,17 @@ pub fn export_js_bindings(
     .unwrap();
 
     let mut file = File::create(path)?;
-    file.write(js_string.as_str().as_bytes())?;
+    file.write_all(js_string.as_str().as_bytes())?;
     Ok(())
 }
 
 pub trait StringExt {
     fn trim_all(self) -> Self;
-    fn is_signed_pref(self) -> Option<bool>;
+    fn is_signed_pref(&self) -> Option<bool>;
 }
 
 pub trait StrExt {
-    fn is_signed_pref(self) -> Option<bool>;
+    fn is_signed_pref(&self) -> Option<bool>;
 }
 
 impl StringExt for String {
@@ -75,13 +75,13 @@ impl StringExt for String {
         self
     }
 
-    fn is_signed_pref(self) -> Option<bool> {
+    fn is_signed_pref(&self) -> Option<bool> {
         is_signed_pref(self.as_str())
     }
 }
 
 impl<'a> StrExt for &'a str {
-    fn is_signed_pref(self) -> Option<bool> {
+    fn is_signed_pref(&self) -> Option<bool> {
         is_signed_pref(self)
     }
 }
