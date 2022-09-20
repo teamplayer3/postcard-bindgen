@@ -1,5 +1,7 @@
 # Postcard Bindings
 
+[![Build Status]][actions]
+
 The [postcard crate](https://github.com/jamesmunns/postcard) serializes and deserializes rust structs by using the [serde crate](https://github.com/serde-rs/serde) to a byte format. The resulting byte size is minimal. This is very useful if serialization and deserialization is done in rust and share the same structures.
 
 This `crate` can generate bindings from the rust structures for other languages than rust. This allows to use the `postcard crate` from other languages.
