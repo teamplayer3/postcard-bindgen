@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 use generate_js::gen_ser_der_funcs;
 use proc_macro2::TokenStream;
 use quote::quote;

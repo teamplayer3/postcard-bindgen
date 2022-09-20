@@ -57,8 +57,8 @@ pub fn gen_const_function(
         .map(|v| {
             v.iter()
                 .map(|param| param.as_ref())
-                .intersperse(",")
-                .collect::<String>()
+                .collect::<Vec<_>>()
+                .join(",")
         })
         .unwrap_or_default();
     quote!(
