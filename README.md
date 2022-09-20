@@ -1,6 +1,6 @@
 # Postcard Bindings
 
-[![Build Status]][actions]
+[![Build status](https://github.com/rust-lang/regex/workflows/ci/badge.svg)](https://github.com/rust-lang/regex/actions)
 
 The [postcard crate](https://github.com/jamesmunns/postcard) serializes and deserializes rust structs by using the [serde crate](https://github.com/serde-rs/serde) to a byte format. The resulting byte size is minimal. This is very useful if serialization and deserialization is done in rust and share the same structures.
 
