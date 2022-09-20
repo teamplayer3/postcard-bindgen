@@ -15,23 +15,14 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@clippy
-    - run: cargo-clippy --deny
-    
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@check
-    - run: cargo check
-    
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@clippy
+      - run: cargo-clippy --deny
+
   fmt:
-    name: Fmt
+    name: rustFmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@check
-    - run: cargo fmt
-   
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@rustfmt
+      - run: cargo fmt
