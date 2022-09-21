@@ -1,6 +1,6 @@
 # Postcard Bindgen
 
-[![Build status](https://github.com/teamplayer3/postcard-bindings/workflows/Rust/badge.svg)](https://github.com/teamplayer3/postcard-bindings/actions)
+[![Build status](https://github.com/teamplayer3/postcard-bindgen/workflows/Rust/badge.svg)](https://github.com/teamplayer3/postcard-bindgen/actions)
 
 The [postcard crate](https://github.com/jamesmunns/postcard) serializes and deserializes rust structs by using the [serde crate](https://github.com/serde-rs/serde) to a byte format. The resulting byte size is minimal. This is very useful if serialization and deserialization is done in rust and share the same structures.
 
