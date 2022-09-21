@@ -1,4 +1,4 @@
-# Postcard Bindings
+# Postcard Bindgen
 
 [![Build status](https://github.com/teamplayer3/postcard-bindings/workflows/Rust/badge.svg)](https://github.com/teamplayer3/postcard-bindings/actions)
 
