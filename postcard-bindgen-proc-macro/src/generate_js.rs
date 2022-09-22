@@ -1,5 +1,5 @@
 use convert_case::{Case, Casing};
-use genco::{prelude::js::Tokens, quote, quote_in};
+use genco::{prelude::js::Tokens, quote, quote_in, tokens::quoted};
 use postcard_bindgen_core::{StrExt, StringExt};
 use regex_macro::regex;
 use serde_derive_internals::ast::Field;
@@ -8,6 +8,71 @@ use syn::TypePath;
 enum Direction {
     Serialize,
     Deserialize,
+}
+
+pub fn gen_check_func(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens {
+    let obj_name = obj_name.as_ref();
+
+    quote! {
+        const is_$(obj_name.to_case(Case::Snake).to_uppercase()) = (v) => {
+            return $(gen_field_checks(fields).iter().chain(&gen_type_checks(&fields)).map(|q| q.to_string().unwrap()).collect::<Vec<_>>().join("&&"))
+        }
+    }
+}
+
+fn gen_field_checks(fields: &[Field]) -> Vec<Tokens> {
+    fields
+        .iter()
+        .map(|f| {
+            let field_name = f.original.ident.as_ref().unwrap().to_string();
+            quote!( $(quoted(field_name)) in v)
+        })
+        .collect::<Vec<_>>()
+}
+
+fn gen_type_checks(fields: &[Field]) -> Vec<Tokens> {
+    fields.iter().map(gen_type_check).collect::<Vec<_>>()
+}
+
+fn gen_type_check(field: &Field) -> Tokens {
+    use syn::Type::*;
+    match field.ty {
+        Slice(_) => unimplemented!(),
+        Array(_) => unimplemented!(),
+        Ptr(_) => unimplemented!(),
+        Reference(_) => unimplemented!(),
+        BareFn(_) => unimplemented!(),
+        Never(_) => unimplemented!(),
+        Tuple(_) => unimplemented!(),
+        Path(inner) => gen_type_check_path(inner, field),
+        TraitObject(_) => unimplemented!(),
+        ImplTrait(_) => unimplemented!(),
+        Paren(_) => unimplemented!(),
+        Group(_) => unimplemented!(),
+        Infer(_) => unimplemented!(),
+        Macro(_) => unimplemented!(),
+        Verbatim(_) => unimplemented!(),
+        _ => unimplemented!(),
+    }
+}
+
+fn gen_type_check_path(path: &TypePath, field: &Field) -> Tokens {
+    let number_matcher = regex!(r"^([u|i])(\d+)$");
+    let string_matcher = regex!(r"(?:alloc|std)::string::String");
+    let array_matcher = regex!(r"(?:alloc|std)::vec::Vec<([u|i]\d+)>");
+
+    let path_string = type_path_to_string(path);
+    let path_str = path_string.as_str();
+
+    if let Some(_) = number_matcher.captures(path_str) {
+        quote!(typeof v.$(field.original.ident.as_ref().unwrap().to_string()) === "number")
+    } else if string_matcher.is_match(path_str) {
+        quote!(typeof v.$(field.original.ident.as_ref().unwrap().to_string()) === "string")
+    } else if let Some(_) = array_matcher.captures(path_str) {
+        quote!(Array.isArray(v.$(field.original.ident.as_ref().unwrap().to_string())))
+    } else {
+        unimplemented!()
+    }
 }
 
 pub fn gen_ser_der_funcs(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens {
@@ -121,6 +186,10 @@ fn number_type_to_const_js_type(c: &str) -> &'static str {
     }
 }
 
+fn type_path_to_string(path: &TypePath) -> String {
+    quote::quote!(#path).to_string().trim_all()
+}
+
 fn match_path_type_to_serialize_func_ending(
     ident: impl AsRef<str>,
     path: &TypePath,
@@ -130,7 +199,7 @@ fn match_path_type_to_serialize_func_ending(
     let string_matcher = regex!(r"(?:alloc|std)::string::String");
     let array_matcher = regex!(r"(?:alloc|std)::vec::Vec<([u|i]\d+)>");
 
-    let path_string = quote::quote!(#path).to_string().trim_all();
+    let path_string = type_path_to_string(path);
     let path_str = path_string.as_str();
     let mut tokens = Tokens::new();
 

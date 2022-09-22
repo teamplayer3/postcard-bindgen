@@ -1,6 +1,6 @@
-use generate_js::gen_ser_der_funcs;
+use genco::{prelude::js::Tokens, quote};
+use generate_js::{gen_check_func, gen_ser_der_funcs};
 use proc_macro2::TokenStream;
-use quote::quote;
 use serde_derive_internals::{
     ast::{self, Style},
     Ctxt, Derive,
@@ -21,10 +21,13 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let cx = Ctxt::new();
     let container = ast::Container::from_ast(&cx, &input, Derive::Serialize).unwrap();
 
-    let typescript = match container.data {
+    let typescript: Tokens = match container.data {
         ast::Data::Enum(_) => unimplemented!(),
         ast::Data::Struct(style, fields) => match style {
-            Style::Struct => gen_ser_der_funcs(container.ident.to_string(), &fields),
+            Style::Struct => quote! {
+                $(gen_ser_der_funcs(container.ident.to_string(), &fields))
+                $(gen_check_func(container.ident.to_string(), &fields))
+            },
             _ => unimplemented!(),
         },
     };
@@ -35,7 +38,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let container_ident_str = container_ident_string.as_str();
 
     let expanded = if cfg!(any(debug_assertions, feature = "export-js")) {
-        quote! {
+        quote::quote! {
             impl postcard_bindgen::JsExportable for #container_ident {
                 const JS_STRING : &'static str = #typescript_string;
                 const TYPE_IDENT: &'static str = #container_ident_str;
