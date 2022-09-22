@@ -29,7 +29,8 @@ fn gen_ser_cases(defines: &[JsTyping]) -> Tokens {
 
 fn gen_ser_case(tokens: &mut Tokens, define: &JsTyping) {
     let case = format!("\"{}\"", define.type_ident);
+    let type_name = define.type_ident.to_case(Case::Snake).to_uppercase();
     quote_in! {*tokens =>
-        case $case: serialize_$(define.type_ident.to_case(Case::Snake).to_uppercase())(s, value); break
+        case $case: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break
     }
 }
