@@ -1,5 +1,5 @@
 [package]
-name = "postcard-bindings-proc-macro"
+name = "postcard-bindgen-proc-macro"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-postcard-bindings-core = { version = "0.1.0", path = "../postcard-bindings-core"}
+postcard-bindgen-core = { version = "0.1.0", path = "../postcard-bindgen-core"}
 
 quote = "1.0.21"
 serde_derive_internals = "0.26"

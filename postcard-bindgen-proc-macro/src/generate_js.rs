@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
 use genco::{prelude::js::Tokens, quote, quote_in};
-use postcard_bindings_core::{StrExt, StringExt};
+use postcard_bindgen_core::{StrExt, StringExt};
 use regex_macro::regex;
 use serde_derive_internals::ast::Field;
 use syn::TypePath;

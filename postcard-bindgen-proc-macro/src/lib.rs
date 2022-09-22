@@ -36,7 +36,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
 
     let expanded = if cfg!(any(debug_assertions, feature = "export-js")) {
         quote! {
-            impl postcard_bindings::JsExportable for #container_ident {
+            impl postcard_bindgen::JsExportable for #container_ident {
                 const JS_STRING : &'static str = #typescript_string;
                 const TYPE_IDENT: &'static str = #container_ident_str;
             }

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use postcard_bindings::{export_js_bindings, ArchPointerLen, JsExportable, PostcardBindings};
+use postcard_bindgen::{export_js_bindings, ArchPointerLen, JsExportable, PostcardBindings};
 use serde_derive::Serialize;
 
 extern crate alloc;
