@@ -1,4 +1,4 @@
-import { serialize, deserialize } from "./js_export.js";
+import { serialize, deserialize } from "../../target/debug/examples/js_export.js";
 
 const otherTest = {
     name: 2,
