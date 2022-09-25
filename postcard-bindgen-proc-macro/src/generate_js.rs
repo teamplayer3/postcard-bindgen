@@ -23,15 +23,20 @@ pub fn gen_check_func(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens {
 fn gen_field_checks(fields: &[Field]) -> Vec<Tokens> {
     fields
         .iter()
-        .map(|f| {
-            let field_name = f.original.ident.as_ref().unwrap().to_string();
+        .filter(|field| !field.attrs.skip_deserializing())
+        .map(|field| {
+            let field_name = field.attrs.name().serialize_name();
             quote!( $(quoted(field_name)) in v)
         })
         .collect::<Vec<_>>()
 }
 
 fn gen_type_checks(fields: &[Field]) -> Vec<Tokens> {
-    fields.iter().map(gen_type_check).collect::<Vec<_>>()
+    fields
+        .iter()
+        .filter(|field| !field.attrs.skip_deserializing())
+        .map(gen_type_check)
+        .collect::<Vec<_>>()
 }
 
 fn gen_type_check(field: &Field) -> Tokens {
@@ -63,13 +68,14 @@ fn gen_type_check_path(path: &TypePath, field: &Field) -> Tokens {
 
     let path_string = type_path_to_string(path);
     let path_str = path_string.as_str();
+    let field_name = field.attrs.name().serialize_name();
 
     if number_matcher.captures(path_str).is_some() {
-        quote!(typeof v.$(field.original.ident.as_ref().unwrap().to_string()) === "number")
+        quote!(typeof v.$(field_name.as_str()) === "number")
     } else if string_matcher.is_match(path_str) {
-        quote!(typeof v.$(field.original.ident.as_ref().unwrap().to_string()) === "string")
+        quote!(typeof v.$(field_name.as_str()) === "string")
     } else if array_matcher.captures(path_str).is_some() {
-        quote!(Array.isArray(v.$(field.original.ident.as_ref().unwrap().to_string())))
+        quote!(Array.isArray(v.$(field_name.as_str())))
     } else {
         unimplemented!()
     }
@@ -82,6 +88,7 @@ pub fn gen_ser_der_funcs(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens 
     quote_in! {ser_body =>
         $(fields
             .iter()
+            .filter(|field| !field.attrs.skip_serializing())
             .map(|field| gen_field_func(field, Direction::Serialize))
             .collect::<Vec<_>>())
     };
@@ -89,11 +96,8 @@ pub fn gen_ser_der_funcs(obj_name: impl AsRef<str>, fields: &[Field]) -> Tokens 
     let mut des_body = Tokens::new();
     quote_in! {des_body =>
         return {
-            $(fields.iter().map(|field|
-                quote! {
-                    $(gen_field_func(field, Direction::Deserialize))
-
-                }
+            $(fields.iter().filter(|field| !field.attrs.skip_deserializing()).map(|field|
+                quote!($(gen_field_func(field, Direction::Deserialize)))
             ).collect::<Vec<_>>())
         }
     }
@@ -134,15 +138,12 @@ pub fn gen_const_function(
 }
 
 fn gen_field_func(field: &Field, direction: Direction) -> Tokens {
+    let field_name = field.attrs.name().serialize_name();
     let (func_accessor, left_hand, func_divider) = match direction {
         Direction::Serialize => ("s", Tokens::new(), ";"),
-        Direction::Deserialize => (
-            "d",
-            quote!($(field.original.ident.as_ref().unwrap().to_string()):),
-            ",",
-        ),
+        Direction::Deserialize => ("d", quote!($(field_name.as_str()):), ","),
     };
-    quote!($left_hand $(func_accessor).$(gen_func_name_and_head(field.original.ident.as_ref().unwrap().to_string(), field.ty, direction))$func_divider)
+    quote!($left_hand $(func_accessor).$(gen_func_name_and_head(field_name, field.ty, direction))$func_divider)
 }
 
 fn gen_func_name_and_head(ident: impl AsRef<str>, ty: &syn::Type, direction: Direction) -> Tokens {

@@ -14,10 +14,13 @@ struct Test {
 #[derive(Serialize, PostcardBindings)]
 struct OtherTest {
     name: u8,
+    #[allow(dead_code)]
+    #[serde(skip)]
     other: u16,
     // string: std::string::String,
     // alloc_string: alloc::string::String,
     array: std::vec::Vec<u8>,
+    #[serde(rename = "allocArray")]
     alloc_array: alloc::vec::Vec<u32>,
 }
 
