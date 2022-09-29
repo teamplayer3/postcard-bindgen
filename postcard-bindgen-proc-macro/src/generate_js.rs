@@ -196,6 +196,17 @@ fn match_path_type_to_serialize_func_ending(
     path: &TypePath,
     direction: Direction,
 ) -> Tokens {
+    println!(
+        "{:?} {:?}",
+        path.path
+            .segments
+            .iter()
+            .map(|p| p.ident.to_string())
+            .collect::<Vec<_>>()
+            .as_slice(),
+        path.path.get_ident().unwrap().to_string()
+    );
+
     let number_matcher = regex!(r"^([u|i])(\d+)$");
     let string_matcher = regex!(r"(?:alloc|std)::string::String");
     let array_matcher = regex!(r"(?:alloc|std)::vec::Vec<([u|i]\d+)>");

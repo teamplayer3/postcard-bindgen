@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, vec::Vec};
 
 use postcard_bindgen::{export_js_bindings, ArchPointerLen, JsExportable, PostcardBindings};
 use serde_derive::Serialize;
@@ -19,7 +19,7 @@ struct OtherTest {
     other: u16,
     // string: std::string::String,
     // alloc_string: alloc::string::String,
-    array: std::vec::Vec<u8>,
+    array: Vec<u8>,
     #[serde(rename = "allocArray")]
     alloc_array: alloc::vec::Vec<u32>,
 }

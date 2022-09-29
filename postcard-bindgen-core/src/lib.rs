@@ -1,4 +1,6 @@
 mod code_gen;
+mod registry;
+mod type_info;
 
 use std::{
     fs::File,
