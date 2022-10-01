@@ -1,5 +1,6 @@
 pub mod des;
 pub mod ser;
+pub mod type_checking;
 
 use genco::{prelude::js::Tokens, quote};
 

@@ -1,13 +1,10 @@
-use genco::{prelude::js::Tokens, quote};
-use generate_js::{gen_check_func, gen_ser_der_funcs};
+use derive_struct::derive_struct;
 use proc_macro2::TokenStream;
-use serde_derive_internals::{
-    ast::{self, Style},
-    Ctxt, Derive,
-};
+use quote::quote;
+use serde_derive_internals::{ast, Ctxt, Derive};
 use syn::DeriveInput;
 
-mod generate_js;
+mod derive_struct;
 
 #[proc_macro_derive(PostcardBindings)]
 pub fn postcard_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -21,29 +18,36 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let cx = Ctxt::new();
     let container = ast::Container::from_ast(&cx, &input, Derive::Serialize).unwrap();
 
-    let typescript: Tokens = match container.data {
+    let body = match container.data {
         ast::Data::Enum(_) => unimplemented!(),
-        ast::Data::Struct(style, fields) => match style {
-            Style::Struct => quote! {
-                $(gen_ser_der_funcs(container.ident.to_string(), &fields))
-                $(gen_check_func(container.ident.to_string(), &fields))
-            },
-            _ => unimplemented!(),
-        },
+        ast::Data::Struct(style, fields) => {
+            derive_struct(style, container.ident.to_owned(), fields)
+        }
     };
 
-    let typescript_string = typescript.to_string().unwrap();
-    let container_ident = container.ident;
-    let container_ident_string = container_ident.to_string();
-    let container_ident_str = container_ident_string.as_str();
+    let ident = container.ident;
+    let container_name = ident.to_string();
 
     let expanded = if cfg!(any(debug_assertions, feature = "export-js")) {
-        quote::quote! {
-            impl postcard_bindgen::JsExportable for #container_ident {
-                const JS_STRING : &'static str = #typescript_string;
-                const TYPE_IDENT: &'static str = #container_ident_str;
-            }
-        }
+        quote!(
+            const _: () = {
+                #[allow(unused_extern_crates, clippy::useless_attribute)]
+                extern crate postcard_bindgen as _pb;
+                impl _pb::JsBindings for #ident {
+                    fn create_bindings(reg: &mut _pb::BindingsRegistry) {
+                        #body
+                    }
+                }
+
+                impl _pb::GenJsBinding for #ident {
+                    fn get_type() -> _pb::JsType {
+                        _pb::JsType::Object(_pb::ObjectMeta {
+                            name: #container_name.into()
+                        })
+                    }
+                }
+            };
+        )
     } else {
         TokenStream::new()
     };

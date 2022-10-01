@@ -1,9 +1,14 @@
-import { serialize, deserialize } from "../../target/debug/examples/js_export.js";
+import { serialize, deserialize } from "./js_export.js";
+
+const test = {
+    name: 23,
+    other: 24322
+}
 
 const otherTest = {
     name: 2,
-    array: [12, 12, 2],
-    allocArray: [1, 43, 1]
+    other: 23232,
+    test: test
 }
 
 const bytes = serialize("OtherTest", otherTest)

@@ -1,6 +1,6 @@
 mod code_gen;
-mod registry;
-mod type_info;
+pub mod registry;
+pub mod type_info;
 
 use std::{
     fs::File,
@@ -8,26 +8,15 @@ use std::{
     path::Path,
 };
 
-use genco::quote;
+use genco::{prelude::JavaScript, quote, Tokens};
 
-use code_gen::{des::gen_deserialize_func, gen_ser_des_classes, ser::gen_serialize_func};
-
-pub trait JsExportable {
-    const JS_STRING: &'static str;
-    const TYPE_IDENT: &'static str;
-
-    fn js_bindings() -> JsTyping {
-        JsTyping {
-            js_bindings: Self::JS_STRING,
-            type_ident: Self::TYPE_IDENT,
-        }
-    }
-}
-
-pub struct JsTyping {
-    js_bindings: &'static str,
-    type_ident: &'static str,
-}
+use code_gen::{
+    des::{gen_des_obj_function, gen_deserialize_func},
+    gen_ser_des_classes,
+    ser::{gen_ser_obj_function, gen_serialize_func},
+    type_checking::gen_check_func,
+};
+use registry::{BindingType, StructType};
 
 pub enum ArchPointerLen {
     U32,
@@ -43,23 +32,51 @@ impl ArchPointerLen {
     }
 }
 
-pub fn export_js_bindings(
-    path: &Path,
-    defines: Vec<JsTyping>,
-    pointer_type: ArchPointerLen,
-) -> io::Result<()> {
-    let js_string = quote!(
-        $(gen_ser_des_classes(pointer_type))
-        $(defines.iter().map(|define| define.js_bindings).collect::<Vec<_>>().join("\n"))
-        $(gen_serialize_func(&defines))
-        $(gen_deserialize_func(&defines))
-    )
-    .to_file_string()
-    .unwrap();
+#[macro_export]
+macro_rules! generate_bindings {
+    ($( $x:ty ),*) => {
+        {
+            let mut reg = postcard_bindgen::BindingsRegistry::default();
+            $(
+                <$x as postcard_bindgen::JsBindings>::create_bindings(&mut reg);
+            )*
+            postcard_bindgen::generate_js(reg.into_entries()).to_file_string().unwrap()
+        }
+    };
+}
 
+pub fn export_bindings(path: &Path, bindings: impl AsRef<str>) -> io::Result<()> {
     let mut file = File::create(path)?;
-    file.write_all(js_string.as_str().as_bytes())?;
+    file.write_all(bindings.as_ref().as_bytes())?;
     Ok(())
+}
+
+pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
+    let ser_des_body = tys.iter().map(|ty| match ty {
+        BindingType::Enum(_ty) => todo!(),
+        BindingType::Struct(ty) => generate_js_object(ty),
+        BindingType::TupleStruct(_ty) => todo!(),
+    });
+    let type_check_body = tys.iter().map(|ty| match ty {
+        BindingType::Enum(_ty) => todo!(),
+        BindingType::Struct(ty) => gen_check_func(&ty.name, &ty.fields),
+        BindingType::TupleStruct(_ty) => todo!(),
+    });
+    quote!(
+        $(gen_ser_des_classes(ArchPointerLen::U32))
+        $(ser_des_body.map(|body| body.to_string().unwrap()).collect::<Vec<_>>().join("\n"))
+        $(type_check_body.map(|body| body.to_string().unwrap()).collect::<Vec<_>>().join("\n"))
+        $(gen_serialize_func(&tys))
+        $(gen_deserialize_func(&tys))
+    )
+}
+
+fn generate_js_object(ty: &StructType) -> Tokens<JavaScript> {
+    let obj_name = &ty.name;
+    quote! {
+        $(gen_ser_obj_function(obj_name, &ty.fields))
+        $(gen_des_obj_function(obj_name, &ty.fields))
+    }
 }
 
 pub trait StringExt {

@@ -1,6 +1,6 @@
-use std::{path::PathBuf, vec::Vec};
+use std::path::PathBuf;
 
-use postcard_bindgen::{export_js_bindings, ArchPointerLen, JsExportable, PostcardBindings};
+use postcard_bindgen::{export_bindings, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
 
 extern crate alloc;
@@ -17,11 +17,7 @@ struct OtherTest {
     #[allow(dead_code)]
     #[serde(skip)]
     other: u16,
-    // string: std::string::String,
-    // alloc_string: alloc::string::String,
-    array: Vec<u8>,
-    #[serde(rename = "allocArray")]
-    alloc_array: alloc::vec::Vec<u32>,
+    test: Test,
 }
 
 fn export_path() -> PathBuf {
@@ -32,10 +28,5 @@ fn export_path() -> PathBuf {
 }
 
 fn main() {
-    export_js_bindings(
-        export_path().as_path(),
-        vec![Test::js_bindings(), OtherTest::js_bindings()],
-        ArchPointerLen::U32,
-    )
-    .unwrap();
+    export_bindings(&export_path(), generate_bindings!(OtherTest, Test)).unwrap();
 }
