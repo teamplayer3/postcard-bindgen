@@ -7,7 +7,6 @@ const test = {
 
 const otherTest = {
     name: 2,
-    other: 23232,
     test: test
 }
 

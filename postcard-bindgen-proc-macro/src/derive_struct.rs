@@ -3,6 +3,10 @@ use quote::quote;
 use serde_derive_internals::ast::{Field, Style};
 
 pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStream {
+    let fields = fields
+        .into_iter()
+        .filter(|field| !(field.attrs.skip_serializing() || field.attrs.skip_deserializing()))
+        .collect::<Vec<_>>();
     match style {
         Style::Struct => derive_struct_type(ident, fields),
         Style::Tuple => derive_tuple_struct_type(ident, fields),
