@@ -27,10 +27,9 @@ struct Test {
 }
 
 fn main() {
-    export_js_bindings(
+    export_bindings(
         Path::new("./js_export.js"),
-        vec![Test::js_bindings()],
-        ArchPointerLen::U32, // used for byte amount of `usize` and `isize`
+        generate_bindings!(Test), // register container for generating bindings
     )
     .unwrap();
 }
