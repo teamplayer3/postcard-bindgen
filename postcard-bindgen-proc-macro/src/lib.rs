@@ -56,23 +56,3 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
 
     expanded
 }
-
-#[cfg(test)]
-mod test {
-    use quote::quote;
-
-    use crate::derive_js_implementation;
-
-    #[test]
-    fn test_macro() {
-        let input_stream = quote!(
-            #[derive(Serialize)]
-            struct Test {
-                name: String,
-            }
-        );
-
-        let out = derive_js_implementation(input_stream.into());
-        println!("{}", out.to_string())
-    }
-}
