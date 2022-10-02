@@ -10,8 +10,10 @@ const otherTest = {
     test: test
 }
 
-const bytes = serialize("OtherTest", otherTest)
+const tupleStruct = [234, 231, 4523]
+
+const bytes = serialize("TupleStruct", tupleStruct)
 console.log(bytes)
 
-const deser = deserialize("OtherTest", bytes)
+const deser = deserialize("TupleStruct", bytes)
 console.log(deser)

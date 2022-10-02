@@ -41,3 +41,39 @@ fn gen_type_check(field: &StructField) -> Tokens {
         _ => quote!(typeof v.$(field.name.as_str()) === $(quoted(field.js_type.to_string()))),
     }
 }
+
+pub mod tuple_struct {
+    use convert_case::{Case, Casing};
+    use genco::{quote, tokens::quoted, Tokens};
+
+    use crate::type_info::{JsType, ObjectMeta};
+
+    pub fn gen_check_func(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
+        let obj_name = obj_name.as_ref();
+
+        quote! {
+            const is_$(obj_name.to_case(Case::Snake).to_uppercase()) = (v) => {
+                return v.length === $(fields.as_ref().len()) && $(gen_type_checks(fields).iter().map(|q| q.to_string().unwrap()).collect::<Vec<_>>().join("&&"))
+            }
+        }
+    }
+
+    fn gen_type_checks(fields: impl AsRef<[JsType]>) -> Vec<Tokens> {
+        fields
+            .as_ref()
+            .iter()
+            .enumerate()
+            .map(|(index, field)| gen_type_check(index, field))
+            .collect::<Vec<_>>()
+    }
+
+    fn gen_type_check(index: usize, field: &JsType) -> Tokens {
+        match field {
+            JsType::Array(_) => quote!(Array.isArray(v[$index])),
+            JsType::Object(ObjectMeta { name }) => {
+                quote!(is_$(name.to_case(Case::Snake).to_uppercase())(v[$index]))
+            }
+            _ => quote!(typeof v[$index] === $(quoted(field.to_string()))),
+        }
+    }
+}

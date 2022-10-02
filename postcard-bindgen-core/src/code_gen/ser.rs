@@ -2,7 +2,7 @@ use convert_case::{Case, Casing};
 use genco::{lang::js::Tokens, quote, quote_in};
 
 use crate::{
-    registry::{BindingType, StructField, StructType},
+    registry::{BindingType, StructField, StructType, TupleStructType},
     type_info::{JsType, ObjectMeta},
 };
 
@@ -32,7 +32,8 @@ fn gen_ser_cases(defines: impl AsRef<[BindingType]>) -> Tokens {
 
 fn gen_ser_case(tokens: &mut Tokens, define: &BindingType) {
     match define {
-        BindingType::Struct(StructType { name, fields: _ }) => {
+        BindingType::Struct(StructType { name, fields: _ })
+        | BindingType::TupleStruct(TupleStructType { name, fields: _ }) => {
             let case = format!("\"{}\"", name);
             let type_name = name.to_case(Case::Snake).to_uppercase();
             quote_in! {*tokens =>
@@ -70,4 +71,40 @@ fn gen_ser_function_object(field: impl AsRef<str>, obj_meta: &ObjectMeta) -> Tok
 fn gen_ser_function(field: impl AsRef<str>, ty: &JsType) -> Tokens {
     // |s.serialize_<type>(<args...>, v.<field>);|
     quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+}
+
+pub mod tuple_struct {
+    use convert_case::{Case, Casing};
+    use genco::{prelude::JavaScript, quote, Tokens};
+
+    use crate::type_info::{JsType, ObjectMeta};
+
+    pub fn gen_ser_tuple_obj_function(
+        obj_name: impl AsRef<str>,
+        fields: impl AsRef<[JsType]>,
+    ) -> Tokens<JavaScript> {
+        let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
+        quote! {
+            const serialize_$(obj_name_upper) = (s, v) => {
+                $(fields.as_ref().iter().enumerate().map(|(index,field)| gen_ser_field_adapter(index, field)).collect::<Vec<_>>())
+            }
+        }
+    }
+
+    fn gen_ser_field_adapter(index: usize, field: &JsType) -> Tokens<JavaScript> {
+        match field {
+            JsType::Object(m) => gen_ser_function_object(index, m),
+            _ => gen_ser_function(index, field),
+        }
+    }
+
+    fn gen_ser_function_object(index: usize, obj_meta: &ObjectMeta) -> Tokens<JavaScript> {
+        // |serialize_<obj_name>(s, v.<field>);|
+        quote!(serialize_$(obj_meta.name.to_case(Case::Snake).to_uppercase())(s, v[$index]);)
+    }
+
+    fn gen_ser_function(index: usize, ty: &JsType) -> Tokens<JavaScript> {
+        // |s.serialize_<type>(<args...>, v.<field>);|
+        quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v[$index]);)
+    }
 }

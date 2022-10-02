@@ -11,12 +11,12 @@ use std::{
 use genco::{prelude::JavaScript, quote, Tokens};
 
 use code_gen::{
-    des::{gen_des_obj_function, gen_deserialize_func},
+    des::{self, gen_des_obj_function, gen_deserialize_func},
     gen_ser_des_classes,
-    ser::{gen_ser_obj_function, gen_serialize_func},
-    type_checking::gen_check_func,
+    ser::{gen_ser_obj_function, gen_serialize_func, tuple_struct},
+    type_checking::{self, gen_check_func},
 };
-use registry::{BindingType, StructType};
+use registry::{BindingType, StructType, TupleStructType};
 
 pub enum ArchPointerLen {
     U32,
@@ -55,12 +55,14 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
     let ser_des_body = tys.iter().map(|ty| match ty {
         BindingType::Enum(_ty) => todo!(),
         BindingType::Struct(ty) => generate_js_object(ty),
-        BindingType::TupleStruct(_ty) => todo!(),
+        BindingType::TupleStruct(ty) => generate_js_object_tuple(ty),
     });
     let type_check_body = tys.iter().map(|ty| match ty {
         BindingType::Enum(_ty) => todo!(),
         BindingType::Struct(ty) => gen_check_func(&ty.name, &ty.fields),
-        BindingType::TupleStruct(_ty) => todo!(),
+        BindingType::TupleStruct(ty) => {
+            type_checking::tuple_struct::gen_check_func(&ty.name, &ty.fields)
+        }
     });
     quote!(
         $(gen_ser_des_classes(ArchPointerLen::U32))
@@ -76,6 +78,14 @@ fn generate_js_object(ty: &StructType) -> Tokens<JavaScript> {
     quote! {
         $(gen_ser_obj_function(obj_name, &ty.fields))
         $(gen_des_obj_function(obj_name, &ty.fields))
+    }
+}
+
+fn generate_js_object_tuple(ty: &TupleStructType) -> Tokens<JavaScript> {
+    let obj_name = &ty.name;
+    quote! {
+        $(tuple_struct::gen_ser_tuple_obj_function(obj_name, &ty.fields))
+        $(des::tuple_struct::gen_des_obj_function(obj_name, &ty.fields))
     }
 }
 

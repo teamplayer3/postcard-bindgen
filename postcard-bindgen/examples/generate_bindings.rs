@@ -31,5 +31,9 @@ fn export_path() -> PathBuf {
 }
 
 fn main() {
-    export_bindings(&export_path(), generate_bindings!(OtherTest, Test)).unwrap();
+    export_bindings(
+        &export_path(),
+        generate_bindings!(OtherTest, Test, TupleStruct),
+    )
+    .unwrap();
 }
