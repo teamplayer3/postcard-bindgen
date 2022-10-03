@@ -64,7 +64,7 @@ pub mod strukt {
 
     use crate::{
         registry::StructField,
-        type_info::{ArrayMeta, JsType, ObjectMeta},
+        type_info::{bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta},
         utils::StringExt,
     };
 
@@ -93,10 +93,13 @@ pub mod strukt {
         // |s.serialize_<type>(<args...>, v.<field>);|
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v.$(field.as_ref())))
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v.$(field.as_ref()));)
+            }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v.$(field.as_ref()));)
             }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+                quote!(s.serialize_$(ty.as_func_name())(v.$(field.as_ref()));)
             }
         }
     }
@@ -106,8 +109,11 @@ pub mod strukt {
             JsType::Array(ArrayMeta { items_type }) => {
                 quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
             }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v))
+            }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+                quote!(s.serialize_$(ty.as_func_name())(v))
             }
         }
     }
@@ -117,7 +123,7 @@ pub mod tuple_struct {
     use convert_case::{Case, Casing};
     use genco::{lang::js::Tokens, quote};
 
-    use crate::type_info::{ArrayMeta, JsType, ObjectMeta};
+    use crate::type_info::{bool_to_js_bool, ArrayMeta, JsType, ObjectMeta};
 
     pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
@@ -144,10 +150,13 @@ pub mod tuple_struct {
         // |s.serialize_<type>(<args...>, v.<field>);|
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v[$index]))
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v[$index]);)
+            }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v[$index]);)
             }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v[$index]);)
+                quote!(s.serialize_$(ty.as_func_name())(v[$index]);)
             }
         }
     }
@@ -157,8 +166,11 @@ pub mod tuple_struct {
             JsType::Array(ArrayMeta { items_type }) => {
                 quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
             }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v))
+            }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+                quote!(s.serialize_$(ty.as_func_name())(v))
             }
         }
     }
@@ -169,7 +181,7 @@ pub mod enum_ty {
 
     use crate::{
         registry::{EnumVariant, EnumVariantType, StructField},
-        type_info::{ArrayMeta, JsType, ObjectMeta},
+        type_info::{bool_to_js_bool, ArrayMeta, JsType, ObjectMeta},
         utils::{StrExt, StringExt},
     };
 
@@ -260,8 +272,11 @@ pub mod enum_ty {
             JsType::Array(ArrayMeta { items_type }) => {
                 quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v.inner$field_access);)
             }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v.inner$field_access);)
+            }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.inner$field_access);)
+                quote!(s.serialize_$(ty.as_func_name())(v.inner$field_access);)
             }
         }
     }
@@ -271,8 +286,11 @@ pub mod enum_ty {
             JsType::Array(ArrayMeta { items_type }) => {
                 quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
             }
+            JsType::Number(m) => {
+                quote!(s.serialize_$(ty.as_func_name())($(m.as_byte_js_string()),$(bool_to_js_bool(m.signed)),v))
+            }
             _ => {
-                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+                quote!(s.serialize_$(ty.as_func_name())(v))
             }
         }
     }

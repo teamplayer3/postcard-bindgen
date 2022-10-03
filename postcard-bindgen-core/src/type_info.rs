@@ -18,14 +18,10 @@ impl ToString for JsType {
 }
 
 impl JsType {
-    pub(crate) fn as_js_func_args(&self) -> Vec<&'static str> {
+    pub(crate) fn as_js_func_args(&self) -> Option<Vec<&'static str>> {
         match self {
-            JsType::Number(m) => {
-                vec![m.as_byte_js_string(), bool_to_js_bool(m.signed)]
-            }
-            JsType::Array(ArrayMeta { items_type: _ }) => vec![],
-            JsType::String(_) => todo!(),
-            JsType::Object(_m) => todo!(),
+            JsType::Number(m) => Some(vec![m.as_byte_js_string(), bool_to_js_bool(m.signed)]),
+            _ => None,
         }
     }
 
@@ -45,7 +41,7 @@ impl AsRef<JsType> for JsType {
     }
 }
 
-fn bool_to_js_bool(value: bool) -> &'static str {
+pub fn bool_to_js_bool(value: bool) -> &'static str {
     if value {
         "true"
     } else {

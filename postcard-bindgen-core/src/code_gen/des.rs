@@ -77,7 +77,7 @@ pub mod strukt {
                 quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
             }
             _ => {
-                quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+                quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
             }
         }
     }
@@ -88,7 +88,7 @@ pub mod strukt {
                 quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
             }
             _ => {
-                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))))
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
             }
         }
     }
@@ -128,7 +128,7 @@ pub mod tuple_struct {
                 quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
             }
             _ => {
-                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
             }
         }
     }
@@ -139,7 +139,7 @@ pub mod tuple_struct {
                 quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
             }
             _ => {
-                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
             }
         }
     }
@@ -254,7 +254,7 @@ pub mod enum_ty {
                 quote!($field_access d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
             }
             _ => {
-                quote!($field_access d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+                quote!($field_access d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
             }
         }
     }
@@ -265,7 +265,7 @@ pub mod enum_ty {
                 quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
             }
             _ => {
-                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
             }
         }
     }

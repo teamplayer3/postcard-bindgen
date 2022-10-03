@@ -9,7 +9,7 @@ extern crate alloc;
 struct A;
 
 #[derive(Serialize, PostcardBindings)]
-struct B(u8, Vec<u16>);
+struct B(u8, Vec<u16>, String);
 
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
@@ -42,7 +42,7 @@ fn main() {
         a: 123,
         b: C::D {
             a: vec![6, 123],
-            b: B(231, vec![182, 1234]),
+            b: B(231, vec![182, 1234], "hello from rust".into()),
         },
         c: A,
         d: vec![234, 21],

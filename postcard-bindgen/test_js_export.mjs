@@ -7,12 +7,14 @@ const d = {
         key: "D",
         inner: {
             a: [234, 224],
-            b: [123, [123, 431, 123232]]
+            b: [123, [123, 431, 123232], "Hello"]
         }
     },
     c: {},
     d: [234, 213, 123]
 }
+
+console.log(d.b.inner.b)
 
 const bytes = serialize("D", d)
 console.log(bytes)
