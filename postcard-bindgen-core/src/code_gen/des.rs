@@ -128,8 +128,8 @@ pub mod enum_ty {
     }
 
     impl FormatInto<JavaScript> for FieldAccess {
-        fn format_into(self, mut tokens: &mut genco::Tokens<JavaScript>) {
-            quote_in! {tokens =>
+        fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
+            quote_in! { *tokens =>
                 $(match self {
                     FieldAccess::Array => (),
                     FieldAccess::Object(n) => $n:

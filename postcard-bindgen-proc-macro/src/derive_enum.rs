@@ -30,15 +30,15 @@ pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -
     )
 }
 
-fn derive_unit_variant<'a>(variant_name: impl AsRef<str>) -> TokenStream {
+fn derive_unit_variant(variant_name: impl AsRef<str>) -> TokenStream {
     let variant_name = variant_name.as_ref();
     quote!(ty.register_variant(#variant_name.into());)
 }
 
-fn derive_newtype_variant<'a>(
+fn derive_newtype_variant(
     variant_name: impl AsRef<str>,
     _index: usize,
-    field: &ast::Field<'a>,
+    field: &ast::Field<'_>,
 ) -> TokenStream {
     let variant_name = variant_name.as_ref();
     let ty = field.ty;

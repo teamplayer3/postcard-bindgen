@@ -78,7 +78,7 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
 
 fn generate_js_obj_unit(name: impl AsRef<str>) -> Tokens<JavaScript> {
     quote! {
-        $(gen_ser_obj_function(name.as_ref().to_owned(), &[]))
+        $(gen_ser_obj_function(name.as_ref(), &[]))
         $(gen_des_obj_function(name, &[]))
     }
 }

@@ -12,11 +12,13 @@ enum FieldAccess {
 }
 
 impl FormatInto<JavaScript> for FieldAccess {
-    fn format_into(self, mut tokens: &mut genco::Tokens<JavaScript>) {
-        quote_in!(tokens => $(match self {
-            FieldAccess::Array(i) => [$i],
-            FieldAccess::Object(n) => .$n
-        }) )
+    fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
+        quote_in! { *tokens =>
+            $(match self {
+                FieldAccess::Array(i) => [$i],
+                FieldAccess::Object(n) => .$n
+            })
+        }
     }
 }
 

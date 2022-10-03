@@ -131,29 +131,26 @@ pub mod enum_ty {
     }
 
     fn gen_simple_type_checks<'a>(
-        variants: impl IntoIterator<Item = (usize, &'a EnumVariant)> + Clone,
+        variants: impl Iterator<Item = (usize, &'a EnumVariant)> + Clone,
     ) -> Tokens {
-        if variants.to_owned().into_iter().count() == 0 {
+        if variants.to_owned().count() == 0 {
             Tokens::new()
         } else {
-            let variant_checks = and_chain(
-                variants
-                    .into_iter()
-                    .map(|(_, variant)| quote!(v === $(quoted(&variant.name)))),
-            );
+            let variant_checks =
+                and_chain(variants.map(|(_, variant)| quote!(v === $(quoted(&variant.name)))));
             let type_check = simple_enum_type_check();
             quote!(($type_check && $variant_checks))
         }
     }
 
     fn gen_complex_type_checks<'a>(
-        variants: impl IntoIterator<Item = (usize, &'a EnumVariant)> + Clone,
+        variants: impl Iterator<Item = (usize, &'a EnumVariant)> + Clone,
     ) -> Tokens {
-        if variants.to_owned().into_iter().count() == 0 {
+        if variants.to_owned().count() == 0 {
             Tokens::new()
         } else {
-            let variant_checks = or_chain(variants.to_owned().into_iter().map(|(_, variant)| {
-                let inner_type_checks = gen_variant_check(&variant);
+            let variant_checks = or_chain(variants.map(|(_, variant)| {
+                let inner_type_checks = gen_variant_check(variant);
                 quote!((v.key === $(quoted(&variant.name)) && $inner_type_checks))
             }));
             let type_check = complex_enum_type_check();
