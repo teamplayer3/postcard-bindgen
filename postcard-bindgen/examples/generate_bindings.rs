@@ -25,6 +25,7 @@ struct D {
     a: u8,
     b: C,
     c: A,
+    d: Vec<u8>,
 }
 
 fn main() {
@@ -41,6 +42,7 @@ fn main() {
         a: 123,
         b: C::D { a: 132, b: B(231) },
         c: A,
+        d: vec![234, 21],
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

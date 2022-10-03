@@ -64,7 +64,7 @@ pub mod strukt {
 
     use crate::{
         registry::StructField,
-        type_info::{JsType, ObjectMeta},
+        type_info::{ArrayMeta, JsType, ObjectMeta},
         utils::StringExt,
     };
 
@@ -91,7 +91,25 @@ pub mod strukt {
 
     fn gen_ser_function(field: impl AsRef<str>, ty: &JsType) -> Tokens {
         // |s.serialize_<type>(<args...>, v.<field>);|
-        quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v.$(field.as_ref())))
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+            }
+        }
+    }
+
+    fn gen_ser_function_nested(ty: &JsType) -> Tokens {
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+            }
+        }
     }
 }
 

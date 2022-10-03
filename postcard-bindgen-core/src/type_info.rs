@@ -23,7 +23,7 @@ impl JsType {
             JsType::Number(m) => {
                 vec![m.as_byte_js_string(), bool_to_js_bool(m.signed)]
             }
-            JsType::Array(_) => todo!(),
+            JsType::Array(ArrayMeta { items_type: _ }) => vec![],
             JsType::String(_) => todo!(),
             JsType::Object(_m) => todo!(),
         }
