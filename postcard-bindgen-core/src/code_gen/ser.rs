@@ -1,10 +1,7 @@
 use convert_case::{Case, Casing};
 use genco::{lang::js::Tokens, prelude::JavaScript, quote, quote_in, tokens::FormatInto};
 
-use crate::{
-    registry::{BindingType, EnumType, StructField, StructType, TupleStructType, UnitStructType},
-    type_info::{JsType, ObjectMeta},
-};
+use crate::registry::{BindingType, EnumType, StructType, TupleStructType, UnitStructType};
 
 enum FieldAccess {
     Object(String),
@@ -61,33 +58,44 @@ fn gen_ser_case(tokens: &mut Tokens, define: &BindingType) {
     }
 }
 
-pub fn gen_ser_obj_function(
-    obj_name: impl AsRef<str>,
-    fields: impl AsRef<[StructField]>,
-) -> Tokens {
-    let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
-    quote! {
-        const serialize_$(obj_name_upper) = (s, v) => {
-            $(fields.as_ref().iter().map(gen_ser_field_adapter).collect::<Vec<_>>())
+pub mod strukt {
+    use convert_case::{Case, Casing};
+    use genco::{lang::js::Tokens, quote};
+
+    use crate::{
+        registry::StructField,
+        type_info::{JsType, ObjectMeta},
+        StringExt,
+    };
+
+    pub fn gen_ser_obj_function(
+        obj_name: impl AsRef<str>,
+        fields: impl AsRef<[StructField]>,
+    ) -> Tokens {
+        let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
+        quote! {
+            const serialize_$(obj_name_upper) = (s, v) => {
+                $(fields.as_ref().iter().map(gen_ser_field_adapter).collect::<Vec<_>>())
+            }
         }
     }
-}
 
-fn gen_ser_field_adapter(field: &StructField) -> Tokens {
-    match &field.js_type {
-        JsType::Object(m) => gen_ser_function_object(&field.name, m),
-        _ => gen_ser_function(&field.name, &field.js_type),
+    fn gen_ser_field_adapter(field: &StructField) -> Tokens {
+        match &field.js_type {
+            JsType::Object(m) => gen_ser_function_object(&field.name, m),
+            _ => gen_ser_function(&field.name, &field.js_type),
+        }
     }
-}
 
-fn gen_ser_function_object(field: impl AsRef<str>, obj_meta: &ObjectMeta) -> Tokens {
-    // |serialize_<obj_name>(s, v.<field>);|
-    quote!(serialize_$(obj_meta.name.to_case(Case::Snake).to_uppercase())(s, v.$(field.as_ref()));)
-}
+    fn gen_ser_function_object(field: impl AsRef<str>, obj_meta: &ObjectMeta) -> Tokens {
+        // |serialize_<obj_name>(s, v.<field>);|
+        quote!(serialize_$(obj_meta.name.to_obj_identifier())(s, v.$(field.as_ref()));)
+    }
 
-fn gen_ser_function(field: impl AsRef<str>, ty: &JsType) -> Tokens {
-    // |s.serialize_<type>(<args...>, v.<field>);|
-    quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+    fn gen_ser_function(field: impl AsRef<str>, ty: &JsType) -> Tokens {
+        // |s.serialize_<type>(<args...>, v.<field>);|
+        quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.$(field.as_ref()));)
+    }
 }
 
 pub mod tuple_struct {
