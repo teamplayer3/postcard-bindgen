@@ -14,8 +14,6 @@ const d = {
     d: [234, 213, 123]
 }
 
-console.log(d.b.inner.b)
-
 const bytes = serialize("D", d)
 console.log(bytes)
 
