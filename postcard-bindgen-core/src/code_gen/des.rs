@@ -74,7 +74,7 @@ pub mod strukt {
         // |<field>: d.deserialize_<type>(<args...>),|
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
+                quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))),)
             }
             _ => {
                 quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
@@ -85,7 +85,7 @@ pub mod strukt {
     fn gen_des_function_nested(ty: &JsType) -> Tokens {
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
             }
             _ => {
                 quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
@@ -125,7 +125,7 @@ pub mod tuple_struct {
         // |<field>: d.deserialize_<type>(<args...>),|
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))),)
             }
             _ => {
                 quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
@@ -136,7 +136,7 @@ pub mod tuple_struct {
     fn gen_des_function_nested(ty: &JsType) -> Tokens {
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
             }
             _ => {
                 quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
@@ -251,7 +251,7 @@ pub mod enum_ty {
         // |<field>: d.deserialize_<type>(<args...>),|
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!($field_access d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
+                quote!($field_access d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))),)
             }
             _ => {
                 quote!($field_access d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))),)
@@ -262,7 +262,7 @@ pub mod enum_ty {
     fn gen_des_function_nested(ty: &JsType) -> Tokens {
         match ty {
             JsType::Array(ArrayMeta { items_type }) => {
-                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
             }
             _ => {
                 quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().map(|d| d.join(",")))))
