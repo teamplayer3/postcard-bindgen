@@ -60,7 +60,7 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         BindingType::UnitStruct(ty) => generate_js_obj_unit(&ty.name),
     });
     let type_check_body = tys.iter().map(|ty| match ty {
-        BindingType::Enum(ty) => type_checking::enum_ty::gen_check_func(&ty.name, &ty.variants),
+        BindingType::Enum(ty) => type_checking::ty_enum::gen_check_func(&ty.name, &ty.variants),
         BindingType::Struct(ty) => type_checking::strukt::gen_check_func(&ty.name, &ty.fields),
         BindingType::TupleStruct(ty) => {
             type_checking::tuple_struct::gen_check_func(&ty.name, &ty.fields)
