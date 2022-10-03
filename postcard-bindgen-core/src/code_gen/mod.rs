@@ -29,32 +29,32 @@ pub fn gen_ser_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
 
 fn generate_js_obj_unit(name: impl AsRef<str>) -> Tokens {
     quote! {
-        $(ser::strukt::gen_ser_obj_function(name.as_ref(), &[]))
-        $(des::strukt::gen_des_obj_function(name, &[]))
+        $(ser::strukt::gen_function(name.as_ref(), &[]))
+        $(des::strukt::gen_function(name, &[]))
     }
 }
 
 fn generate_js_object(ty: &StructType) -> Tokens {
     let obj_name = &ty.name;
     quote! {
-        $(ser::strukt::gen_ser_obj_function(obj_name, &ty.fields))
-        $(des::strukt::gen_des_obj_function(obj_name, &ty.fields))
+        $(ser::strukt::gen_function(obj_name, &ty.fields))
+        $(des::strukt::gen_function(obj_name, &ty.fields))
     }
 }
 
 fn generate_js_object_tuple(ty: &TupleStructType) -> Tokens {
     let obj_name = &ty.name;
     quote! {
-        $(ser::tuple_struct::gen_ser_tuple_obj_function(obj_name, &ty.fields))
-        $(des::tuple_struct::gen_des_obj_function(obj_name, &ty.fields))
+        $(ser::tuple_struct::gen_function(obj_name, &ty.fields))
+        $(des::tuple_struct::gen_function(obj_name, &ty.fields))
     }
 }
 
 fn generate_js_enum(ty: &EnumType) -> Tokens {
     let obj_name = &ty.name;
     quote! {
-        $(ser::enum_ty::gen_ser_enum_function(obj_name, &ty.variants))
-        $(des::enum_ty::gen_des_enum_function(obj_name, &ty.variants))
+        $(ser::enum_ty::gen_function(obj_name, &ty.variants))
+        $(des::enum_ty::gen_function(obj_name, &ty.variants))
     }
 }
 

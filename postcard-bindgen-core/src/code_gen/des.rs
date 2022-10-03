@@ -49,10 +49,7 @@ pub mod strukt {
         utils::{StrExt, StringExt},
     };
 
-    pub fn gen_des_obj_function(
-        obj_name: impl AsRef<str>,
-        fields: impl AsRef<[StructField]>,
-    ) -> Tokens {
+    pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[StructField]>) -> Tokens {
         let obj_name = obj_name.as_ref();
         quote! {
             const deserialize_$(obj_name.to_obj_identifier()) = (d) => ({
@@ -85,7 +82,7 @@ pub mod tuple_struct {
 
     use crate::type_info::{JsType, ObjectMeta};
 
-    pub fn gen_des_obj_function(
+    pub fn gen_function(
         obj_name: impl AsRef<str>,
         fields: impl AsRef<[JsType]>,
     ) -> Tokens<JavaScript> {
@@ -145,10 +142,7 @@ pub mod enum_ty {
         }
     }
 
-    pub fn gen_des_enum_function(
-        obj_name: impl AsRef<str>,
-        variants: impl AsRef<[EnumVariant]>,
-    ) -> Tokens {
+    pub fn gen_function(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
         let enumerated_variants = variants.as_ref().iter().enumerate();
         quote! {
