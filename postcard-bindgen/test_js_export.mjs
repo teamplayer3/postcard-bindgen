@@ -1,4 +1,5 @@
 import { serialize, deserialize } from "./js_export.js";
+import fs from "fs";
 
 const test = {
     name: 23,
@@ -22,3 +23,9 @@ console.log(bytes)
 
 const deser = deserialize("D", bytes)
 console.log(deser)
+
+const bytes_file = `${process.cwd()}/serialized.bytes`
+const loaded_bytes = fs.readFileSync(bytes_file)
+console.log(loaded_bytes)
+const rust_des = deserialize("D", loaded_bytes);
+console.log(rust_des)

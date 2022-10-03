@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::io::Write;
 
 use postcard_bindgen::{export_bindings, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
@@ -27,13 +27,23 @@ struct D {
     c: A,
 }
 
-fn export_path() -> PathBuf {
-    let mut exec_path = std::env::current_exe().unwrap();
-    exec_path.pop();
-    exec_path.push("js_export.js");
-    exec_path
-}
-
 fn main() {
-    export_bindings(&export_path(), generate_bindings!(A, B, C, D)).unwrap();
+    export_bindings(
+        std::env::current_dir()
+            .unwrap()
+            .join("js_export.js")
+            .as_path(),
+        generate_bindings!(A, B, C, D),
+    )
+    .unwrap();
+
+    let d = D {
+        a: 123,
+        b: C::D { a: 132, b: B(231) },
+        c: A,
+    };
+    let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
+    let mut file =
+        std::fs::File::create(std::env::current_dir().unwrap().join("serialized.bytes")).unwrap();
+    file.write_all(postcard_bytes.as_slice()).unwrap();
 }

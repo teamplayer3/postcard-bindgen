@@ -10,3 +10,4 @@ postcard-bindgen-core = {path = "../postcard-bindgen-core"}
 [dev-dependencies]
 serde = "1"
 serde_derive = "1"
+postcard = "1.0.2"
