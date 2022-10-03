@@ -96,14 +96,11 @@ pub mod strukt {
 
 pub mod tuple_struct {
     use convert_case::{Case, Casing};
-    use genco::{prelude::JavaScript, quote, Tokens};
+    use genco::{lang::js::Tokens, quote};
 
-    use crate::type_info::{JsType, ObjectMeta};
+    use crate::type_info::{ArrayMeta, JsType, ObjectMeta};
 
-    pub fn gen_function(
-        obj_name: impl AsRef<str>,
-        fields: impl AsRef<[JsType]>,
-    ) -> Tokens<JavaScript> {
+    pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
         quote! {
             const deserialize_$obj_name_upper = (d) => ([
@@ -112,21 +109,39 @@ pub mod tuple_struct {
         }
     }
 
-    fn gen_des_field_adapter(index: usize, field: &JsType) -> Tokens<JavaScript> {
+    fn gen_des_field_adapter(index: usize, field: &JsType) -> Tokens {
         match field {
             JsType::Object(m) => gen_des_function_object(index, m),
-            _ => gen_des_function(index, field),
+            _ => gen_des_function(field),
         }
     }
 
-    fn gen_des_function_object(_index: usize, obj_meta: &ObjectMeta) -> Tokens<JavaScript> {
+    fn gen_des_function_object(_index: usize, obj_meta: &ObjectMeta) -> Tokens {
         // |<field>: deserialize_<obj_name>(d),|
         quote!(deserialize_$(obj_meta.name.to_case(Case::Snake).to_uppercase())(d),)
     }
 
-    fn gen_des_function(_index: usize, ty: &JsType) -> Tokens<JavaScript> {
+    fn gen_des_function(ty: &JsType) -> Tokens {
         // |<field>: d.deserialize_<type>(<args...>),|
-        quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))),)
+            }
+            _ => {
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+            }
+        }
+    }
+
+    fn gen_des_function_nested(ty: &JsType) -> Tokens {
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(&*items_type))))
+            }
+            _ => {
+                quote!(d.deserialize_$(ty.as_func_name())($(ty.as_js_func_args().join(","))),)
+            }
+        }
     }
 }
 

@@ -9,7 +9,7 @@ extern crate alloc;
 struct A;
 
 #[derive(Serialize, PostcardBindings)]
-struct B(u8);
+struct B(u8, Vec<u16>);
 
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
@@ -40,7 +40,10 @@ fn main() {
 
     let d = D {
         a: 123,
-        b: C::D { a: 132, b: B(231) },
+        b: C::D {
+            a: 132,
+            b: B(231, vec![182, 1234]),
+        },
         c: A,
         d: vec![234, 21],
     };

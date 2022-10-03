@@ -115,14 +115,11 @@ pub mod strukt {
 
 pub mod tuple_struct {
     use convert_case::{Case, Casing};
-    use genco::{prelude::JavaScript, quote, Tokens};
+    use genco::{lang::js::Tokens, quote};
 
-    use crate::type_info::{JsType, ObjectMeta};
+    use crate::type_info::{ArrayMeta, JsType, ObjectMeta};
 
-    pub fn gen_function(
-        obj_name: impl AsRef<str>,
-        fields: impl AsRef<[JsType]>,
-    ) -> Tokens<JavaScript> {
+    pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_case(Case::Snake).to_uppercase();
         quote! {
             const serialize_$(obj_name_upper) = (s, v) => {
@@ -131,21 +128,39 @@ pub mod tuple_struct {
         }
     }
 
-    fn gen_ser_field_adapter(index: usize, field: &JsType) -> Tokens<JavaScript> {
+    fn gen_ser_field_adapter(index: usize, field: &JsType) -> Tokens {
         match field {
             JsType::Object(m) => gen_ser_function_object(index, m),
             _ => gen_ser_function(index, field),
         }
     }
 
-    fn gen_ser_function_object(index: usize, obj_meta: &ObjectMeta) -> Tokens<JavaScript> {
+    fn gen_ser_function_object(index: usize, obj_meta: &ObjectMeta) -> Tokens {
         // |serialize_<obj_name>(s, v.<field>);|
         quote!(serialize_$(obj_meta.name.to_case(Case::Snake).to_uppercase())(s, v[$index]);)
     }
 
-    fn gen_ser_function(index: usize, ty: &JsType) -> Tokens<JavaScript> {
+    fn gen_ser_function(index: usize, ty: &JsType) -> Tokens {
         // |s.serialize_<type>(<args...>, v.<field>);|
-        quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v[$index]);)
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v[$index]))
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v[$index]);)
+            }
+        }
+    }
+
+    fn gen_ser_function_nested(ty: &JsType) -> Tokens {
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+            }
+        }
     }
 }
 
