@@ -39,6 +39,12 @@ impl JsType {
     }
 }
 
+impl AsRef<JsType> for JsType {
+    fn as_ref(&self) -> &JsType {
+        self
+    }
+}
+
 fn bool_to_js_bool(value: bool) -> &'static str {
     if value {
         "true"

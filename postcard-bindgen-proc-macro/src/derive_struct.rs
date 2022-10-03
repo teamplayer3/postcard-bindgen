@@ -10,8 +10,17 @@ pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStr
     match style {
         Style::Struct => derive_struct_type(ident, fields),
         Style::Tuple => derive_tuple_struct_type(ident, fields),
+        Style::Unit => derive_unit_struct_type(ident),
         _ => unimplemented!(),
     }
+}
+
+fn derive_unit_struct_type(ident: Ident) -> TokenStream {
+    let ident_str = ident.to_string();
+    quote!(
+        let mut ty = _pb::UnitStructType::new(#ident_str.into());
+        reg.register_unit_struct_binding(ty);
+    )
 }
 
 fn derive_tuple_struct_type(ident: Ident, fields: Vec<Field>) -> TokenStream {

@@ -1,9 +1,11 @@
+use derive_enum::derive_enum;
 use derive_struct::derive_struct;
 use proc_macro2::TokenStream;
 use quote::quote;
 use serde_derive_internals::{ast, Ctxt, Derive};
 use syn::DeriveInput;
 
+mod derive_enum;
 mod derive_struct;
 
 #[proc_macro_derive(PostcardBindings)]
@@ -19,7 +21,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let container = ast::Container::from_ast(&cx, &input, Derive::Serialize).unwrap();
 
     let body = match container.data {
-        ast::Data::Enum(_) => unimplemented!(),
+        ast::Data::Enum(variants) => derive_enum(container.ident.to_owned(), variants),
         ast::Data::Struct(style, fields) => {
             derive_struct(style, container.ident.to_owned(), fields)
         }

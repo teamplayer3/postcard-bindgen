@@ -1,16 +1,12 @@
-use crate::{collapse_list_brace, collapse_list_bracket, type_to_ts};
+use proc_macro2::{Ident, TokenStream};
+use quote::quote;
+use serde_derive_internals::ast;
 
-use super::{derive_element, derive_field};
-use proc_macro2::TokenStream;
-use quote::{quote, TokenStreamExt};
-use serde_derive_internals::{ast, attr};
-
-pub fn derive_enum<'a>(
-    variants: Vec<ast::Variant<'a>>,
-    _attr_container: &attr::Container,
-) -> TokenStream {
-    let tokens = variants
-        .into_iter()
+pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -> TokenStream {
+    let enum_name = ident.to_string();
+    let body = variants
+        .as_ref()
+        .iter()
         .enumerate()
         .map(|(variant_idx, variant)| {
             let variant_name = variant.attrs.name().serialize_name();
@@ -26,62 +22,64 @@ pub fn derive_enum<'a>(
                 }
                 ast::Style::Unit => derive_unit_variant(&variant_name),
             }
-        })
-        .fold(quote! {}, |mut agg, tokens| {
-            agg.append_all(tokens);
-            agg
         });
-
-    tokens
+    quote!(
+        let mut ty = _pb::EnumType::new(#enum_name.into());
+        #(#body);*;
+        reg.register_enum_binding(ty);
+    )
 }
 
-fn derive_unit_variant<'a>(variant_name: &str) -> TokenStream {
-    quote! {
-        | { "tag": #variant_name, }
-    }
+fn derive_unit_variant<'a>(variant_name: impl AsRef<str>) -> TokenStream {
+    let variant_name = variant_name.as_ref();
+    quote!(ty.register_variant(#variant_name.into());)
 }
 
 fn derive_newtype_variant<'a>(
-    variant_name: &str,
-    _variant_idx: usize,
+    variant_name: impl AsRef<str>,
+    _index: usize,
     field: &ast::Field<'a>,
 ) -> TokenStream {
-    let ty = type_to_ts(&field.ty);
-    quote! {
-        | { "tag": #variant_name, "fields": #ty, }
-    }
+    let variant_name = variant_name.as_ref();
+    let ty = field.ty;
+    quote!(
+        let mut fields = _pb::TupleFields::default();
+        fields.register_field::<#ty>();
+        ty.register_variant_tuple(#variant_name.into(), fields);
+    )
 }
 
 fn derive_struct_variant<'a>(
-    variant_name: &str,
-    variant_idx: usize,
-    fields: &Vec<ast::Field<'a>>,
+    variant_name: impl AsRef<str>,
+    _index: usize,
+    fields: impl AsRef<[ast::Field<'a>]>,
 ) -> TokenStream {
-    let contents = collapse_list_brace(
-        fields
-            .into_iter()
-            .enumerate()
-            .map(|(field_idx, field)| derive_field(variant_idx, field_idx, field))
-            .collect::<Vec<_>>(),
-    );
-    quote! {
-        | { "tag": #variant_name, "fields": #contents, }
-    }
+    let variant_name = variant_name.as_ref();
+    let body = fields.as_ref().iter().map(|field| {
+        let ty = field.ty;
+        let field_name = field.attrs.name().serialize_name();
+        quote!(fields.register_field::<#ty>(#field_name.into());)
+    });
+    quote!(
+        let mut fields = _pb::StructFields::default();
+        #(#body);*;
+        ty.register_unnamed_struct(#variant_name.into(), fields);
+    )
 }
 
 fn derive_tuple_variant<'a>(
-    variant_name: &str,
-    _variant_idx: usize,
-    fields: &Vec<ast::Field<'a>>,
+    variant_name: impl AsRef<str>,
+    _index: usize,
+    fields: impl AsRef<[ast::Field<'a>]>,
 ) -> TokenStream {
-    let contents = collapse_list_bracket(
-        fields
-            .into_iter()
-            .enumerate()
-            .map(|(element_idx, field)| derive_element(0, element_idx, &field))
-            .collect::<Vec<_>>(),
-    );
-    quote! {
-        | {"tag": #variant_name, "fields": #contents, }
-    }
+    let variant_name = variant_name.as_ref();
+    let body = fields.as_ref().iter().map(|field| {
+        let ty = field.ty;
+        quote!(fields.register_field::<#ty>();)
+    });
+    quote!(
+        let mut fields = _pb::TupleFields::default();
+        #(#body);*;
+        ty.register_variant_tuple(#variant_name.into(), fields);
+    )
 }

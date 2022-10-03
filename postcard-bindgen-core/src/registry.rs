@@ -6,6 +6,7 @@ use crate::type_info::{GenJsBinding, JsType};
 pub enum BindingType {
     Struct(StructType),
     TupleStruct(TupleStructType),
+    UnitStruct(UnitStructType),
     Enum(EnumType),
 }
 
@@ -45,7 +46,7 @@ impl EnumType {
         self.variants.push(EnumVariant {
             index: self.variants.len(),
             name,
-            inner_type: EnumVariantType::UnnamedStruct(fields.into_inner()),
+            inner_type: EnumVariantType::NewType(fields.into_inner()),
         })
     }
 }
@@ -57,12 +58,18 @@ pub struct EnumVariant {
     pub inner_type: EnumVariantType,
 }
 
+impl AsRef<EnumVariant> for EnumVariant {
+    fn as_ref(&self) -> &EnumVariant {
+        self
+    }
+}
+
 #[derive(Debug)]
 pub enum EnumVariantType {
     Empty,
     Tuple(Vec<JsType>),
     // for unnamed structs create struct with custom name ( __EnumName_Struct1)
-    UnnamedStruct(Vec<StructField>),
+    NewType(Vec<StructField>),
 }
 
 #[derive(Debug)]
@@ -103,6 +110,17 @@ impl TupleStructType {
 
     pub fn register_field<T: GenJsBinding>(&mut self) {
         self.fields.push(T::get_type())
+    }
+}
+
+#[derive(Debug)]
+pub struct UnitStructType {
+    pub name: String,
+}
+
+impl UnitStructType {
+    pub fn new(name: String) -> Self {
+        Self { name }
     }
 }
 
@@ -152,6 +170,10 @@ impl BindingsRegistry {
 
     pub fn register_tuple_struct_binding(&mut self, value: TupleStructType) {
         self.0.push(BindingType::TupleStruct(value));
+    }
+
+    pub fn register_unit_struct_binding(&mut self, value: UnitStructType) {
+        self.0.push(BindingType::UnitStruct(value));
     }
 
     pub fn register_enum_binding(&mut self, value: EnumType) {

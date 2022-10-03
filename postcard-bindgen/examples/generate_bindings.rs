@@ -18,7 +18,22 @@ struct OtherTest {
     #[serde(skip)]
     other: u16,
     test: Test,
+    tuple: TupleStruct,
+    unit: Unit,
+    enum_ty: Enum,
 }
+
+#[derive(Serialize, PostcardBindings)]
+#[allow(dead_code)]
+enum Enum {
+    A,
+    B(u8),
+    C(u8, u16),
+    D { a: u8, b: u16 },
+}
+
+#[derive(Serialize, PostcardBindings)]
+struct Unit;
 
 #[derive(Serialize, PostcardBindings)]
 struct TupleStruct(u8, u16, u32);
@@ -33,7 +48,7 @@ fn export_path() -> PathBuf {
 fn main() {
     export_bindings(
         &export_path(),
-        generate_bindings!(OtherTest, Test, TupleStruct),
+        generate_bindings!(OtherTest, Test, TupleStruct, Unit, Enum),
     )
     .unwrap();
 }

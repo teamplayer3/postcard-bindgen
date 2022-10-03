@@ -8,15 +8,16 @@ use std::{
     path::Path,
 };
 
+use convert_case::{Case, Casing};
 use genco::{prelude::JavaScript, quote, Tokens};
 
 use code_gen::{
     des::{self, gen_des_obj_function, gen_deserialize_func},
     gen_ser_des_classes,
-    ser::{gen_ser_obj_function, gen_serialize_func, tuple_struct},
-    type_checking::{self, gen_check_func},
+    ser::{self, gen_ser_obj_function, gen_serialize_func, tuple_struct},
+    type_checking,
 };
-use registry::{BindingType, StructType, TupleStructType};
+use registry::{BindingType, EnumType, StructType, TupleStructType};
 
 pub enum ArchPointerLen {
     U32,
@@ -53,16 +54,18 @@ pub fn export_bindings(path: &Path, bindings: impl AsRef<str>) -> io::Result<()>
 
 pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
     let ser_des_body = tys.iter().map(|ty| match ty {
-        BindingType::Enum(_ty) => todo!(),
+        BindingType::Enum(ty) => generate_js_enum(ty),
         BindingType::Struct(ty) => generate_js_object(ty),
         BindingType::TupleStruct(ty) => generate_js_object_tuple(ty),
+        BindingType::UnitStruct(ty) => generate_js_obj_unit(&ty.name),
     });
     let type_check_body = tys.iter().map(|ty| match ty {
-        BindingType::Enum(_ty) => todo!(),
-        BindingType::Struct(ty) => gen_check_func(&ty.name, &ty.fields),
+        BindingType::Enum(ty) => type_checking::enum_ty::gen_check_func(&ty.name, &ty.variants),
+        BindingType::Struct(ty) => type_checking::strukt::gen_check_func(&ty.name, &ty.fields),
         BindingType::TupleStruct(ty) => {
             type_checking::tuple_struct::gen_check_func(&ty.name, &ty.fields)
         }
+        BindingType::UnitStruct(ty) => type_checking::unit_struct::gen_check_func(&ty.name),
     });
     quote!(
         $(gen_ser_des_classes(ArchPointerLen::U32))
@@ -71,6 +74,13 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         $(gen_serialize_func(&tys))
         $(gen_deserialize_func(&tys))
     )
+}
+
+fn generate_js_obj_unit(name: impl AsRef<str>) -> Tokens<JavaScript> {
+    quote! {
+        $(gen_ser_obj_function(name.as_ref().to_owned(), &[]))
+        $(gen_des_obj_function(name, &[]))
+    }
 }
 
 fn generate_js_object(ty: &StructType) -> Tokens<JavaScript> {
@@ -89,13 +99,23 @@ fn generate_js_object_tuple(ty: &TupleStructType) -> Tokens<JavaScript> {
     }
 }
 
+fn generate_js_enum(ty: &EnumType) -> Tokens<JavaScript> {
+    let obj_name = &ty.name;
+    quote! {
+        $(ser::enum_ty::gen_ser_enum_function(obj_name, &ty.variants))
+        $(des::enum_ty::gen_des_enum_function(obj_name, &ty.variants))
+    }
+}
+
 pub trait StringExt {
     fn trim_all(self) -> Self;
     fn is_signed_pref(&self) -> Option<bool>;
+    fn to_obj_identifier(&self) -> Self;
 }
 
 pub trait StrExt {
     fn is_signed_pref(&self) -> Option<bool>;
+    fn to_obj_identifier(&self) -> String;
 }
 
 impl StringExt for String {
@@ -107,11 +127,19 @@ impl StringExt for String {
     fn is_signed_pref(&self) -> Option<bool> {
         is_signed_pref(self.as_str())
     }
+
+    fn to_obj_identifier(&self) -> Self {
+        self.to_case(Case::Snake).to_uppercase()
+    }
 }
 
 impl<'a> StrExt for &'a str {
     fn is_signed_pref(&self) -> Option<bool> {
         is_signed_pref(self)
+    }
+
+    fn to_obj_identifier(&self) -> String {
+        self.to_case(Case::Snake).to_uppercase()
     }
 }
 
