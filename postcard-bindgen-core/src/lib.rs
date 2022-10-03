@@ -15,7 +15,7 @@ use code_gen::{
     des::{self, gen_des_obj_function, gen_deserialize_func},
     gen_ser_des_classes,
     ser::{self, gen_ser_obj_function, gen_serialize_func, tuple_struct},
-    type_checking,
+    type_checking::gen_type_checkings,
 };
 use registry::{BindingType, EnumType, StructType, TupleStructType};
 
@@ -59,18 +59,11 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         BindingType::TupleStruct(ty) => generate_js_object_tuple(ty),
         BindingType::UnitStruct(ty) => generate_js_obj_unit(&ty.name),
     });
-    let type_check_body = tys.iter().map(|ty| match ty {
-        BindingType::Enum(ty) => type_checking::ty_enum::gen_check_func(&ty.name, &ty.variants),
-        BindingType::Struct(ty) => type_checking::strukt::gen_check_func(&ty.name, &ty.fields),
-        BindingType::TupleStruct(ty) => {
-            type_checking::tuple_struct::gen_check_func(&ty.name, &ty.fields)
-        }
-        BindingType::UnitStruct(ty) => type_checking::unit_struct::gen_check_func(&ty.name),
-    });
+    let type_checks = gen_type_checkings(&tys);
     quote!(
         $(gen_ser_des_classes(ArchPointerLen::U32))
         $(ser_des_body.map(|body| body.to_string().unwrap()).collect::<Vec<_>>().join("\n"))
-        $(type_check_body.map(|body| body.to_string().unwrap()).collect::<Vec<_>>().join("\n"))
+        $type_checks
         $(gen_serialize_func(&tys))
         $(gen_deserialize_func(&tys))
     )

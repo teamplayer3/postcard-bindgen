@@ -1,7 +1,7 @@
-pub mod strukt;
-pub mod tuple_struct;
-pub mod ty_enum;
-pub mod unit_struct;
+mod strukt;
+mod tuple_struct;
+mod ty_enum;
+mod unit_struct;
 
 use genco::{
     lang::js::Tokens,
@@ -11,11 +11,19 @@ use genco::{
 };
 
 use crate::{
-    registry::StructField,
+    registry::{BindingType, StructField},
     type_info::{JsType, ObjectMeta},
     StringExt,
 };
 
+pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
+    line_brake_chain(bindings.as_ref().iter().map(|ty| match ty {
+        BindingType::Enum(ty) => ty_enum::gen_check_func(&ty.name, &ty.variants),
+        BindingType::Struct(ty) => strukt::gen_check_func(&ty.name, &ty.fields),
+        BindingType::TupleStruct(ty) => tuple_struct::gen_check_func(&ty.name, &ty.fields),
+        BindingType::UnitStruct(ty) => unit_struct::gen_check_func(&ty.name),
+    }))
+}
 enum FieldAccess<'a> {
     Object(&'a str),
     Array(usize),
@@ -105,6 +113,18 @@ fn and_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
 
 fn or_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
     quote!($(for part in parts join (||) => $part))
+}
+
+fn line_brake_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
+    quote!($(for part in parts join ($['\n']) => $part))
+}
+
+#[allow(unused)]
+fn joined_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
+    parts.into_iter().fold(Tokens::new(), |mut res, p| {
+        res.append(p);
+        res
+    })
 }
 
 #[cfg(test)]
