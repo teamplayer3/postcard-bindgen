@@ -5,37 +5,20 @@ const test = {
     other: 24322
 }
 
-const otherTest = {
-    name: 2,
-    test: test,
-    tuple: [123, 124, 1],
-    unit: {},
-    enum_ty: {
-        key: "B",
-        inner: [2345]
-    }
+const d = {
+    a: 22,
+    b: {
+        key: "D",
+        inner: {
+            a: 234,
+            b: [123]
+        }
+    },
+    c: {}
 }
 
-const bytes = serialize("OtherTest", otherTest)
+const bytes = serialize("D", d)
 console.log(bytes)
 
-const deser = deserialize("OtherTest", bytes)
+const deser = deserialize("D", bytes)
 console.log(deser)
-
-const enum_1 = "A"
-const enum_2 = {
-    type: "B",
-    inner: [23, 2312]
-}
-const enum_3 = "C"
-const enum_4 = {
-    type: "D",
-    inner: {
-        a: 123,
-        b: 12343
-    }
-}
-
-// enum {
-//     A, B(u8, u16), C, D { a: u8, b: u64 }
-// }

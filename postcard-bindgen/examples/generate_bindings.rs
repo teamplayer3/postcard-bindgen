@@ -6,37 +6,26 @@ use serde_derive::Serialize;
 extern crate alloc;
 
 #[derive(Serialize, PostcardBindings)]
-struct Test {
-    name: u8,
-    other: u16,
-}
+struct A;
 
 #[derive(Serialize, PostcardBindings)]
-struct OtherTest {
-    name: u8,
-    #[allow(dead_code)]
-    #[serde(skip)]
-    other: u16,
-    test: Test,
-    tuple: TupleStruct,
-    unit: Unit,
-    enum_ty: Enum,
-}
+struct B(u8);
 
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
-enum Enum {
+enum C {
     A,
     B(u8),
-    C(u8, u16),
-    D { a: u8, b: u16 },
+    C(A, B),
+    D { a: u8, b: B },
 }
 
 #[derive(Serialize, PostcardBindings)]
-struct Unit;
-
-#[derive(Serialize, PostcardBindings)]
-struct TupleStruct(u8, u16, u32);
+struct D {
+    a: u8,
+    b: C,
+    c: A,
+}
 
 fn export_path() -> PathBuf {
     let mut exec_path = std::env::current_exe().unwrap();
@@ -46,9 +35,5 @@ fn export_path() -> PathBuf {
 }
 
 fn main() {
-    export_bindings(
-        &export_path(),
-        generate_bindings!(OtherTest, Test, TupleStruct, Unit, Enum),
-    )
-    .unwrap();
+    export_bindings(&export_path(), generate_bindings!(A, B, C, D)).unwrap();
 }
