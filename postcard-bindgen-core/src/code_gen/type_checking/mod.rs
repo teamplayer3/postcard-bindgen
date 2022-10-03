@@ -13,7 +13,7 @@ use genco::{
 use crate::{
     registry::{BindingType, StructField},
     type_info::{JsType, ObjectMeta},
-    StringExt,
+    utils::StringExt,
 };
 
 use super::line_brake_chain;

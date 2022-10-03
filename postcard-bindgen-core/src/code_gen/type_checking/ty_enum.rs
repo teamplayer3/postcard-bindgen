@@ -2,7 +2,7 @@ use genco::{lang::js::Tokens, quote, tokens::quoted};
 
 use crate::{
     registry::{EnumVariant, EnumVariantType},
-    StrExt,
+    utils::StrExt,
 };
 
 use super::{

@@ -1,6 +1,6 @@
 use genco::{lang::js::Tokens, quote};
 
-use crate::{registry::StructField, StrExt};
+use crate::{registry::StructField, utils::StrExt};
 
 use super::{gen_struct_field_available_checks, gen_struct_field_type_checks, InnerTypeAccess};
 

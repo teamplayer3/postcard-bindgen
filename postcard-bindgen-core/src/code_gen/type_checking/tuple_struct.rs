@@ -1,6 +1,6 @@
 use genco::{lang::js::Tokens, quote};
 
-use crate::{type_info::JsType, StrExt};
+use crate::{type_info::JsType, utils::StrExt};
 
 use super::{gen_array_field_type_checks, InnerTypeAccess};
 

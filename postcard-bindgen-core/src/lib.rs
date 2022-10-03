@@ -1,6 +1,7 @@
 mod code_gen;
 pub mod registry;
 pub mod type_info;
+mod utils;
 
 use std::{
     fs::File,
@@ -8,7 +9,6 @@ use std::{
     path::Path,
 };
 
-use convert_case::{Case, Casing};
 use genco::{prelude::JavaScript, quote, Tokens};
 
 use code_gen::{
@@ -61,51 +61,4 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         $(gen_serialize_func(&tys))
         $(gen_deserialize_func(&tys))
     )
-}
-
-pub trait StringExt {
-    fn trim_all(self) -> Self;
-    fn is_signed_pref(&self) -> Option<bool>;
-    fn to_obj_identifier(&self) -> Self;
-}
-
-pub trait StrExt {
-    fn is_signed_pref(&self) -> Option<bool>;
-    fn to_obj_identifier(&self) -> String;
-}
-
-impl StringExt for String {
-    fn trim_all(mut self) -> Self {
-        self.retain(|c| !c.is_whitespace());
-        self
-    }
-
-    fn is_signed_pref(&self) -> Option<bool> {
-        is_signed_pref(self.as_str())
-    }
-
-    fn to_obj_identifier(&self) -> Self {
-        self.to_case(Case::Snake).to_uppercase()
-    }
-}
-
-impl<'a> StrExt for &'a str {
-    fn is_signed_pref(&self) -> Option<bool> {
-        is_signed_pref(self)
-    }
-
-    fn to_obj_identifier(&self) -> String {
-        self.to_case(Case::Snake).to_uppercase()
-    }
-}
-
-fn is_signed_pref(s: &str) -> Option<bool> {
-    if s.len() != 1 {
-        return None;
-    }
-    match s.chars().next().unwrap() {
-        'i' => Some(true),
-        'u' => Some(false),
-        _ => None,
-    }
 }

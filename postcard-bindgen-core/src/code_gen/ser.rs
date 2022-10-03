@@ -65,7 +65,7 @@ pub mod strukt {
     use crate::{
         registry::StructField,
         type_info::{JsType, ObjectMeta},
-        StringExt,
+        utils::StringExt,
     };
 
     pub fn gen_ser_obj_function(
@@ -140,7 +140,7 @@ pub mod enum_ty {
     use crate::{
         registry::{EnumVariant, EnumVariantType, StructField},
         type_info::{JsType, ObjectMeta},
-        StrExt, StringExt,
+        utils::{StrExt, StringExt},
     };
 
     use super::FieldAccess;

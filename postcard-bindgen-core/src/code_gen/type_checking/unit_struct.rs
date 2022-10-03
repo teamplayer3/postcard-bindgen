@@ -1,6 +1,6 @@
 use genco::{lang::js::Tokens, quote};
 
-use crate::StrExt;
+use crate::utils::StrExt;
 
 pub fn gen_check_func(obj_name: impl AsRef<str>) -> Tokens {
     let obj_name = obj_name.as_ref();

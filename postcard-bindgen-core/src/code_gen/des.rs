@@ -46,7 +46,7 @@ pub mod strukt {
     use crate::{
         registry::StructField,
         type_info::{JsType, ObjectMeta},
-        StrExt, StringExt,
+        utils::{StrExt, StringExt},
     };
 
     pub fn gen_des_obj_function(
@@ -126,7 +126,7 @@ pub mod enum_ty {
     use crate::{
         registry::{EnumVariant, EnumVariantType, StructField},
         type_info::{JsType, ObjectMeta},
-        StrExt, StringExt,
+        utils::{StrExt, StringExt},
     };
 
     enum FieldAccess {
