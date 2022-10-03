@@ -169,7 +169,7 @@ pub mod enum_ty {
 
     use crate::{
         registry::{EnumVariant, EnumVariantType, StructField},
-        type_info::{JsType, ObjectMeta},
+        type_info::{ArrayMeta, JsType, ObjectMeta},
         utils::{StrExt, StringExt},
     };
 
@@ -256,6 +256,24 @@ pub mod enum_ty {
 
     fn gen_ser_function(field_access: FieldAccess, ty: &JsType) -> Tokens {
         // |s.serialize_<type>(<args...>, v.<field>);|
-        quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.inner$field_access);)
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v.inner$field_access);)
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v.inner$field_access);)
+            }
+        }
+    }
+
+    fn gen_ser_function_nested(ty: &JsType) -> Tokens {
+        match ty {
+            JsType::Array(ArrayMeta { items_type }) => {
+                quote!(s.serialize_$(ty.as_func_name())((s, v) => $(gen_ser_function_nested(&*items_type)),v))
+            }
+            _ => {
+                quote!(s.serialize_$(ty.as_func_name())($(ty.as_js_func_args().join(",")),v))
+            }
+        }
     }
 }

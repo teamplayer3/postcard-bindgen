@@ -17,7 +17,7 @@ enum C {
     A,
     B(u8),
     C(A, B),
-    D { a: u8, b: B },
+    D { a: Vec<u8>, b: B },
 }
 
 #[derive(Serialize, PostcardBindings)]
@@ -41,7 +41,7 @@ fn main() {
     let d = D {
         a: 123,
         b: C::D {
-            a: 132,
+            a: vec![6, 123],
             b: B(231, vec![182, 1234]),
         },
         c: A,
