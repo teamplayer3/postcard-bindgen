@@ -11,7 +11,7 @@ pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStr
         Style::Struct => derive_struct_type(ident, fields),
         Style::Tuple => derive_tuple_struct_type(ident, fields),
         Style::Unit => derive_unit_struct_type(ident),
-        _ => unimplemented!(),
+        Style::Newtype => derive_tuple_struct_type(ident, fields),
     }
 }
 
