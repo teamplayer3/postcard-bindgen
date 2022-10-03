@@ -27,41 +27,70 @@ impl FormatInto<JavaScript> for FieldAccess<'_> {
     }
 }
 
-fn gen_struct_field_available_checks(fields: impl AsRef<[StructField]>) -> Tokens {
-    and_chain(
-        fields
-            .as_ref()
-            .iter()
-            .map(|field| quote!( $(quoted(&field.name)) in v)),
-    )
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum InnerTypeAccess {
+    Direct,
+    EnumInner,
 }
 
-fn gen_struct_field_type_checks(fields: impl AsRef<[StructField]>) -> Tokens {
-    and_chain(
-        fields
-            .as_ref()
-            .iter()
-            .map(|field| gen_field_type_check(FieldAccess::Object(&field.name), &field.js_type)),
-    )
-}
-
-fn gen_array_field_type_checks(fields: impl AsRef<[JsType]>) -> Tokens {
-    and_chain(
-        fields
-            .as_ref()
-            .iter()
-            .enumerate()
-            .map(|(index, field)| gen_field_type_check(FieldAccess::Array(index), field)),
-    )
-}
-
-fn gen_field_type_check(field_access: FieldAccess, ty: &JsType) -> Tokens {
-    match ty {
-        JsType::Array(_) => quote!(Array.isArray(v$field_access)),
-        JsType::Object(ObjectMeta { name }) => {
-            quote!(is_$(name.to_obj_identifier())(v$field_access))
+impl FormatInto<JavaScript> for InnerTypeAccess {
+    fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
+        quote_in! { *tokens =>
+            $(match self {
+                InnerTypeAccess::Direct => (),
+                InnerTypeAccess::EnumInner => .inner
+            })
         }
-        _ => quote!(typeof v$field_access === $(quoted(ty.to_string()))),
+    }
+}
+
+fn gen_struct_field_available_checks(
+    fields: impl AsRef<[StructField]>,
+    inner_access: InnerTypeAccess,
+) -> Tokens {
+    and_chain(
+        fields
+            .as_ref()
+            .iter()
+            .map(|field| quote!( $(quoted(&field.name)) in v$inner_access)),
+    )
+}
+
+fn gen_struct_field_type_checks(
+    fields: impl AsRef<[StructField]>,
+    inner_access: InnerTypeAccess,
+) -> Tokens {
+    and_chain(fields.as_ref().iter().map(|field| {
+        gen_field_type_check(
+            FieldAccess::Object(&field.name),
+            &field.js_type,
+            inner_access,
+        )
+    }))
+}
+
+fn gen_array_field_type_checks(
+    fields: impl AsRef<[JsType]>,
+    inner_access: InnerTypeAccess,
+) -> Tokens {
+    and_chain(
+        fields.as_ref().iter().enumerate().map(|(index, field)| {
+            gen_field_type_check(FieldAccess::Array(index), field, inner_access)
+        }),
+    )
+}
+
+fn gen_field_type_check(
+    field_access: FieldAccess,
+    ty: &JsType,
+    inner_access: InnerTypeAccess,
+) -> Tokens {
+    match ty {
+        JsType::Array(_) => quote!(Array.isArray(v$inner_access$field_access)),
+        JsType::Object(ObjectMeta { name }) => {
+            quote!(is_$(name.to_obj_identifier())(v$inner_access$field_access))
+        }
+        _ => quote!(typeof v$inner_access$field_access === $(quoted(ty.to_string()))),
     }
 }
 
@@ -70,13 +99,14 @@ pub mod strukt {
 
     use crate::{registry::StructField, StrExt};
 
-    use super::{gen_struct_field_available_checks, gen_struct_field_type_checks};
+    use super::{gen_struct_field_available_checks, gen_struct_field_type_checks, InnerTypeAccess};
 
     pub fn gen_check_func(obj_name: impl AsRef<str>, fields: impl AsRef<[StructField]>) -> Tokens {
         let obj_name = obj_name.as_ref();
 
-        let field_available_checks = gen_struct_field_available_checks(&fields);
-        let field_type_checks = gen_struct_field_type_checks(&fields);
+        let field_available_checks =
+            gen_struct_field_available_checks(&fields, InnerTypeAccess::Direct);
+        let field_type_checks = gen_struct_field_type_checks(&fields, InnerTypeAccess::Direct);
 
         quote! {
             const is_$(obj_name.to_obj_identifier()) = (v) => {
@@ -91,13 +121,13 @@ pub mod tuple_struct {
 
     use crate::{type_info::JsType, StrExt};
 
-    use super::gen_array_field_type_checks;
+    use super::{gen_array_field_type_checks, InnerTypeAccess};
 
     pub fn gen_check_func(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
         let obj_name = obj_name.as_ref();
 
         let field_count = fields.as_ref().len();
-        let field_type_checks = gen_array_field_type_checks(fields);
+        let field_type_checks = gen_array_field_type_checks(fields, InnerTypeAccess::Direct);
 
         quote! {
             const is_$(obj_name.to_obj_identifier()) = (v) => {
@@ -133,7 +163,7 @@ pub mod enum_ty {
 
     use super::{
         and_chain, gen_array_field_type_checks, gen_struct_field_available_checks,
-        gen_struct_field_type_checks, or_chain,
+        gen_struct_field_type_checks, or_chain, InnerTypeAccess,
     };
 
     pub fn gen_check_func(
@@ -190,12 +220,13 @@ pub mod enum_ty {
         match &variant.inner_type {
             EnumVariantType::Empty => unreachable!(),
             EnumVariantType::NewType(fields) => {
-                let field_checks = gen_struct_field_available_checks(fields);
-                let type_checks = gen_struct_field_type_checks(fields);
+                let field_checks =
+                    gen_struct_field_available_checks(fields, InnerTypeAccess::EnumInner);
+                let type_checks = gen_struct_field_type_checks(fields, InnerTypeAccess::EnumInner);
                 quote!($field_checks && $type_checks)
             }
             EnumVariantType::Tuple(fields) => {
-                let type_checks = gen_array_field_type_checks(fields);
+                let type_checks = gen_array_field_type_checks(fields, InnerTypeAccess::EnumInner);
                 quote!(Array.isArray(v.inner) && v.inner.length === $(fields.len()) && $type_checks)
             }
         }
