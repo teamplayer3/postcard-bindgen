@@ -252,7 +252,7 @@ pub mod enum_ty {
     }
 
     fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
-        let variant_name = quoted(variant.as_ref().name.as_str());
+        let variant_name = quoted(variant.name.as_str());
         let body = match &variant.inner_type {
             EnumVariantType::Empty => CaseBody::None,
             EnumVariantType::Tuple(fields) => CaseBody::Body(semicolon_chain(
