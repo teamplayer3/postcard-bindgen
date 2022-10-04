@@ -10,6 +10,17 @@ pub enum BindingType {
     Enum(EnumType),
 }
 
+impl BindingType {
+    pub fn inner_name(&self) -> String {
+        match self {
+            Self::Struct(StructType { name, fields: _ }) => name.to_owned(),
+            Self::TupleStruct(TupleStructType { name, fields: _ }) => name.to_owned(),
+            Self::Enum(EnumType { name, variants: _ }) => name.to_owned(),
+            Self::UnitStruct(UnitStructType { name }) => name.to_owned(),
+        }
+    }
+}
+
 #[derive(Debug)]
 // encoded into | variant index | (inner)
 pub struct EnumType {

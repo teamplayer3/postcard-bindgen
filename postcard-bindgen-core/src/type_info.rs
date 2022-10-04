@@ -30,7 +30,7 @@ impl JsType {
             JsType::Number(_) => "number",
             JsType::Array(_) => "array",
             JsType::String(_) => "string",
-            JsType::Object(_) => unimplemented!(),
+            JsType::Object(_) => "object",
         }
     }
 }
