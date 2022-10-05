@@ -18,13 +18,6 @@ impl ToString for JsType {
 }
 
 impl JsType {
-    pub(crate) fn as_js_func_args(&self) -> Option<Vec<&'static str>> {
-        match self {
-            JsType::Number(m) => Some(vec![m.as_byte_js_string(), bool_to_js_bool(m.signed)]),
-            _ => None,
-        }
-    }
-
     pub(crate) fn as_func_name(&self) -> &'static str {
         match self {
             JsType::Number(_) => "number",

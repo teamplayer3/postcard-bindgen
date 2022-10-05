@@ -73,3 +73,7 @@ fn joined_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
 fn semicolon_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
     quote!($(for part in parts join (;) => $part))
 }
+
+fn comma_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
+    quote!($(for part in parts join (,) => $part))
+}
