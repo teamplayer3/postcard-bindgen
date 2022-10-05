@@ -152,7 +152,7 @@ pub mod enum_ty {
     use genco::{lang::js::Tokens, quote, tokens::quoted};
 
     use crate::{
-        code_gen::semicolon_chain,
+        code_gen::{semicolon_chain, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE},
         registry::{EnumVariant, EnumVariantType},
         utils::StrExt,
     };
@@ -162,11 +162,13 @@ pub mod enum_ty {
     pub fn gen_function(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
         let enumerated_variants = variants.as_ref().iter().enumerate();
+        let switch_body = semicolon_chain(
+            enumerated_variants.map(|(index, variant)| gen_case_for_variant(index, variant)),
+        );
         quote! {
             const deserialize_$(obj_name_upper) = (d) => {
                 switch (d.deserialize_number(U32_BYTES, false)) {
-                    $(semicolon_chain(enumerated_variants.to_owned().filter(|(_, v)| matches!(v.inner_type, EnumVariantType::Empty)).map(|(index, variant)| gen_case_for_variant(index, variant))))
-                    $(semicolon_chain(enumerated_variants.filter(|(_, v)| !matches!(v.inner_type, EnumVariantType::Empty)).map(|(index, variant)| gen_case_for_variant(index, variant))))
+                    $switch_body
                     default: throw "variant not implemented"
                 }
             }
@@ -177,9 +179,13 @@ pub mod enum_ty {
         let variant_name = quoted(&variant.name);
         let body = match &variant.inner_type {
             EnumVariantType::Empty => Tokens::new(),
-            EnumVariantType::NewType(fields) => quote!(, inner: $(gen_accessor_struct(fields))),
-            EnumVariantType::Tuple(fields) => quote!(, inner: $(gen_accessor_tuple(fields))),
+            EnumVariantType::NewType(fields) => {
+                quote!(, $JS_ENUM_VARIANT_VALUE: $(gen_accessor_struct(fields)))
+            }
+            EnumVariantType::Tuple(fields) => {
+                quote!(, $JS_ENUM_VARIANT_VALUE: $(gen_accessor_tuple(fields)))
+            }
         };
-        quote!(case $index: return { key: $variant_name $body})
+        quote!(case $index: return { $JS_ENUM_VARIANT_KEY: $variant_name $body})
     }
 }

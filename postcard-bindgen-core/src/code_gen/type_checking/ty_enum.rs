@@ -1,6 +1,7 @@
 use genco::{lang::js::Tokens, quote, tokens::quoted};
 
 use crate::{
+    code_gen::{JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE},
     registry::{EnumVariant, EnumVariantType},
     utils::StrExt,
 };
@@ -35,8 +36,10 @@ fn gen_simple_type_checks<'a>(
     if variants.to_owned().count() == 0 {
         Tokens::new()
     } else {
-        let variant_checks =
-            and_chain(variants.map(|(_, variant)| quote!(v === $(quoted(&variant.name)))));
+        let variant_checks = and_chain(
+            variants
+                .map(|(_, variant)| quote!(v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)))),
+        );
         let type_check = simple_enum_type_check();
         quote!(($type_check && $variant_checks))
     }
@@ -50,7 +53,7 @@ fn gen_complex_type_checks<'a>(
     } else {
         let variant_checks = or_chain(variants.map(|(_, variant)| {
             let inner_type_checks = gen_variant_check(variant);
-            quote!((v.key === $(quoted(&variant.name)) && $inner_type_checks))
+            quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)) && $inner_type_checks))
         }));
         let type_check = complex_enum_type_check();
         quote!(($type_check && $variant_checks))
@@ -68,15 +71,15 @@ fn gen_variant_check(variant: &EnumVariant) -> Tokens {
         }
         EnumVariantType::Tuple(fields) => {
             let type_checks = gen_array_field_type_checks(fields, InnerTypeAccess::EnumInner);
-            quote!(Array.isArray(v.inner) && v.inner.length === $(fields.len()) && $type_checks)
+            quote!(Array.isArray(v.$JS_ENUM_VARIANT_VALUE) && v.$JS_ENUM_VARIANT_VALUE.length === $(fields.len()) && $type_checks)
         }
     }
 }
 
 fn simple_enum_type_check() -> Tokens {
-    quote!(typeof v === "string")
+    quote!(typeof v === "object" && $(quoted(JS_ENUM_VARIANT_KEY)))
 }
 
 fn complex_enum_type_check() -> Tokens {
-    quote!(typeof v === "object" && "key" in v && "inner" in v)
+    quote!(typeof v === "object" && $(quoted(JS_ENUM_VARIANT_KEY)) in v && $(quoted(JS_ENUM_VARIANT_VALUE)) in v)
 }

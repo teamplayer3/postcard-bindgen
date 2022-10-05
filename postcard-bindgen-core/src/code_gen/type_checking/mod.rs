@@ -16,7 +16,7 @@ use crate::{
     utils::StringExt,
 };
 
-use super::line_brake_chain;
+use super::{line_brake_chain, JS_ENUM_VARIANT_VALUE};
 
 pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
     line_brake_chain(bindings.as_ref().iter().map(|ty| match ty {
@@ -53,7 +53,7 @@ impl FormatInto<JavaScript> for InnerTypeAccess {
         quote_in! { *tokens =>
             $(match self {
                 InnerTypeAccess::Direct => (),
-                InnerTypeAccess::EnumInner => .inner
+                InnerTypeAccess::EnumInner => .$JS_ENUM_VARIANT_VALUE
             })
         }
     }

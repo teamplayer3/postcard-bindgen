@@ -9,6 +9,9 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::registry::{BindingType, EnumType, StructType, TupleStructType};
 
+const JS_ENUM_VARIANT_KEY: &str = "tag";
+const JS_ENUM_VARIANT_VALUE: &str = "value";
+
 pub fn gen_ser_des_classes() -> Tokens {
     quote!(
         const U8_BYTES = 1, U16_BYTES = 2, U32_BYTES = 4, U64_BYTES = 8, U128_BYTES = 16;

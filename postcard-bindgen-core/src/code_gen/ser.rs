@@ -11,7 +11,7 @@ use crate::{
     utils::StringExt,
 };
 
-use super::semicolon_chain;
+use super::{semicolon_chain, JS_ENUM_VARIANT_VALUE};
 
 enum FieldAccessor<'a> {
     Object(&'a str),
@@ -42,7 +42,7 @@ impl FormatInto<JavaScript> for InnerTypeAccess {
         quote_in! { *tokens =>
             $(match self {
                 InnerTypeAccess::Direct => (),
-                InnerTypeAccess::EnumInner => .inner
+                InnerTypeAccess::EnumInner => .$JS_ENUM_VARIANT_VALUE
             })
         }
     }
@@ -225,6 +225,7 @@ pub mod enum_ty {
     };
 
     use crate::{
+        code_gen::{semicolon_chain, JS_ENUM_VARIANT_KEY},
         registry::{EnumVariant, EnumVariantType},
         utils::StrExt,
     };
@@ -234,16 +235,13 @@ pub mod enum_ty {
     pub fn gen_function(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
         let enumerated_variants = variants.as_ref().iter().enumerate();
+        let switch_body = semicolon_chain(
+            enumerated_variants.map(|(index, variant)| gen_case_for_variant(index, variant)),
+        );
         quote! {
             const serialize_$(obj_name_upper) = (s, v) => {
-                if (typeof v === "string") {
-                    switch (v) {
-                        $(enumerated_variants.to_owned().filter(|(_, v)| matches!(v.inner_type, EnumVariantType::Empty)).map(|(index, variant)| gen_case_for_variant(index, variant)).collect::<Vec<_>>())
-                    }
-                } else {
-                    switch (v.key) {
-                        $(enumerated_variants.filter(|(_, v)| !matches!(v.inner_type, EnumVariantType::Empty)).map(|(index, variant)| gen_case_for_variant(index, variant)).collect::<Vec<_>>())
-                    }
+                switch (v.$JS_ENUM_VARIANT_KEY) {
+                    $switch_body
                 }
             }
         }
@@ -277,6 +275,6 @@ pub mod enum_ty {
             }
         };
 
-        quote!(case $variant_name: s.serialize_number(U32_BYTES, false, $index); $body break;)
+        quote!(case $variant_name: s.serialize_number(U32_BYTES, false, $index); $body break)
     }
 }

@@ -4,8 +4,8 @@ import fs from "fs";
 const d = {
     a: 22,
     b: {
-        key: "D",
-        inner: {
+        tag: "D",
+        value: {
             a: [234, 224],
             b: [123, [123, 431, 123232], "Hello"]
         }
