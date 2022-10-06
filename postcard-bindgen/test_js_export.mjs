@@ -11,7 +11,7 @@ const d = {
         }
     },
     c: {},
-    d: [234, 213, 123]
+    d: [234, 213, 123],
 }
 
 const bytes = serialize("D", d)

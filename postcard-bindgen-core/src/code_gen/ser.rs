@@ -13,6 +13,7 @@ use crate::{
 
 use super::{semicolon_chain, JS_ENUM_VARIANT_VALUE};
 
+#[derive(Debug, Clone, Copy)]
 enum FieldAccessor<'a> {
     Object(&'a str),
     Array(usize),
@@ -70,7 +71,17 @@ fn gen_accessor(
         JsType::Number(n) => gen_accessor_number(accessor_type, n, field_access, field_accessor),
         JsType::String(_) => gen_accessor_simple(accessor_type, field_access, field_accessor),
         JsType::Object(o) => gen_accessor_object(o, field_access, field_accessor),
+        JsType::Optional(t) => gen_accessor_optional(t, field_access, field_accessor),
     }
+}
+
+fn gen_accessor_optional(
+    inner_type: &JsType,
+    field_access: InnerTypeAccess,
+    field_accessor: FieldAccessor,
+) -> Tokens {
+    let type_accessor = gen_accessor(inner_type, field_access, field_accessor);
+    quote!(if (v$field_access$field_accessor !== undefined) { s.serialize_number(U32_BYTES, false, 1); $type_accessor } else { s.serialize_number(U32_BYTES, false, 0) })
 }
 
 // quote!(s.serialize_$(ty.as_func_name())(v.$(field.as_ref())))

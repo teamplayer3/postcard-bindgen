@@ -6,10 +6,7 @@ use crate::{
     utils::StrExt,
 };
 
-use super::{
-    and_chain, gen_array_field_type_checks, gen_struct_field_available_checks,
-    gen_struct_field_type_checks, or_chain, InnerTypeAccess,
-};
+use super::{and_chain, gen_array_checks, gen_object_checks, or_chain, InnerTypeAccess};
 
 pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
     let obj_name = obj_name.as_ref();
@@ -23,11 +20,8 @@ pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVaria
 
     let simple_variant_checks = gen_simple_type_checks(simple_variants);
     let complex_variant_checks = gen_complex_type_checks(complex_variants);
-    quote!(
-        const is_$(obj_name.to_obj_identifier()) = (v) => {
-            return $simple_variant_checks || $complex_variant_checks
-        }
-    )
+
+    quote!(const is_$(obj_name.to_obj_identifier()) = (v) => ($simple_variant_checks || $complex_variant_checks))
 }
 
 fn gen_simple_type_checks<'a>(
@@ -63,16 +57,8 @@ fn gen_complex_type_checks<'a>(
 fn gen_variant_check(variant: &EnumVariant) -> Tokens {
     match &variant.inner_type {
         EnumVariantType::Empty => unreachable!(),
-        EnumVariantType::NewType(fields) => {
-            let field_checks =
-                gen_struct_field_available_checks(fields, InnerTypeAccess::EnumInner);
-            let type_checks = gen_struct_field_type_checks(fields, InnerTypeAccess::EnumInner);
-            quote!($field_checks && $type_checks)
-        }
-        EnumVariantType::Tuple(fields) => {
-            let type_checks = gen_array_field_type_checks(fields, InnerTypeAccess::EnumInner);
-            quote!(Array.isArray(v.$JS_ENUM_VARIANT_VALUE) && v.$JS_ENUM_VARIANT_VALUE.length === $(fields.len()) && $type_checks)
-        }
+        EnumVariantType::NewType(fields) => gen_object_checks(fields, InnerTypeAccess::EnumInner),
+        EnumVariantType::Tuple(fields) => gen_array_checks(fields, InnerTypeAccess::EnumInner),
     }
 }
 

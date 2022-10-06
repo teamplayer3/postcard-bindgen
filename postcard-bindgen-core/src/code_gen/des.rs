@@ -13,17 +13,19 @@ use crate::{
 
 use super::{comma_chain, semicolon_chain};
 
+#[derive(Debug, Clone, Copy)]
 enum FieldAccessor<'a> {
     Object(&'a str),
     Array,
+    None,
 }
 
 impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
     fn format_into(self, tokens: &mut Tokens) {
         quote_in! { *tokens =>
             $(match self {
-                Self::Array => (),
-                Self::Object(n) => $n:
+                Self::Array | Self::None => (),
+                Self::Object(n) => $n:,
             })
         }
     }
@@ -36,7 +38,13 @@ fn gen_accessor(js_type: &JsType, field_accessor: FieldAccessor) -> Tokens {
         JsType::Number(n) => gen_accessor_number(accessor_type, n, field_accessor),
         JsType::String(_) => gen_accessor_simple(accessor_type, field_accessor),
         JsType::Object(o) => gen_accessor_object(o, field_accessor),
+        JsType::Optional(t) => gen_accessor_optional(t, field_accessor),
     }
+}
+
+fn gen_accessor_optional(inner_type: &JsType, field_accessor: FieldAccessor) -> Tokens {
+    let inner_accessor = gen_accessor(inner_type, FieldAccessor::None);
+    quote!($(field_accessor)(d.deserialize_number(U32_BYTES, false) === 0) ? undefined : $inner_accessor)
 }
 
 // quote!($(field_accessor)d.deserialize_$(ty.as_func_name())())

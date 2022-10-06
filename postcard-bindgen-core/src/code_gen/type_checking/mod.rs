@@ -26,6 +26,8 @@ pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
         BindingType::UnitStruct(ty) => unit_struct::gen_check_func(&ty.name),
     }))
 }
+
+#[derive(Debug, Clone, Copy)]
 enum FieldAccess<'a> {
     Object(&'a str),
     Array(usize),
@@ -59,38 +61,64 @@ impl FormatInto<JavaScript> for InnerTypeAccess {
     }
 }
 
-fn gen_struct_field_available_checks(
-    fields: impl AsRef<[StructField]>,
-    inner_access: InnerTypeAccess,
-) -> Tokens {
-    and_chain(
-        fields
-            .as_ref()
-            .iter()
-            .map(|field| quote!( $(quoted(&field.name)) in v$inner_access)),
-    )
+fn gen_object_checks(fields: impl AsRef<[StructField]>,
+    inner_access: InnerTypeAccess) -> Tokens {
+    let field_checks = gen_struct_field_checks(fields, inner_access);
+    quote!(typeof v$inner_access === "object" && $field_checks)
 }
 
-fn gen_struct_field_type_checks(
+fn gen_array_checks(fields: impl AsRef<[JsType]>,
+    inner_access: InnerTypeAccess) -> Tokens {
+    let arr_len = fields.as_ref().len();
+    let field_checks = gen_array_field_checks(fields, inner_access);
+    quote!(Array.isArray(v$inner_access) && v$inner_access.length === $arr_len && $field_checks)
+}
+
+fn gen_struct_field_checks(
     fields: impl AsRef<[StructField]>,
     inner_access: InnerTypeAccess,
 ) -> Tokens {
     and_chain(fields.as_ref().iter().map(|field| {
-        gen_field_type_check(
-            FieldAccess::Object(&field.name),
-            &field.js_type,
-            inner_access,
-        )
+        match &field.js_type {
+            JsType::Optional(t) => {
+                let field_name = &field.name;
+                let field_name_str = quoted(field_name);
+                let accessor = FieldAccess::Object(field_name);
+                let type_check = gen_field_type_check(
+                    accessor,
+                    t,
+                    inner_access,
+                );
+                quote!((($field_name_str in v$inner_access && (v$inner_access$accessor !== undefined && $type_check) || v$inner_access$accessor === undefined) || !($field_name_str in v$inner_access)))
+            },
+            _ => {
+                let field_name = &field.name;
+                let field_name_str = quoted(field_name);
+                let type_check = gen_field_type_check(
+                    FieldAccess::Object(&field.name),
+                    &field.js_type,
+                    inner_access,
+                );
+                quote!($field_name_str in v$inner_access && $type_check)
+            }
+        }
+        
+        
     }))
 }
 
-fn gen_array_field_type_checks(
-    fields: impl AsRef<[JsType]>,
-    inner_access: InnerTypeAccess,
-) -> Tokens {
+fn gen_array_field_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeAccess) -> Tokens {
     and_chain(
         fields.as_ref().iter().enumerate().map(|(index, field)| {
-            gen_field_type_check(FieldAccess::Array(index), field, inner_access)
+            match field {
+                JsType::Optional(o) => {
+                    let accessor = FieldAccess::Array(index);
+                    let inner_type_check = gen_field_type_check(accessor, o, inner_access);
+                    quote!((v$inner_access$accessor !== undefined && $inner_type_check) || v$inner_access$accessor === undefined)
+                }, 
+                _ => gen_field_type_check(FieldAccess::Array(index), field, inner_access)
+            }
+            
         }),
     )
 }
@@ -110,11 +138,11 @@ fn gen_field_type_check(
 }
 
 fn and_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
-    quote!($(for part in parts join (&&) => $part))
+    quote!($(for part in parts join ( && ) => $part))
 }
 
 fn or_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
-    quote!($(for part in parts join (||) => $part))
+    quote!($(for part in parts join ( || ) => $part))
 }
 
 #[cfg(test)]
