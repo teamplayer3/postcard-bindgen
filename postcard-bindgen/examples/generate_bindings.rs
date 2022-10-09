@@ -3,8 +3,6 @@ use std::io::Write;
 use postcard_bindgen::{export_bindings, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
 
-extern crate alloc;
-
 #[derive(Serialize, PostcardBindings)]
 struct A;
 
@@ -27,6 +25,8 @@ struct D {
     c: A,
     d: Vec<u8>,
     e: Option<u8>,
+    f: &'static [u8],
+    g: &'static str,
 }
 
 fn main() {
@@ -48,6 +48,8 @@ fn main() {
         c: A,
         d: vec![234, 21],
         e: None,
+        f: &[123, 23],
+        g: "Hello",
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

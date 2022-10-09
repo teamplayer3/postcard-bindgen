@@ -8,7 +8,7 @@ use genco::{
 use crate::{
     registry::{BindingType, StructField},
     type_info::{bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta},
-    utils::StringExt,
+    utils::{StrExt, StringExt},
 };
 
 use super::{semicolon_chain, JS_ENUM_VARIANT_VALUE};

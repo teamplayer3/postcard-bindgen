@@ -3,6 +3,12 @@ name = "postcard-bindgen-core"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+alloc = []
+heapless = ["dep:heapless"]
+
 [dependencies]
 genco = "0.17.2"
 convert_case = "0.6.0"
+heapless = { version = "0.7.16", optional = true }

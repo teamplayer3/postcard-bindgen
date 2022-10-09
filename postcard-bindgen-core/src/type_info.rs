@@ -82,11 +82,17 @@ pub struct StringMeta {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
-    pub name: String,
+    pub name: &'static str,
 }
 
 pub trait GenJsBinding {
     fn get_type() -> JsType;
+}
+
+impl<T: GenJsBinding> GenJsBinding for &mut T {
+    fn get_type() -> JsType {
+        T::get_type()
+    }
 }
 
 macro_rules! impl_gen_js_binding_numbers {
@@ -100,20 +106,6 @@ macro_rules! impl_gen_js_binding_numbers {
             }
         }
     };
-}
-
-impl GenJsBinding for std::string::String {
-    fn get_type() -> JsType {
-        JsType::String(StringMeta {})
-    }
-}
-
-impl<T: GenJsBinding> GenJsBinding for std::vec::Vec<T> {
-    fn get_type() -> JsType {
-        JsType::Array(ArrayMeta {
-            items_type: Box::new(T::get_type()),
-        })
-    }
 }
 
 impl_gen_js_binding_numbers!(u8, 1, false);
@@ -135,5 +127,59 @@ impl_gen_js_binding_numbers!(isize, 4, true);
 impl<T: GenJsBinding> GenJsBinding for Option<T> {
     fn get_type() -> JsType {
         JsType::Optional(Box::new(T::get_type()))
+    }
+}
+
+impl<'a, T: GenJsBinding> GenJsBinding for &'a [T] {
+    fn get_type() -> JsType {
+        JsType::Array(ArrayMeta {
+            items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
+impl<T: GenJsBinding> GenJsBinding for [T] {
+    fn get_type() -> JsType {
+        JsType::Array(ArrayMeta {
+            items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
+impl<'a> GenJsBinding for &'a str {
+    fn get_type() -> JsType {
+        JsType::String(StringMeta {})
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl GenJsBinding for alloc::string::String {
+    fn get_type() -> JsType {
+        JsType::String(StringMeta {})
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
+    fn get_type() -> JsType {
+        JsType::Array(ArrayMeta {
+            items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
+#[cfg(feature = "heapless")]
+impl<T: GenJsBinding, const N: usize> GenJsBinding for heapless::Vec<T, N> {
+    fn get_type() -> JsType {
+        JsType::Array(ArrayMeta {
+            items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
+#[cfg(feature = "heapless")]
+impl<const N: usize> GenJsBinding for heapless::String<N> {
+    fn get_type() -> JsType {
+        JsType::String(StringMeta {})
     }
 }

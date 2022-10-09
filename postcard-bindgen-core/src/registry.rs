@@ -213,7 +213,7 @@ mod test {
         struct Test {
             a: u8,
             b: u16,
-            c: String,
+            c: &'static str,
         }
 
         impl JsBindings for Test {
@@ -222,7 +222,7 @@ mod test {
 
                 ty.register_field::<u8>("a".into());
                 ty.register_field::<u16>("b".into());
-                ty.register_field::<String>("c".into());
+                ty.register_field::<&str>("c".into());
 
                 registry.register_struct_binding(ty);
             }
@@ -235,15 +235,15 @@ mod test {
 
     #[test]
     fn test_registry_tuple_struct() {
-        struct Test(u8, String, Vec<u8>);
+        struct Test(u8, &'static str, &'static [u8]);
 
         impl JsBindings for Test {
             fn create_bindings(registry: &mut BindingsRegistry) {
                 let mut ty = TupleStructType::new("Test".into());
 
                 ty.register_field::<u8>();
-                ty.register_field::<String>();
-                ty.register_field::<Vec<u8>>();
+                ty.register_field::<&str>();
+                ty.register_field::<&[u8]>();
 
                 registry.register_tuple_struct_binding(ty);
             }
@@ -260,7 +260,7 @@ mod test {
         enum Test {
             A,
             B(u8),
-            C { a: String, b: u16 },
+            C { a: &'static str, b: u16 },
         }
 
         impl JsBindings for Test {
@@ -274,7 +274,7 @@ mod test {
                 ty.register_variant_tuple("B".into(), fields);
 
                 let mut fields = StructFields::default();
-                fields.register_field::<String>("a".into());
+                fields.register_field::<&str>("a".into());
                 fields.register_field::<u16>("b".into());
                 ty.register_unnamed_struct("C".into(), fields);
 

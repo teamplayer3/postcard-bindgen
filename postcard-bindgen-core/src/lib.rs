@@ -1,3 +1,5 @@
+extern crate alloc;
+
 mod code_gen;
 pub mod registry;
 pub mod type_info;

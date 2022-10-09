@@ -3,6 +3,12 @@ name = "postcard-bindgen"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+std = ["postcard-bindgen-core/alloc"]
+alloc = ["postcard-bindgen-core/alloc"]
+heapless = ["postcard-bindgen-core/heapless"]
+
 [dependencies]
 postcard-bindgen-proc-macro = {path = "../postcard-bindgen-proc-macro"}
 postcard-bindgen-core = {path = "../postcard-bindgen-core"}
@@ -11,3 +17,7 @@ postcard-bindgen-core = {path = "../postcard-bindgen-core"}
 serde = "1"
 serde_derive = "1"
 postcard = "1.0.2"
+
+[[example]]
+name = "generate_bindings"
+required-features = ["std"]

@@ -12,6 +12,8 @@ const d = {
     },
     c: {},
     d: [234, 213, 123],
+    f: [12, 123],
+    g: "hello from js"
 }
 
 const bytes = serialize("D", d)
