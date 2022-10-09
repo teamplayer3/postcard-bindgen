@@ -102,8 +102,6 @@ fn gen_struct_field_checks(
                 quote!($field_name_str in v$inner_access && $type_check)
             }
         }
-        
-        
     }))
 }
 
@@ -117,8 +115,7 @@ fn gen_array_field_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeA
                     quote!((v$inner_access$accessor !== undefined && $inner_type_check) || v$inner_access$accessor === undefined)
                 }, 
                 _ => gen_field_type_check(FieldAccess::Array(index), field, inner_access)
-            }
-            
+            }            
         }),
     )
 }
