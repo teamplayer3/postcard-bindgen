@@ -2,5 +2,9 @@
 members = [
     "postcard-bindgen-proc-macro",
     "postcard-bindgen-core",
-    "postcard-bindgen"
+    "postcard-bindgen",
+]
+
+exclude = [
+    "examples"
 ]
