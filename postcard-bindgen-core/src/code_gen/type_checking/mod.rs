@@ -61,14 +61,12 @@ impl FormatInto<JavaScript> for InnerTypeAccess {
     }
 }
 
-fn gen_object_checks(fields: impl AsRef<[StructField]>,
-    inner_access: InnerTypeAccess) -> Tokens {
+fn gen_object_checks(fields: impl AsRef<[StructField]>, inner_access: InnerTypeAccess) -> Tokens {
     let field_checks = gen_struct_field_checks(fields, inner_access);
     quote!(typeof v$inner_access === "object" && $field_checks)
 }
 
-fn gen_array_checks(fields: impl AsRef<[JsType]>,
-    inner_access: InnerTypeAccess) -> Tokens {
+fn gen_array_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeAccess) -> Tokens {
     let arr_len = fields.as_ref().len();
     let field_checks = gen_array_field_checks(fields, inner_access);
     quote!(Array.isArray(v$inner_access) && v$inner_access.length === $arr_len && $field_checks)
@@ -113,9 +111,9 @@ fn gen_array_field_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeA
                     let accessor = FieldAccess::Array(index);
                     let inner_type_check = gen_field_type_check(accessor, o, inner_access);
                     quote!((v$inner_access$accessor !== undefined && $inner_type_check) || v$inner_access$accessor === undefined)
-                }, 
+                },
                 _ => gen_field_type_check(FieldAccess::Array(index), field, inner_access)
-            }            
+            }
         }),
     )
 }
