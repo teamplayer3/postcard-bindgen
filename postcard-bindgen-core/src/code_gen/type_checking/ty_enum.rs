@@ -21,36 +21,42 @@ pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVaria
     let simple_variant_checks = gen_simple_type_checks(simple_variants);
     let complex_variant_checks = gen_complex_type_checks(complex_variants);
 
-    quote!(const is_$(obj_name.to_obj_identifier()) = (v) => ($simple_variant_checks || $complex_variant_checks))
+    let combined = or_chain(
+        [simple_variant_checks, complex_variant_checks]
+            .into_iter()
+            .filter_map(|v| v),
+    );
+
+    quote!(const is_$(obj_name.to_obj_identifier()) = (v) => ($combined))
 }
 
 fn gen_simple_type_checks<'a>(
     variants: impl Iterator<Item = (usize, &'a EnumVariant)> + Clone,
-) -> Tokens {
+) -> Option<Tokens> {
     if variants.to_owned().count() == 0 {
-        Tokens::new()
+        None
     } else {
         let variant_checks = and_chain(
             variants
                 .map(|(_, variant)| quote!(v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)))),
         );
         let type_check = simple_enum_type_check();
-        quote!(($type_check && $variant_checks))
+        Some(quote!(($type_check && $variant_checks)))
     }
 }
 
 fn gen_complex_type_checks<'a>(
     variants: impl Iterator<Item = (usize, &'a EnumVariant)> + Clone,
-) -> Tokens {
+) -> Option<Tokens> {
     if variants.to_owned().count() == 0 {
-        Tokens::new()
+        None
     } else {
         let variant_checks = or_chain(variants.map(|(_, variant)| {
             let inner_type_checks = gen_variant_check(variant);
             quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)) && $inner_type_checks))
         }));
         let type_check = complex_enum_type_check();
-        quote!(($type_check && $variant_checks))
+        Some(quote!(($type_check && $variant_checks)))
     }
 }
 
