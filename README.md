@@ -54,7 +54,7 @@ struct UnitStruct;
 <tr><td>New Type</td><td>
 
 ```rust
-struct UnitStruct(u8);
+struct NewType(u8);
 ```
 </td><td>
 
@@ -65,7 +65,7 @@ struct UnitStruct(u8);
 <tr><td>Tuple Struct</td><td>
 
 ```rust
-struct UnitStruct(u8, u16, u32);
+struct TupleStruct(u8, u16, u32);
 ```
 </td><td>
 
@@ -76,7 +76,7 @@ struct UnitStruct(u8, u16, u32);
 <tr><td>Struct</td><td>
 
 ```rust
-struct UnitStruct {
+struct Struct {
     a: u8,
     b: u16
 };
@@ -93,7 +93,7 @@ struct UnitStruct {
 <tr><td>Enum</td><td>
 
 ```rust
-enum UnitStruct {
+enum Enum {
     A,
     B(u8),
     C {
