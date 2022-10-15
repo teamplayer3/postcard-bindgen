@@ -1,12 +1,15 @@
 use genco::{lang::js::Tokens, quote, tokens::quoted};
 
 use crate::{
-    code_gen::{JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE},
+    code_gen::{
+        utils::{and_chain, or_chain},
+        JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+    },
     registry::{EnumVariant, EnumVariantType},
     utils::StrExt,
 };
 
-use super::{and_chain, gen_array_checks, gen_object_checks, or_chain, InnerTypeAccess};
+use super::{gen_array_checks, gen_object_checks, InnerTypeAccess};
 
 pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
     let obj_name = obj_name.as_ref();
@@ -37,8 +40,7 @@ fn gen_simple_type_checks<'a>(
         None
     } else {
         let variant_checks = and_chain(
-            variants
-                .map(|(_, variant)| quote!(v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)))),
+            variants.map(|(_, variant)| quote!(v.$JS_ENUM_VARIANT_KEY === $(quoted(variant.name)))),
         );
         let type_check = simple_enum_type_check();
         Some(quote!(($type_check && $variant_checks)))
@@ -53,7 +55,7 @@ fn gen_complex_type_checks<'a>(
     } else {
         let variant_checks = or_chain(variants.map(|(_, variant)| {
             let inner_type_checks = gen_variant_check(variant);
-            quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(&variant.name)) && $inner_type_checks))
+            quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(variant.name)) && $inner_type_checks))
         }));
         let type_check = complex_enum_type_check();
         Some(quote!(($type_check && $variant_checks)))

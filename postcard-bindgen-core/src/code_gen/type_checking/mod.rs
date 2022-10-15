@@ -11,12 +11,13 @@ use genco::{
 };
 
 use crate::{
+    code_gen::utils::{and_chain, line_brake_chain},
     registry::{BindingType, StructField},
     type_info::{JsType, ObjectMeta},
     utils::StrExt,
 };
 
-use super::{line_brake_chain, JS_ENUM_VARIANT_VALUE};
+use super::JS_ENUM_VARIANT_VALUE;
 
 pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
     line_brake_chain(bindings.as_ref().iter().map(|ty| match ty {
@@ -79,7 +80,7 @@ fn gen_struct_field_checks(
     and_chain(fields.as_ref().iter().map(|field| {
         match &field.js_type {
             JsType::Optional(t) => {
-                let field_name = &field.name;
+                let field_name = field.name;
                 let field_name_str = quoted(field_name);
                 let accessor = FieldAccess::Object(field_name);
                 let type_check = gen_field_type_check(
@@ -90,7 +91,7 @@ fn gen_struct_field_checks(
                 quote!((($field_name_str in v$inner_access && (v$inner_access$accessor !== undefined && $type_check) || v$inner_access$accessor === undefined) || !($field_name_str in v$inner_access)))
             },
             _ => {
-                let field_name = &field.name;
+                let field_name = field.name;
                 let field_name_str = quoted(field_name);
                 let type_check = gen_field_type_check(
                     FieldAccess::Object(&field.name),
@@ -129,38 +130,5 @@ fn gen_field_type_check(
             quote!(is_$(name.to_obj_identifier())(v$inner_access$field_access))
         }
         _ => quote!(typeof v$inner_access$field_access === $(quoted(ty.to_string()))),
-    }
-}
-
-fn and_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
-    quote!($(for part in parts join ( && ) => $part))
-}
-
-fn or_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
-    quote!($(for part in parts join ( || ) => $part))
-}
-
-#[cfg(test)]
-mod test {
-    use genco::quote;
-
-    use super::{and_chain, or_chain};
-
-    #[test]
-    fn test_and_chain() {
-        let parts = vec![quote!(true === true), quote!(false === false)];
-        assert_eq!(
-            and_chain(parts).to_string().unwrap(),
-            "true === true&&false === false"
-        )
-    }
-
-    #[test]
-    fn test_or_chain() {
-        let parts = vec![quote!(true === true), quote!(false === false)];
-        assert_eq!(
-            or_chain(parts).to_string().unwrap(),
-            "true === true||false === false"
-        )
     }
 }

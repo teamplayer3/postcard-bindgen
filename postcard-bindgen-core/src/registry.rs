@@ -11,7 +11,7 @@ pub enum BindingType {
 }
 
 impl BindingType {
-    pub fn inner_name(&self) -> String {
+    pub fn inner_name(&self) -> &'static str {
         match self {
             Self::Struct(StructType { name, fields: _ }) => name.to_owned(),
             Self::TupleStruct(TupleStructType { name, fields: _ }) => name.to_owned(),
@@ -24,12 +24,12 @@ impl BindingType {
 #[derive(Debug)]
 // encoded into | variant index | (inner)
 pub struct EnumType {
-    pub name: String,
+    pub name: &'static str,
     pub variants: Vec<EnumVariant>,
 }
 
 impl EnumType {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &'static str) -> Self {
         Self {
             name,
             variants: Default::default(),
@@ -37,7 +37,7 @@ impl EnumType {
     }
 
     // index is set based on order of variant registration
-    pub fn register_variant(&mut self, name: String) {
+    pub fn register_variant(&mut self, name: &'static str) {
         self.variants.push(EnumVariant {
             index: self.variants.len(),
             name,
@@ -45,7 +45,7 @@ impl EnumType {
         });
     }
 
-    pub fn register_variant_tuple(&mut self, name: String, fields: TupleFields) {
+    pub fn register_variant_tuple(&mut self, name: &'static str, fields: TupleFields) {
         self.variants.push(EnumVariant {
             index: self.variants.len(),
             name,
@@ -53,7 +53,7 @@ impl EnumType {
         });
     }
 
-    pub fn register_unnamed_struct(&mut self, name: String, fields: StructFields) {
+    pub fn register_unnamed_struct(&mut self, name: &'static str, fields: StructFields) {
         self.variants.push(EnumVariant {
             index: self.variants.len(),
             name,
@@ -65,7 +65,7 @@ impl EnumType {
 #[derive(Debug)]
 pub struct EnumVariant {
     pub index: usize,
-    pub name: String,
+    pub name: &'static str,
     pub inner_type: EnumVariantType,
 }
 
@@ -85,19 +85,19 @@ pub enum EnumVariantType {
 
 #[derive(Debug)]
 pub struct StructType {
-    pub name: String,
+    pub name: &'static str,
     pub fields: Vec<StructField>,
 }
 
 impl StructType {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &'static str) -> Self {
         Self {
             name,
             fields: Default::default(),
         }
     }
 
-    pub fn register_field<T: GenJsBinding>(&mut self, name: String) {
+    pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.fields.push(StructField {
             name,
             js_type: T::get_type(),
@@ -107,12 +107,12 @@ impl StructType {
 
 #[derive(Debug)]
 pub struct TupleStructType {
-    pub name: String,
+    pub name: &'static str,
     pub fields: Vec<JsType>,
 }
 
 impl TupleStructType {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &'static str) -> Self {
         Self {
             name,
             fields: Default::default(),
@@ -126,19 +126,18 @@ impl TupleStructType {
 
 #[derive(Debug)]
 pub struct UnitStructType {
-    pub name: String,
+    pub name: &'static str,
 }
 
 impl UnitStructType {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &'static str) -> Self {
         Self { name }
     }
 }
 
 #[derive(Debug)]
 pub struct StructField {
-    // Tuple struct fields have no name
-    pub name: String,
+    pub name: &'static str,
     pub js_type: JsType,
 }
 
@@ -146,7 +145,7 @@ pub struct StructField {
 pub struct StructFields(Vec<StructField>);
 
 impl StructFields {
-    pub fn register_field<T: GenJsBinding>(&mut self, name: String) {
+    pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.0.push(StructField {
             name,
             js_type: T::get_type(),

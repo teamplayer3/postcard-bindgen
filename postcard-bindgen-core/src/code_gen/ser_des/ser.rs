@@ -6,12 +6,11 @@ use genco::{
 };
 
 use crate::{
+    code_gen::{utils::semicolon_chain, JS_ENUM_VARIANT_VALUE},
     registry::{BindingType, StructField},
     type_info::{bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta},
-    utils::{StrExt, StringExt},
+    utils::StrExt,
 };
-
-use super::{semicolon_chain, JS_ENUM_VARIANT_VALUE};
 
 #[derive(Debug, Clone, Copy)]
 enum FieldAccessor<'a> {
@@ -159,7 +158,7 @@ fn gen_accessors_struct(
         gen_accessor(
             &field.js_type,
             field_access,
-            FieldAccessor::Object(field.name.as_str()),
+            FieldAccessor::Object(field.name),
         )
     }))
 }
@@ -186,7 +185,7 @@ fn gen_ser_cases(defines: impl AsRef<[BindingType]>) -> Tokens {
 
 fn gen_ser_case(define: &BindingType) -> Tokens {
     let name = define.inner_name();
-    let case_str = quoted(name.as_str());
+    let case_str = quoted(name);
     let type_name = name.to_obj_identifier();
     quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
 }
@@ -202,9 +201,7 @@ pub mod strukt {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
         let body = gen_accessors_struct(fields, InnerTypeAccess::Direct);
         quote! {
-            const serialize_$(obj_name_upper) = (s, v) => {
-                $body
-            }
+            const serialize_$(obj_name_upper) = (s, v) => { $body }
         }
     }
 }
@@ -220,9 +217,7 @@ pub mod tuple_struct {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
         let body = gen_accessors_tuple(fields, InnerTypeAccess::Direct);
         quote! {
-            const serialize_$(obj_name_upper) = (s, v) => {
-                $body
-            }
+            const serialize_$(obj_name_upper) = (s, v) => { $body }
         }
     }
 }
@@ -236,7 +231,7 @@ pub mod enum_ty {
     };
 
     use crate::{
-        code_gen::{semicolon_chain, JS_ENUM_VARIANT_KEY},
+        code_gen::{utils::semicolon_chain, JS_ENUM_VARIANT_KEY},
         registry::{EnumVariant, EnumVariantType},
         utils::StrExt,
     };
@@ -275,7 +270,7 @@ pub mod enum_ty {
     }
 
     fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
-        let variant_name = quoted(variant.name.as_str());
+        let variant_name = quoted(variant.name);
         let body = match &variant.inner_type {
             EnumVariantType::Empty => CaseBody::None,
             EnumVariantType::Tuple(fields) => {

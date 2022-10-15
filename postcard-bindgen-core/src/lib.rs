@@ -14,7 +14,9 @@ use std::{
 use genco::{prelude::JavaScript, quote, Tokens};
 
 use code_gen::{
-    gen_deserialize_func, gen_ser_des_classes, gen_ser_des_functions, gen_serialize_func,
+    ser_des::{
+        gen_deserialize_func, gen_ser_des_classes, gen_ser_des_functions, gen_serialize_func,
+    },
     type_checking::gen_type_checkings,
 };
 use registry::BindingType;

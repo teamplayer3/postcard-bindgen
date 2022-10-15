@@ -6,12 +6,11 @@ use genco::{
 };
 
 use crate::{
+    code_gen::utils::{comma_chain, semicolon_chain},
     registry::{BindingType, StructField},
     type_info::{bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta},
-    utils::{StrExt, StringExt},
+    utils::StrExt,
 };
-
-use super::{comma_chain, semicolon_chain};
 
 #[derive(Debug, Clone, Copy)]
 enum FieldAccessor<'a> {
@@ -25,7 +24,7 @@ impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
         quote_in! { *tokens =>
             $(match self {
                 Self::Array | Self::None => (),
-                Self::Object(n) => $n:,
+                Self::Object(n) => $n:$[' '],
             })
         }
     }
@@ -87,9 +86,9 @@ fn gen_accessor_struct(fields: impl AsRef<[StructField]>) -> Tokens {
         fields
             .as_ref()
             .iter()
-            .map(|field| gen_accessor(&field.js_type, FieldAccessor::Object(field.name.as_str()))),
+            .map(|field| gen_accessor(&field.js_type, FieldAccessor::Object(field.name))),
     );
-    quote!({$body})
+    quote!({ $body })
 }
 
 fn gen_accessor_tuple(fields: impl AsRef<[JsType]>) -> Tokens {
@@ -100,7 +99,7 @@ fn gen_accessor_tuple(fields: impl AsRef<[JsType]>) -> Tokens {
             .enumerate()
             .map(|(_, js_type)| gen_accessor(js_type, FieldAccessor::Array)),
     );
-    quote!([$body])
+    quote!([ $body ])
 }
 
 pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
@@ -123,7 +122,7 @@ fn gen_des_cases(defines: impl AsRef<[BindingType]>) -> Tokens {
 
 fn gen_des_case(define: &BindingType) -> Tokens {
     let name = define.inner_name();
-    let case_str = quoted(name.as_str());
+    let case_str = quoted(name);
     let type_name = name.to_obj_identifier();
     quote!(case $case_str: return deserialize_$type_name(d))
 }
@@ -160,7 +159,7 @@ pub mod enum_ty {
     use genco::{lang::js::Tokens, quote, tokens::quoted};
 
     use crate::{
-        code_gen::{semicolon_chain, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE},
+        code_gen::{utils::semicolon_chain, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE},
         registry::{EnumVariant, EnumVariantType},
         utils::StrExt,
     };
@@ -184,7 +183,7 @@ pub mod enum_ty {
     }
 
     fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
-        let variant_name = quoted(&variant.name);
+        let variant_name = quoted(variant.name);
         let body = match &variant.inner_type {
             EnumVariantType::Empty => Tokens::new(),
             EnumVariantType::NewType(fields) => {
