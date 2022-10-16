@@ -23,6 +23,8 @@ use code_gen::{
 use registry::BindingType;
 use serde::Serialize;
 
+pub use code_gen::type_checking::ts::gen_ts_typings;
+
 pub enum ArchPointerLen {
     U32,
     U64,
@@ -46,7 +48,8 @@ macro_rules! generate_bindings {
             $(
                 <$x as postcard_bindgen::JsBindings>::create_bindings(&mut reg);
             )*
-            postcard_bindgen::generate_js(reg.into_entries()).to_file_string().unwrap()
+            let bindings = reg.into_entries();
+            (postcard_bindgen::generate_js(&bindings).to_file_string().unwrap(), postcard_bindgen::gen_ts_typings(bindings).to_file_string().unwrap())
         }
     };
 }
@@ -57,7 +60,7 @@ pub fn export_bindings(path: &Path, bindings: impl AsRef<str>) -> io::Result<()>
     Ok(())
 }
 
-pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
+pub fn generate_js(tys: impl AsRef<[BindingType]>) -> Tokens<JavaScript> {
     let ser_des_body = gen_ser_des_functions(&tys);
     let type_checks = gen_type_checkings(&tys);
     quote!(
@@ -65,11 +68,14 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         $ser_des_body
         $type_checks
         $(gen_serialize_func(&tys))
-        $(gen_deserialize_func(&tys))
+        $(gen_deserialize_func(tys))
     )
 }
 
-pub fn build_npm_package(path: &Path, bindings: impl AsRef<str>) -> io::Result<()> {
+pub fn build_npm_package(
+    path: &Path,
+    bindings: (impl AsRef<str>, impl AsRef<str>),
+) -> io::Result<()> {
     let mut dir = path.to_path_buf();
     dir.push("test-bindings");
 
@@ -81,9 +87,13 @@ pub fn build_npm_package(path: &Path, bindings: impl AsRef<str>) -> io::Result<(
     package_json_path.push("package.json");
     File::create(package_json_path.as_path())?.write_all(package_json.as_bytes())?;
 
-    let mut js_export_path = dir;
+    let mut js_export_path = dir.to_owned();
     js_export_path.push("index.js");
-    File::create(js_export_path.as_path())?.write_all(bindings.as_ref().as_bytes())?;
+    File::create(js_export_path.as_path())?.write_all(bindings.0.as_ref().as_bytes())?;
+
+    let mut js_export_path = dir;
+    js_export_path.push("index.d.ts");
+    File::create(js_export_path.as_path())?.write_all(bindings.1.as_ref().as_bytes())?;
 
     Ok(())
 }

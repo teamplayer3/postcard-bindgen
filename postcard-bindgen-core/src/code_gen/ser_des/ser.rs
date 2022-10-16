@@ -163,7 +163,7 @@ fn gen_accessors_struct(
     }))
 }
 
-pub fn gen_serialize_func(defines: &Vec<BindingType>) -> Tokens {
+pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
     let switch_body = gen_ser_cases(defines);
     quote!(
         module.exports.serialize = (type, value) => {

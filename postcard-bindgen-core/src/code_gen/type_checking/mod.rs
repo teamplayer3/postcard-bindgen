@@ -1,4 +1,5 @@
 mod strukt;
+pub mod ts;
 mod tuple_struct;
 mod ty_enum;
 mod unit_struct;

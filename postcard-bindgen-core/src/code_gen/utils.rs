@@ -28,6 +28,14 @@ pub fn or_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
     quote!($(for part in parts join ( || ) => $part))
 }
 
+pub fn colon_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
+    quote!($(for part in parts join ( : ) => $part))
+}
+
+pub fn divider_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
+    quote!($(for part in parts join ( | ) => $part))
+}
+
 #[cfg(test)]
 mod test {
     use genco::quote;
