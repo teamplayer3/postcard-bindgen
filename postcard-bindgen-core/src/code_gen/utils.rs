@@ -9,7 +9,7 @@ pub fn comma_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
 }
 
 pub fn line_brake_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
-    quote!($(for part in parts join ($['\n']) => $part))
+    quote!($(for part in parts join ($['\r']) => $part))
 }
 
 #[allow(unused)]
