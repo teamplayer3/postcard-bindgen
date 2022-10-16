@@ -1,15 +1,12 @@
-use genco::{prelude::js::Tokens, quote};
+use genco::quote;
 
 use crate::{
     registry::{BindingType, StructField, StructType, TupleStructType, UnitStructType},
     type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, StringMeta},
+    utils::assert_tokens,
 };
 
 use super::gen_ser_des_functions;
-
-fn assert_tokens(generated: Tokens, compare: Tokens) {
-    assert_eq!(generated.to_file_string(), compare.to_file_string())
-}
 
 #[test]
 fn test_binding_struct_unit() {
