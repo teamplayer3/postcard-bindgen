@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use postcard_bindgen::{export_bindings, generate_bindings, PostcardBindings};
+use postcard_bindgen::{build_npm_package, export_bindings, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
@@ -30,11 +30,8 @@ struct D {
 }
 
 fn main() {
-    export_bindings(
-        std::env::current_dir()
-            .unwrap()
-            .join("js_export.js")
-            .as_path(),
+    build_npm_package(
+        std::env::current_dir().unwrap().as_path(),
         generate_bindings!(A, B, C, D),
     )
     .unwrap();

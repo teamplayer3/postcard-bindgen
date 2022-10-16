@@ -1,0 +1,5 @@
+{
+    "name": "{{package_name}}-postcard-bindings",
+    "description": "Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.",
+    "version": "{{package_version}}"
+}

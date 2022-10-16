@@ -1,5 +1,7 @@
-import { serialize, deserialize } from "./js_export.js";
+// import { serialize, deserialize } from "./js_export.js";
 import fs from "fs";
+
+import { serialize, deserialize } from "./test-bindings"
 
 const d = {
     a: 22,

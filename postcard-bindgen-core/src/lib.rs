@@ -12,6 +12,7 @@ use std::{
 };
 
 use genco::{prelude::JavaScript, quote, Tokens};
+use handlebars::Handlebars;
 
 use code_gen::{
     ser_des::{
@@ -20,6 +21,7 @@ use code_gen::{
     type_checking::gen_type_checkings,
 };
 use registry::BindingType;
+use serde::Serialize;
 
 pub enum ArchPointerLen {
     U32,
@@ -50,7 +52,7 @@ macro_rules! generate_bindings {
 }
 
 pub fn export_bindings(path: &Path, bindings: impl AsRef<str>) -> io::Result<()> {
-    let mut file = File::create(path)?;
+    let mut file = File::create(path.join("js_export.js"))?;
     file.write_all(bindings.as_ref().as_bytes())?;
     Ok(())
 }
@@ -64,5 +66,48 @@ pub fn generate_js(tys: Vec<BindingType>) -> Tokens<JavaScript> {
         $type_checks
         $(gen_serialize_func(&tys))
         $(gen_deserialize_func(&tys))
+    )
+}
+
+pub fn build_npm_package(path: &Path, bindings: impl AsRef<str>) -> io::Result<()> {
+    let mut dir = path.to_path_buf();
+    dir.push("test-bindings");
+
+    std::fs::create_dir_all(&dir)?;
+
+    let package_json = package_file_src("test".into(), "0.1.0".into()).unwrap();
+
+    let mut package_json_path = dir.to_owned();
+    package_json_path.push("package.json");
+    File::create(package_json_path.as_path())?.write_all(package_json.as_bytes())?;
+
+    let mut js_export_path = dir;
+    js_export_path.push("index.js");
+    File::create(js_export_path.as_path())?.write_all(bindings.as_ref().as_bytes())?;
+
+    Ok(())
+}
+
+static PACKAGE_FILE_TEMPLATE: &[u8] = include_bytes!("gen_src/package-template.json");
+
+fn package_file_src(
+    package_name: String,
+    package_version: String,
+) -> Result<String, handlebars::RenderError> {
+    #[derive(Serialize)]
+    struct TemplateData {
+        package_name: String,
+        package_version: String,
+    }
+
+    let template_data = TemplateData {
+        package_name,
+        package_version,
+    };
+    Handlebars::new().render_template(
+        String::from_utf8(PACKAGE_FILE_TEMPLATE.into())
+            .unwrap()
+            .as_str(),
+        &template_data,
     )
 }
