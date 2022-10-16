@@ -151,3 +151,167 @@ fn gen_variant_typings(variant: &EnumVariant) -> Tokens {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use genco::quote;
+
+    use crate::{
+        registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
+        type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, StringMeta},
+        utils::assert_tokens,
+    };
+
+    use super::{gen_binding_type, gen_struct_typings};
+
+    #[test]
+    fn test_js_type_with_number_typings() {
+        let number_combs = [
+            (1, false),
+            (2, false),
+            (4, false),
+            (8, false),
+            (16, false),
+            (1, true),
+            (2, true),
+            (4, true),
+            (8, true),
+            (16, true),
+        ];
+        let js_type = [
+            quote!(u8),
+            quote!(u16),
+            quote!(u32),
+            quote!(u64),
+            quote!(u128),
+            quote!(i8),
+            quote!(i16),
+            quote!(i32),
+            quote!(i64),
+            quote!(i128),
+        ];
+        let assert_combs = number_combs.iter().zip(js_type);
+
+        for assertion in assert_combs.clone() {
+            let ty = JsType::Number(NumberMeta {
+                bytes: assertion.0 .0,
+                signed: assertion.0 .1,
+            });
+            assert_tokens(quote!($ty), assertion.1);
+        }
+
+        for assertion in assert_combs.clone() {
+            let ty = JsType::Array(ArrayMeta {
+                items_type: Box::new(JsType::Number(NumberMeta {
+                    bytes: assertion.0 .0,
+                    signed: assertion.0 .1,
+                })),
+            });
+
+            assert_tokens(quote!($ty), quote!($(assertion.1)[]));
+        }
+
+        for assertion in assert_combs {
+            let ty = JsType::Optional(Box::new(JsType::Number(NumberMeta {
+                bytes: assertion.0 .0,
+                signed: assertion.0 .1,
+            })));
+
+            assert_tokens(quote!($ty), quote!($(assertion.1) | undefined));
+        }
+    }
+
+    #[test]
+    fn test_js_type_without_number_typings() {
+        let ty = JsType::Object(ObjectMeta { name: "A" });
+        assert_tokens(quote!($ty), quote!(A));
+
+        let ty = JsType::String(StringMeta {});
+        assert_tokens(quote!($ty), quote!(string));
+    }
+
+    #[test]
+    fn test_struct_structure_typings() {
+        let tokens = gen_struct_typings(&[
+            StructField {
+                name: "a",
+                js_type: JsType::Number(NumberMeta {
+                    bytes: 1,
+                    signed: false,
+                }),
+            },
+            StructField {
+                name: "b",
+                js_type: JsType::Object(ObjectMeta { name: "B" }),
+            },
+            StructField {
+                name: "c",
+                js_type: JsType::String(StringMeta {}),
+            },
+            StructField {
+                name: "d",
+                js_type: JsType::Array(ArrayMeta {
+                    items_type: Box::new(JsType::Number(NumberMeta {
+                        bytes: 1,
+                        signed: false,
+                    })),
+                }),
+            },
+            StructField {
+                name: "e",
+                js_type: JsType::Optional(Box::new(JsType::Number(NumberMeta {
+                    bytes: 1,
+                    signed: false,
+                }))),
+            },
+        ]);
+
+        assert_tokens(
+            tokens,
+            quote!({ a: u8, b: B, c: string, d: u8[], e: u8 | undefined }),
+        )
+    }
+
+    #[test]
+    fn test_struct_typings() {
+        let test_binding = gen_binding_type(&BindingType::Struct(StructType {
+            name: "A",
+            fields: vec![StructField {
+                name: "a",
+                js_type: JsType::Number(NumberMeta {
+                    bytes: 1,
+                    signed: false,
+                }),
+            }],
+        }));
+
+        assert_tokens(test_binding, quote!(export type A = { a: u8 }))
+    }
+
+    #[test]
+    fn test_enum_typings() {
+        let test_binding = gen_binding_type(&BindingType::Enum(EnumType {
+            name: "A",
+            variants: vec![
+                EnumVariant {
+                    name: "A",
+                    index: 0,
+                    inner_type: EnumVariantType::Empty,
+                },
+                EnumVariant {
+                    name: "B",
+                    index: 1,
+                    inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta {
+                        bytes: 1,
+                        signed: false,
+                    })]),
+                },
+            ],
+        }));
+
+        assert_tokens(
+            test_binding,
+            quote!(export type A = { tag: "A" } | { tag: "B", value: [u8] }),
+        )
+    }
+}
