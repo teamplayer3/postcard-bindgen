@@ -4,7 +4,7 @@ pub enum JsType {
     Array(ArrayMeta),
     String(StringMeta),
     Object(ObjectMeta),
-    Optional(Box<JsType>),
+    Optional(OptionalMeta),
 }
 
 impl ToString for JsType {
@@ -15,18 +15,6 @@ impl ToString for JsType {
             JsType::Object(_) => "object".into(),
             JsType::String(_) => "string".into(),
             JsType::Optional(_) => "optional".into(),
-        }
-    }
-}
-
-impl JsType {
-    pub(crate) fn as_func_name(&self) -> &'static str {
-        match self {
-            JsType::Number(_) => "number",
-            JsType::Array(_) => "array",
-            JsType::String(_) => "string",
-            JsType::Object(_) => "object",
-            JsType::Optional(_) => "optional",
         }
     }
 }
@@ -43,6 +31,11 @@ pub fn bool_to_js_bool(value: bool) -> &'static str {
     } else {
         "false"
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OptionalMeta {
+    pub(crate) inner: Box<JsType>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -141,7 +134,9 @@ impl_gen_js_binding_numbers!(isize, 4, true);
 
 impl<T: GenJsBinding> GenJsBinding for Option<T> {
     fn get_type() -> JsType {
-        JsType::Optional(Box::new(T::get_type()))
+        JsType::Optional(OptionalMeta {
+            inner: Box::new(T::get_type()),
+        })
     }
 }
 

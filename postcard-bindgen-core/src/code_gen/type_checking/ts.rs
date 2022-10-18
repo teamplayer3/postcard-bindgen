@@ -10,7 +10,7 @@ use crate::{
         JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
     },
     registry::{BindingType, EnumVariant, EnumVariantType, StructField},
-    type_info::{ArrayMeta, JsType, ObjectMeta},
+    type_info::{ArrayMeta, JsType, ObjectMeta, OptionalMeta},
 };
 
 pub fn gen_ts_typings(bindings: impl AsRef<[BindingType]>) -> Tokens {
@@ -76,7 +76,7 @@ fn js_type_format_into(tokens: &mut Tokens, ty: &JsType) {
             JsType::Number(m) => $(m.as_ts_type()),
             JsType::Array(ArrayMeta {items_type}) => $(items_type.as_ref())[],
             JsType::Object(ObjectMeta {name}) => $(*name),
-            JsType::Optional(inner) => $(inner.as_ref()) | undefined,
+            JsType::Optional(OptionalMeta {inner}) => $(inner.as_ref()) | undefined,
             JsType::String(_) => string
         })
     }
@@ -158,7 +158,7 @@ mod test {
 
     use crate::{
         registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
-        type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, StringMeta},
+        type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
         utils::assert_tokens,
     };
 
@@ -212,10 +212,12 @@ mod test {
         }
 
         for assertion in assert_combs {
-            let ty = JsType::Optional(Box::new(JsType::Number(NumberMeta {
-                bytes: assertion.0 .0,
-                signed: assertion.0 .1,
-            })));
+            let ty = JsType::Optional(OptionalMeta {
+                inner: Box::new(JsType::Number(NumberMeta {
+                    bytes: assertion.0 .0,
+                    signed: assertion.0 .1,
+                })),
+            });
 
             assert_tokens(quote!($ty), quote!($(assertion.1) | undefined));
         }
@@ -259,10 +261,12 @@ mod test {
             },
             StructField {
                 name: "e",
-                js_type: JsType::Optional(Box::new(JsType::Number(NumberMeta {
-                    bytes: 1,
-                    signed: false,
-                }))),
+                js_type: JsType::Optional(OptionalMeta {
+                    inner: Box::new(JsType::Number(NumberMeta {
+                        bytes: 1,
+                        signed: false,
+                    })),
+                }),
             },
         ]);
 

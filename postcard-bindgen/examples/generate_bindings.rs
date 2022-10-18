@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use postcard_bindgen::{build_npm_package, export_bindings, generate_bindings, PostcardBindings};
+use postcard_bindgen::{build_npm_package, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
 
 #[derive(Serialize, PostcardBindings)]

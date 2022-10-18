@@ -1,74 +1,48 @@
-mod strukt;
 pub mod ts;
-mod tuple_struct;
 mod ty_enum;
 mod unit_struct;
 
-use genco::{
-    lang::js::Tokens,
-    prelude::JavaScript,
-    quote, quote_in,
-    tokens::{quoted, FormatInto},
-};
+use genco::{lang::js::Tokens, quote};
 
 use crate::{
-    code_gen::utils::{and_chain, line_brake_chain},
+    code_gen::{
+        generateable::js_types::*,
+        utils::{and_chain, line_brake_chain},
+    },
     registry::{BindingType, StructField},
-    type_info::{JsType, ObjectMeta},
+    type_info::JsType,
     utils::StrExt,
 };
 
-use super::JS_ENUM_VARIANT_VALUE;
-
 pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_brake_chain(bindings.as_ref().iter().map(|ty| match ty {
-        BindingType::Enum(ty) => ty_enum::gen_check_func(&ty.name, &ty.variants),
-        BindingType::Struct(ty) => strukt::gen_check_func(&ty.name, &ty.fields),
-        BindingType::TupleStruct(ty) => tuple_struct::gen_check_func(&ty.name, &ty.fields),
-        BindingType::UnitStruct(ty) => unit_struct::gen_check_func(&ty.name),
-    }))
+    line_brake_chain(bindings.as_ref().iter().map(gen_type_check))
 }
 
-#[derive(Debug, Clone, Copy)]
-enum FieldAccess<'a> {
-    Object(&'a str),
-    Array(usize),
-}
-
-impl FormatInto<JavaScript> for FieldAccess<'_> {
-    fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
-        quote_in! { *tokens =>
-            $(match self {
-                FieldAccess::Array(i) => [$i],
-                FieldAccess::Object(n) => .$n
-            })
+pub fn gen_type_check(binding_type: &BindingType) -> Tokens {
+    let type_name = binding_type.inner_name().to_obj_identifier();
+    let body = match binding_type {
+        BindingType::Enum(ty) => ty_enum::gen_check_func(&ty.variants),
+        BindingType::Struct(ty) => gen_object_checks(&ty.fields, ty_check::InnerTypeAccess::Direct),
+        BindingType::TupleStruct(ty) => {
+            gen_array_checks(&ty.fields, ty_check::InnerTypeAccess::Direct)
         }
-    }
+        BindingType::UnitStruct(_) => unit_struct::gen_check_func(),
+    };
+    quote!(const is_$type_name = (v) => ($body))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum InnerTypeAccess {
-    Direct,
-    EnumInner,
-}
-
-impl FormatInto<JavaScript> for InnerTypeAccess {
-    fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
-        quote_in! { *tokens =>
-            $(match self {
-                InnerTypeAccess::Direct => (),
-                InnerTypeAccess::EnumInner => .$JS_ENUM_VARIANT_VALUE
-            })
-        }
-    }
-}
-
-fn gen_object_checks(fields: impl AsRef<[StructField]>, inner_access: InnerTypeAccess) -> Tokens {
+fn gen_object_checks(
+    fields: impl AsRef<[StructField]>,
+    inner_access: ty_check::InnerTypeAccess,
+) -> Tokens {
     let field_checks = gen_struct_field_checks(fields, inner_access);
     quote!(typeof v$inner_access === "object" && $field_checks)
 }
 
-fn gen_array_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeAccess) -> Tokens {
+fn gen_array_checks(
+    fields: impl AsRef<[JsType]>,
+    inner_access: ty_check::InnerTypeAccess,
+) -> Tokens {
     let arr_len = fields.as_ref().len();
     let field_checks = gen_array_field_checks(fields, inner_access);
     quote!(Array.isArray(v$inner_access) && v$inner_access.length === $arr_len && $field_checks)
@@ -76,60 +50,20 @@ fn gen_array_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeAccess)
 
 fn gen_struct_field_checks(
     fields: impl AsRef<[StructField]>,
-    inner_access: InnerTypeAccess,
+    inner_access: ty_check::InnerTypeAccess,
 ) -> Tokens {
     and_chain(fields.as_ref().iter().map(|field| {
-        match &field.js_type {
-            JsType::Optional(t) => {
-                let field_name = field.name;
-                let field_name_str = quoted(field_name);
-                let accessor = FieldAccess::Object(field_name);
-                let type_check = gen_field_type_check(
-                    accessor,
-                    t,
-                    inner_access,
-                );
-                quote!((($field_name_str in v$inner_access && (v$inner_access$accessor !== undefined && $type_check) || v$inner_access$accessor === undefined) || !($field_name_str in v$inner_access)))
-            },
-            _ => {
-                let field_name = field.name;
-                let field_name_str = quoted(field_name);
-                let type_check = gen_field_type_check(
-                    FieldAccess::Object(&field.name),
-                    &field.js_type,
-                    inner_access,
-                );
-                quote!($field_name_str in v$inner_access && $type_check)
-            }
-        }
+        field
+            .js_type
+            .gen_ty_check(ty_check::FieldAccess::Object(field.name), inner_access)
     }))
 }
 
-fn gen_array_field_checks(fields: impl AsRef<[JsType]>, inner_access: InnerTypeAccess) -> Tokens {
-    and_chain(
-        fields.as_ref().iter().enumerate().map(|(index, field)| {
-            match field {
-                JsType::Optional(o) => {
-                    let accessor = FieldAccess::Array(index);
-                    let inner_type_check = gen_field_type_check(accessor, o, inner_access);
-                    quote!((v$inner_access$accessor !== undefined && $inner_type_check) || v$inner_access$accessor === undefined)
-                },
-                _ => gen_field_type_check(FieldAccess::Array(index), field, inner_access)
-            }
-        }),
-    )
-}
-
-fn gen_field_type_check(
-    field_access: FieldAccess,
-    ty: &JsType,
-    inner_access: InnerTypeAccess,
+fn gen_array_field_checks(
+    fields: impl AsRef<[JsType]>,
+    inner_access: ty_check::InnerTypeAccess,
 ) -> Tokens {
-    match ty {
-        JsType::Array(_) => quote!(Array.isArray(v$inner_access$field_access)),
-        JsType::Object(ObjectMeta { name }) => {
-            quote!(is_$(name.to_obj_identifier())(v$inner_access$field_access))
-        }
-        _ => quote!(typeof v$inner_access$field_access === $(quoted(ty.to_string()))),
-    }
+    and_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
+        field.gen_ty_check(ty_check::FieldAccess::Array(index), inner_access)
+    }))
 }

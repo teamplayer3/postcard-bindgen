@@ -1,93 +1,21 @@
-use genco::{
-    lang::js::Tokens,
-    prelude::JavaScript,
-    quote, quote_in,
-    tokens::{quoted, FormatInto},
-};
+use genco::{lang::js::Tokens, quote, tokens::quoted};
 
 use crate::{
-    code_gen::utils::{comma_chain, semicolon_chain},
+    code_gen::{
+        generateable::js_types::*,
+        utils::{comma_chain, semicolon_chain},
+    },
     registry::{BindingType, StructField},
-    type_info::{bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta},
+    type_info::JsType,
     utils::StrExt,
 };
 
-#[derive(Debug, Clone, Copy)]
-enum FieldAccessor<'a> {
-    Object(&'a str),
-    Array,
-    None,
-}
-
-impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
-    fn format_into(self, tokens: &mut Tokens) {
-        quote_in! { *tokens =>
-            $(match self {
-                Self::Array | Self::None => (),
-                Self::Object(n) => $n:$[' '],
-            })
-        }
-    }
-}
-
-fn gen_accessor(js_type: &JsType, field_accessor: FieldAccessor) -> Tokens {
-    let accessor_type = js_type.as_func_name();
-    match js_type {
-        JsType::Array(a) => gen_accessor_array(accessor_type, a, field_accessor),
-        JsType::Number(n) => gen_accessor_number(accessor_type, n, field_accessor),
-        JsType::String(_) => gen_accessor_simple(accessor_type, field_accessor),
-        JsType::Object(o) => gen_accessor_object(o, field_accessor),
-        JsType::Optional(t) => gen_accessor_optional(t, field_accessor),
-    }
-}
-
-fn gen_accessor_optional(inner_type: &JsType, field_accessor: FieldAccessor) -> Tokens {
-    let inner_accessor = gen_accessor(inner_type, FieldAccessor::None);
-    quote!($(field_accessor)(d.deserialize_number(U32_BYTES, false) === 0) ? undefined : $inner_accessor)
-}
-
-// quote!($(field_accessor)d.deserialize_$(ty.as_func_name())())
-fn gen_accessor_simple(accessor_type: impl AsRef<str>, field_accessor: FieldAccessor) -> Tokens {
-    let accessor_type = accessor_type.as_ref();
-    quote!($(field_accessor)d.deserialize_$accessor_type())
-}
-
-fn gen_accessor_number(
-    accessor_type: impl AsRef<str>,
-    number_meta: &NumberMeta,
-    field_accessor: FieldAccessor,
-) -> Tokens {
-    let accessor_type = accessor_type.as_ref();
-    let byte_amount_str = number_meta.as_byte_js_string();
-    let signed = bool_to_js_bool(number_meta.signed);
-    quote!($(field_accessor)d.deserialize_$accessor_type($byte_amount_str,$signed))
-}
-
-// quote!($field_access d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
-// quote!($(field.as_ref()): d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
-// quote!(d.deserialize_$(ty.as_func_name())(() => $(gen_des_function_nested(items_type))))
-fn gen_accessor_array(
-    accessor_type: impl AsRef<str>,
-    array_meta: &ArrayMeta,
-    field_accessor: FieldAccessor,
-) -> Tokens {
-    let accessor_type = accessor_type.as_ref();
-    let inner_type_accessor = gen_accessor(&array_meta.items_type, FieldAccessor::Array);
-    quote!($(field_accessor)d.deserialize_$accessor_type(() => $inner_type_accessor))
-}
-
-fn gen_accessor_object(obj_meta: &ObjectMeta, field_accessor: FieldAccessor) -> Tokens {
-    let obj_ident = obj_meta.name.to_obj_identifier();
-    quote!($(field_accessor)deserialize_$obj_ident(d))
-}
-
 fn gen_accessor_struct(fields: impl AsRef<[StructField]>) -> Tokens {
-    let body = comma_chain(
-        fields
-            .as_ref()
-            .iter()
-            .map(|field| gen_accessor(&field.js_type, FieldAccessor::Object(field.name))),
-    );
+    let body = comma_chain(fields.as_ref().iter().map(|field| {
+        field
+            .js_type
+            .gen_des_accessor(des::FieldAccessor::Object(field.name))
+    }));
     quote!({ $body })
 }
 
@@ -97,7 +25,7 @@ fn gen_accessor_tuple(fields: impl AsRef<[JsType]>) -> Tokens {
             .as_ref()
             .iter()
             .enumerate()
-            .map(|(_, js_type)| gen_accessor(js_type, FieldAccessor::Array)),
+            .map(|(_, js_type)| js_type.gen_des_accessor(des::FieldAccessor::Array)),
     );
     quote!([ $body ])
 }

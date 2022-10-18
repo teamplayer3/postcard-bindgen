@@ -1,3 +1,4 @@
+mod generateable;
 pub mod ser_des;
 pub mod type_checking;
 mod utils;

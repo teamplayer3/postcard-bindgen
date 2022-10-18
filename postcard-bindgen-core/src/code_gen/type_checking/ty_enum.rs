@@ -2,17 +2,16 @@ use genco::{lang::js::Tokens, quote, tokens::quoted};
 
 use crate::{
     code_gen::{
+        generateable::js_types::*,
         utils::{and_chain, or_chain},
         JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
     },
     registry::{EnumVariant, EnumVariantType},
-    utils::StrExt,
 };
 
-use super::{gen_array_checks, gen_object_checks, InnerTypeAccess};
+use super::{gen_array_checks, gen_object_checks};
 
-pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVariant]>) -> Tokens {
-    let obj_name = obj_name.as_ref();
+pub fn gen_check_func(variants: impl AsRef<[EnumVariant]>) -> Tokens {
     let enumerated_variants = variants.as_ref().iter().enumerate();
     let simple_variants = enumerated_variants
         .to_owned()
@@ -30,7 +29,7 @@ pub fn gen_check_func(obj_name: impl AsRef<str>, variants: impl AsRef<[EnumVaria
             .filter_map(|v| v),
     );
 
-    quote!(const is_$(obj_name.to_obj_identifier()) = (v) => ($combined))
+    quote!($combined)
 }
 
 fn gen_simple_type_checks<'a>(
@@ -65,8 +64,12 @@ fn gen_complex_type_checks<'a>(
 fn gen_variant_check(variant: &EnumVariant) -> Tokens {
     match &variant.inner_type {
         EnumVariantType::Empty => unreachable!(),
-        EnumVariantType::NewType(fields) => gen_object_checks(fields, InnerTypeAccess::EnumInner),
-        EnumVariantType::Tuple(fields) => gen_array_checks(fields, InnerTypeAccess::EnumInner),
+        EnumVariantType::NewType(fields) => {
+            gen_object_checks(fields, ty_check::InnerTypeAccess::EnumInner)
+        }
+        EnumVariantType::Tuple(fields) => {
+            gen_array_checks(fields, ty_check::InnerTypeAccess::EnumInner)
+        }
     }
 }
 
