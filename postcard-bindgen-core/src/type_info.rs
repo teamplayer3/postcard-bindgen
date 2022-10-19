@@ -5,6 +5,20 @@ pub enum JsType {
     String(StringMeta),
     Object(ObjectMeta),
     Optional(OptionalMeta),
+    Range(RangeMeta),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RangeMeta {
+    pub(crate) bounds_type: Box<JsType>,
+}
+
+impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
+    fn get_type() -> JsType {
+        JsType::Range(RangeMeta {
+            bounds_type: Box::new(T::get_type()),
+        })
+    }
 }
 
 impl ToString for JsType {
@@ -15,6 +29,7 @@ impl ToString for JsType {
             JsType::Object(_) => "object".into(),
             JsType::String(_) => "string".into(),
             JsType::Optional(_) => "optional".into(),
+            JsType::Range(_) => "range".into(),
         }
     }
 }

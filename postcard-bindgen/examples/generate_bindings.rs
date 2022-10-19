@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, ops::Range};
 
 use postcard_bindgen::{build_npm_package, generate_bindings, PostcardBindings};
 use serde_derive::Serialize;
@@ -27,6 +27,7 @@ struct D {
     e: Option<u8>,
     f: &'static [u8],
     g: &'static str,
+    h: Range<u16>,
 }
 
 fn main() {
@@ -47,6 +48,7 @@ fn main() {
         e: None,
         f: &[123, 23],
         g: "Hello",
+        h: (10..30),
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

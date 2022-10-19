@@ -27,7 +27,7 @@ fn gen_accessor_tuple(fields: impl AsRef<[JsType]>) -> Tokens {
             .enumerate()
             .map(|(_, js_type)| js_type.gen_des_accessor(des::FieldAccessor::Array)),
     );
-    quote!([ $body ])
+    quote!([$body])
 }
 
 pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {

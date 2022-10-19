@@ -10,7 +10,7 @@ use crate::{
         JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
     },
     registry::{BindingType, EnumVariant, EnumVariantType, StructField},
-    type_info::{ArrayMeta, JsType, ObjectMeta, OptionalMeta},
+    type_info::{ArrayMeta, JsType, ObjectMeta, OptionalMeta, RangeMeta},
 };
 
 pub fn gen_ts_typings(bindings: impl AsRef<[BindingType]>) -> Tokens {
@@ -77,7 +77,8 @@ fn js_type_format_into(tokens: &mut Tokens, ty: &JsType) {
             JsType::Array(ArrayMeta {items_type}) => $(items_type.as_ref())[],
             JsType::Object(ObjectMeta {name}) => $(*name),
             JsType::Optional(OptionalMeta {inner}) => $(inner.as_ref()) | undefined,
-            JsType::String(_) => string
+            JsType::String(_) => string,
+            JsType::Range(RangeMeta {bounds_type}) => {{ start: $(bounds_type.as_ref()), stop: $(bounds_type.as_ref()) }}
         })
     }
 }

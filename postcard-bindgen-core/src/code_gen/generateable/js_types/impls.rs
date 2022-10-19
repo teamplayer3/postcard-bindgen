@@ -1,8 +1,10 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
+    code_gen::{utils::semicolon_chain, JS_OBJECT_VARIABLE},
     type_info::{
-        bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta,
+        bool_to_js_bool, ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, RangeMeta,
+        StringMeta,
     },
     utils::StrExt,
 };
@@ -14,19 +16,14 @@ use super::{
 };
 
 impl AccessorGenerateable for JsType {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
         match self {
-            Self::Number(number_meta) => number_meta.gen_ser_accessor(field_access, field_accessor),
-            Self::Array(array_meta) => array_meta.gen_ser_accessor(field_access, field_accessor),
-            Self::Object(object_meta) => object_meta.gen_ser_accessor(field_access, field_accessor),
-            Self::Optional(optional_meta) => {
-                optional_meta.gen_ser_accessor(field_access, field_accessor)
-            }
-            Self::String(string_meta) => string_meta.gen_ser_accessor(field_access, field_accessor),
+            Self::Number(number_meta) => number_meta.gen_ser_accessor(variable_path),
+            Self::Array(array_meta) => array_meta.gen_ser_accessor(variable_path),
+            Self::Object(object_meta) => object_meta.gen_ser_accessor(variable_path),
+            Self::Optional(optional_meta) => optional_meta.gen_ser_accessor(variable_path),
+            Self::String(string_meta) => string_meta.gen_ser_accessor(variable_path),
+            Self::Range(range_meta) => range_meta.gen_ser_accessor(variable_path),
         }
     }
 
@@ -37,32 +34,49 @@ impl AccessorGenerateable for JsType {
             Self::Object(object_meta) => object_meta.gen_des_accessor(field_accessor),
             Self::Optional(optional_meta) => optional_meta.gen_des_accessor(field_accessor),
             Self::String(string_meta) => string_meta.gen_des_accessor(field_accessor),
+            Self::Range(range_meta) => range_meta.gen_des_accessor(field_accessor),
         }
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
         match self {
-            Self::Number(number_meta) => number_meta.gen_ty_check(field_access, inner_access),
-            Self::Array(array_meta) => array_meta.gen_ty_check(field_access, inner_access),
-            Self::Object(object_meta) => object_meta.gen_ty_check(field_access, inner_access),
-            Self::Optional(optional_meta) => optional_meta.gen_ty_check(field_access, inner_access),
-            Self::String(string_meta) => string_meta.gen_ty_check(field_access, inner_access),
+            Self::Number(number_meta) => number_meta.gen_ty_check(variable_path),
+            Self::Array(array_meta) => array_meta.gen_ty_check(variable_path),
+            Self::Object(object_meta) => object_meta.gen_ty_check(variable_path),
+            Self::Optional(optional_meta) => optional_meta.gen_ty_check(variable_path),
+            Self::String(string_meta) => string_meta.gen_ty_check(variable_path),
+            Self::Range(range_meta) => range_meta.gen_ty_check(variable_path),
         }
     }
 }
 
+impl AccessorGenerateable for RangeMeta {
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
+        let start_path = variable_path
+            .to_owned()
+            .modify_push(ser::VariableAccess::Field("start".into()));
+        let stop_path = variable_path.modify_push(ser::VariableAccess::Field("stop".into()));
+
+        let start_accessor = self.bounds_type.gen_ser_accessor(start_path);
+        let stop_accessor = self.bounds_type.gen_ser_accessor(stop_path);
+
+        semicolon_chain([start_accessor, stop_accessor])
+    }
+
+    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+        let field_des = self.bounds_type.gen_des_accessor(des::FieldAccessor::None);
+        quote!($field_accessor{ start: $(field_des.to_owned()), stop: $field_des })
+    }
+
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
+        quote!(typeof $(variable_path.to_owned()) === "object" && "start" in $(variable_path.to_owned()) && "stop" in $variable_path)
+    }
+}
+
 impl AccessorGenerateable for OptionalMeta {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
-        let type_accessor = self.inner.gen_ser_accessor(field_access, field_accessor);
-        quote!(if (v$field_access$field_accessor !== undefined) { s.serialize_number(U32_BYTES, false, 1); $type_accessor } else { s.serialize_number(U32_BYTES, false, 0) })
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
+        let type_accessor = self.inner.gen_ser_accessor(variable_path.to_owned());
+        quote!(if ($variable_path !== undefined) { s.serialize_number(U32_BYTES, false, 1); $type_accessor } else { s.serialize_number(U32_BYTES, false, 0) })
     }
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
@@ -70,57 +84,39 @@ impl AccessorGenerateable for OptionalMeta {
         quote!($(field_accessor)(d.deserialize_number(U32_BYTES, false) === 0) ? undefined : $inner_accessor)
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
-        let available_check = ty_check::AvailableCheck::from_field_access_and_inner_type_access(
-            field_access,
-            inner_access,
-        );
-        let inner_type_check = self.inner.gen_ty_check(field_access, inner_access);
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
+        let available_check =
+            ty_check::AvailableCheck::from_variable_path(variable_path.to_owned());
+        let inner_type_check = self.inner.gen_ty_check(variable_path.to_owned());
         match &available_check {
             AvailableCheck::Object(_, _) => {
-                quote!((($(available_check.to_owned()) && (v$inner_access$field_access !== undefined && $inner_type_check) || v$inner_access$field_access === undefined) || !($available_check)))
+                quote!((($(available_check.to_owned()) && ($(variable_path.to_owned()) !== undefined && $inner_type_check) || $variable_path === undefined) || !($available_check)))
             }
             AvailableCheck::None => {
-                quote!((v$inner_access$field_access !== undefined && $inner_type_check) || v$inner_access$field_access === undefined)
+                quote!(($(variable_path.to_owned()) !== undefined && $inner_type_check) || $variable_path === undefined)
             }
         }
     }
 }
 
 impl AccessorGenerateable for StringMeta {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
-        quote!(s.serialize_string(v$field_access$field_accessor))
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
+        quote!(s.serialize_string($variable_path))
     }
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
         quote!($(field_accessor)d.deserialize_string())
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
-        quote!(typeof v$inner_access$field_access === "string")
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
+        quote!(typeof $variable_path === "string")
     }
 }
 
 impl AccessorGenerateable for ObjectMeta {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
         let obj_ident = self.name.to_obj_identifier();
-        quote!(serialize_$obj_ident(s, v$field_access$field_accessor))
+        quote!(serialize_$obj_ident(s, $variable_path))
     }
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
@@ -128,26 +124,18 @@ impl AccessorGenerateable for ObjectMeta {
         quote!($(field_accessor)deserialize_$obj_ident(d))
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
         let obj_ident = self.name.to_obj_identifier();
-        quote!(is_$obj_ident(v$inner_access$field_access))
+        quote!(is_$obj_ident($variable_path))
     }
 }
 
 impl AccessorGenerateable for ArrayMeta {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
         let inner_type_accessor = self
             .items_type
-            .gen_ser_accessor(ser::InnerTypeAccess::Direct, ser::FieldAccessor::Direct);
-        quote!(s.serialize_array((s, v) => $inner_type_accessor, v$field_access$field_accessor))
+            .gen_ser_accessor(ser::VariablePath::default());
+        quote!(s.serialize_array((s, $JS_OBJECT_VARIABLE) => $inner_type_accessor, $variable_path))
     }
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
@@ -155,24 +143,16 @@ impl AccessorGenerateable for ArrayMeta {
         quote!($(field_accessor)d.deserialize_array(() => $inner_type_accessor))
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
-        quote!(Array.isArray(v$inner_access$field_access))
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
+        quote!(Array.isArray($variable_path))
     }
 }
 
 impl AccessorGenerateable for NumberMeta {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens {
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens {
         let byte_amount_str = self.as_byte_js_string();
         let signed = bool_to_js_bool(self.signed);
-        quote!(s.serialize_number($byte_amount_str, $signed, v$field_access$field_accessor))
+        quote!(s.serialize_number($byte_amount_str, $signed, $variable_path))
     }
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
@@ -181,11 +161,7 @@ impl AccessorGenerateable for NumberMeta {
         quote!($(field_accessor)d.deserialize_number($byte_amount_str, $signed))
     }
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens {
-        quote!(typeof v$inner_access$field_access === "number")
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens {
+        quote!(typeof $variable_path === "number")
     }
 }

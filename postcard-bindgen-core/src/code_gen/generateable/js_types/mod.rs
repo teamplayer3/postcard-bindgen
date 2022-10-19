@@ -3,57 +3,91 @@ pub mod impls;
 use genco::prelude::js::Tokens;
 
 pub trait AccessorGenerateable {
-    fn gen_ser_accessor(
-        &self,
-        field_access: ser::InnerTypeAccess,
-        field_accessor: ser::FieldAccessor,
-    ) -> Tokens;
+    fn gen_ser_accessor(&self, variable_path: ser::VariablePath) -> Tokens;
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens;
 
-    fn gen_ty_check(
-        &self,
-        field_access: ty_check::FieldAccess,
-        inner_access: ty_check::InnerTypeAccess,
-    ) -> Tokens;
+    fn gen_ty_check(&self, variable_path: ser::VariablePath) -> Tokens;
 }
 
 pub mod ser {
     use genco::{prelude::JavaScript, quote_in, tokens::FormatInto};
 
-    use crate::code_gen::JS_ENUM_VARIANT_VALUE;
+    use crate::code_gen::JS_OBJECT_VARIABLE;
 
-    #[derive(Debug, Clone, Copy)]
-    pub enum FieldAccessor<'a> {
-        Object(&'a str),
-        Array(usize),
-        Direct,
+    // v .name
+    // v [0]
+    // v .name .hello
+    // v [1] .hello
+    // v .name [0]
+    // v .hello .name
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct VariablePath {
+        parts: Vec<VariableAccess>,
+        start_variable: String,
     }
 
-    impl FormatInto<JavaScript> for FieldAccessor<'_> {
-        fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
-            quote_in! { *tokens =>
-                $(match self {
-                    FieldAccessor::Array(i) => [$i],
-                    FieldAccessor::Object(n) => .$n,
-                    FieldAccessor::Direct => ()
-                })
+    impl Default for VariablePath {
+        fn default() -> Self {
+            Self {
+                parts: Default::default(),
+                start_variable: JS_OBJECT_VARIABLE.into(),
             }
         }
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum InnerTypeAccess {
-        Direct,
-        EnumInner,
+    impl VariablePath {
+        pub fn new(start_variable: String) -> Self {
+            Self {
+                start_variable,
+                parts: Default::default(),
+            }
+        }
+
+        pub fn push(&mut self, part: VariableAccess) {
+            self.parts.push(part)
+        }
+
+        pub fn modify_push(mut self, part: VariableAccess) -> Self {
+            self.push(part);
+            self
+        }
+
+        pub fn pop(&mut self) -> (&mut Self, Option<VariableAccess>) {
+            let popped = self.parts.pop();
+            (self, popped)
+        }
+
+        pub fn modify_pop(mut self) -> (Self, Option<VariableAccess>) {
+            let (_, popped) = self.pop();
+            (self, popped)
+        }
     }
 
-    impl FormatInto<JavaScript> for InnerTypeAccess {
+    impl FormatInto<JavaScript> for VariablePath {
+        fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
+            quote_in! { *tokens =>
+                $(self.start_variable)
+            }
+            self.parts
+                .into_iter()
+                .for_each(|part| part.format_into(tokens))
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub enum VariableAccess {
+        Indexed(usize),
+        Field(String),
+    }
+
+    impl FormatInto<JavaScript> for VariableAccess {
         fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
             quote_in! { *tokens =>
                 $(match self {
-                    InnerTypeAccess::Direct => (),
-                    InnerTypeAccess::EnumInner => .$JS_ENUM_VARIANT_VALUE
+                    Self::Indexed(index) => [$index],
+                    Self::Field(name) => .$name,
                 })
             }
         }
@@ -93,66 +127,30 @@ pub mod ty_check {
         tokens::{quoted, FormatInto},
     };
 
-    use crate::code_gen::JS_ENUM_VARIANT_VALUE;
+    use super::ser::{VariableAccess, VariablePath};
 
     #[derive(Clone)]
-    pub enum AvailableCheck<'a> {
-        Object(&'a str, InnerTypeAccess),
+    pub enum AvailableCheck {
+        Object(super::ser::VariablePath, String),
         None,
     }
 
-    impl<'a> AvailableCheck<'a> {
-        pub fn from_field_access_and_inner_type_access(
-            fa: FieldAccess<'a>,
-            ita: InnerTypeAccess,
-        ) -> Self {
-            match fa {
-                FieldAccess::Array(_) => Self::None,
-                FieldAccess::Object(name) => Self::Object(name, ita),
+    impl AvailableCheck {
+        pub fn from_variable_path(path: VariablePath) -> Self {
+            let (path, last) = path.modify_pop();
+            match last {
+                Some(VariableAccess::Field(name)) => Self::Object(path, name),
+                _ => Self::None,
             }
         }
     }
 
-    impl FormatInto<JavaScript> for AvailableCheck<'_> {
+    impl FormatInto<JavaScript> for AvailableCheck {
         fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
             quote_in! { *tokens =>
                 $(match self {
-                    AvailableCheck::Object(field_name, inner_access) => $(quoted(field_name)) in v$inner_access,
+                    AvailableCheck::Object(path, name) => $(quoted(name)) in $path,
                     AvailableCheck::None => ()
-                })
-            }
-        }
-    }
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum FieldAccess<'a> {
-        Object(&'a str),
-        Array(usize),
-    }
-
-    impl FormatInto<JavaScript> for FieldAccess<'_> {
-        fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
-            quote_in! { *tokens =>
-                $(match self {
-                    FieldAccess::Array(i) => [$i],
-                    FieldAccess::Object(n) => .$n
-                })
-            }
-        }
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum InnerTypeAccess {
-        Direct,
-        EnumInner,
-    }
-
-    impl FormatInto<JavaScript> for InnerTypeAccess {
-        fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
-            quote_in! { *tokens =>
-                $(match self {
-                    InnerTypeAccess::Direct => (),
-                    InnerTypeAccess::EnumInner => .$JS_ENUM_VARIANT_VALUE
                 })
             }
         }

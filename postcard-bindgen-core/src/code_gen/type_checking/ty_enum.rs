@@ -4,7 +4,7 @@ use crate::{
     code_gen::{
         generateable::js_types::*,
         utils::{and_chain, or_chain},
-        JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+        JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
     },
     registry::{EnumVariant, EnumVariantType},
 };
@@ -62,21 +62,19 @@ fn gen_complex_type_checks<'a>(
 }
 
 fn gen_variant_check(variant: &EnumVariant) -> Tokens {
+    let variable_path = ser::VariablePath::new("v".into())
+        .modify_push(ser::VariableAccess::Field(JS_ENUM_VARIANT_VALUE.into()));
     match &variant.inner_type {
         EnumVariantType::Empty => unreachable!(),
-        EnumVariantType::NewType(fields) => {
-            gen_object_checks(fields, ty_check::InnerTypeAccess::EnumInner)
-        }
-        EnumVariantType::Tuple(fields) => {
-            gen_array_checks(fields, ty_check::InnerTypeAccess::EnumInner)
-        }
+        EnumVariantType::NewType(fields) => gen_object_checks(fields, variable_path),
+        EnumVariantType::Tuple(fields) => gen_array_checks(fields, variable_path),
     }
 }
 
 fn simple_enum_type_check() -> Tokens {
-    quote!(typeof v === "object" && $(quoted(JS_ENUM_VARIANT_KEY)))
+    quote!(typeof $JS_OBJECT_VARIABLE === "object" && $(quoted(JS_ENUM_VARIANT_KEY)))
 }
 
 fn complex_enum_type_check() -> Tokens {
-    quote!(typeof v === "object" && $(quoted(JS_ENUM_VARIANT_KEY)) in v && $(quoted(JS_ENUM_VARIANT_VALUE)) in v)
+    quote!(typeof $JS_OBJECT_VARIABLE === "object" && $(quoted(JS_ENUM_VARIANT_KEY)) in $JS_OBJECT_VARIABLE && $(quoted(JS_ENUM_VARIANT_VALUE)) in $JS_OBJECT_VARIABLE)
 }

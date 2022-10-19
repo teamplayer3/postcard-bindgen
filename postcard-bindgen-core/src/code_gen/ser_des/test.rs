@@ -35,7 +35,7 @@ fn test_binding_struct_new_type() {
         gen_ser_des_functions(vec![binding]),
         quote!(
             const serialize_A = (s, v) => { s.serialize_number(U8_BYTES, false, v[0]) }
-            const deserialize_A = (d) => ([ d.deserialize_number(U8_BYTES, false) ])
+            const deserialize_A = (d) => ([d.deserialize_number(U8_BYTES, false)])
         ),
     )
 }
@@ -60,7 +60,7 @@ fn test_binding_struct_tuple_2() {
         gen_ser_des_functions(vec![binding]),
         quote!(
             const serialize_A = (s, v) => { s.serialize_number(U8_BYTES, false, v[0]); s.serialize_number(U8_BYTES, false, v[1]) }
-            const deserialize_A = (d) => ([ d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false) ])
+            const deserialize_A = (d) => ([d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false)])
         ),
     )
 }
@@ -89,7 +89,7 @@ fn test_binding_struct_tuple_3() {
         gen_ser_des_functions(vec![binding]),
         quote!(
             const serialize_A = (s, v) => { s.serialize_number(U8_BYTES, false, v[0]); s.serialize_number(U8_BYTES, false, v[1]); s.serialize_number(U8_BYTES, false, v[2]) }
-            const deserialize_A = (d) => ([ d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false) ])
+            const deserialize_A = (d) => ([d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false), d.deserialize_number(U8_BYTES, false)])
         ),
     )
 }
@@ -124,7 +124,7 @@ fn test_binding_struct_tuple_different_types() {
         gen_ser_des_functions(vec![binding]),
         quote!(
             const serialize_A = (s, v) => { s.serialize_number(U8_BYTES, false, v[0]); s.serialize_string(v[1]); if (v[2] !== undefined) { s.serialize_number(U32_BYTES, false, 1); s.serialize_number(U8_BYTES, false, v[2]) } else { s.serialize_number(U32_BYTES, false, 0) }; s.serialize_array((s, v) => s.serialize_number(U8_BYTES, false, v), v[3]); serialize_A(s, v[4]) }
-            const deserialize_A = (d) => ([ d.deserialize_number(U8_BYTES, false), d.deserialize_string(), (d.deserialize_number(U32_BYTES, false) === 0) ? undefined : d.deserialize_number(U8_BYTES, false), d.deserialize_array(() => d.deserialize_number(U8_BYTES, false)), deserialize_A(d) ])
+            const deserialize_A = (d) => ([d.deserialize_number(U8_BYTES, false), d.deserialize_string(), (d.deserialize_number(U32_BYTES, false) === 0) ? undefined : d.deserialize_number(U8_BYTES, false), d.deserialize_array(() => d.deserialize_number(U8_BYTES, false)), deserialize_A(d)])
         ),
     )
 }

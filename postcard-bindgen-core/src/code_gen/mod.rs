@@ -5,3 +5,4 @@ mod utils;
 
 const JS_ENUM_VARIANT_KEY: &str = "tag";
 const JS_ENUM_VARIANT_VALUE: &str = "value";
+const JS_OBJECT_VARIABLE: &str = "v";

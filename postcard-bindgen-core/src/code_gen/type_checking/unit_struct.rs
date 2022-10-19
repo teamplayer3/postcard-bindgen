@@ -1,5 +1,7 @@
 use genco::{lang::js::Tokens, quote};
 
+use crate::code_gen::JS_OBJECT_VARIABLE;
+
 pub fn gen_check_func() -> Tokens {
-    quote!(typeof v === "object" && Object.keys(v).length === 0)
+    quote!(typeof $JS_OBJECT_VARIABLE === "object" && Object.keys($JS_OBJECT_VARIABLE).length === 0)
 }

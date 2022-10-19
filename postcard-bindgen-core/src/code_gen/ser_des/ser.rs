@@ -7,20 +7,24 @@ use crate::{
     utils::StrExt,
 };
 
-fn gen_accessors_tuple(fields: impl AsRef<[JsType]>, field_access: ser::InnerTypeAccess) -> Tokens {
+fn gen_accessors_tuple(fields: impl AsRef<[JsType]>, variable_path: ser::VariablePath) -> Tokens {
     semicolon_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
-        field.gen_ser_accessor(field_access, ser::FieldAccessor::Array(index))
+        let path = variable_path
+            .to_owned()
+            .modify_push(ser::VariableAccess::Indexed(index));
+        field.gen_ser_accessor(path)
     }))
 }
 
 fn gen_accessors_struct(
     fields: impl AsRef<[StructField]>,
-    field_access: ser::InnerTypeAccess,
+    variable_path: ser::VariablePath,
 ) -> Tokens {
     semicolon_chain(fields.as_ref().iter().map(|field| {
-        field
-            .js_type
-            .gen_ser_accessor(field_access, ser::FieldAccessor::Object(field.name))
+        let path = variable_path
+            .to_owned()
+            .modify_push(ser::VariableAccess::Field(field.name.into()));
+        field.js_type.gen_ser_accessor(path)
     }))
 }
 
@@ -54,15 +58,19 @@ fn gen_ser_case(define: &BindingType) -> Tokens {
 pub mod strukt {
     use genco::{lang::js::Tokens, quote};
 
-    use crate::{code_gen::generateable::js_types::*, registry::StructField, utils::StrExt};
+    use crate::{
+        code_gen::{generateable::js_types::*, JS_OBJECT_VARIABLE},
+        registry::StructField,
+        utils::StrExt,
+    };
 
     use super::gen_accessors_struct;
 
     pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[StructField]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
-        let body = gen_accessors_struct(fields, ser::InnerTypeAccess::Direct);
+        let body = gen_accessors_struct(fields, ser::VariablePath::default());
         quote! {
-            const serialize_$(obj_name_upper) = (s, v) => { $body }
+            const serialize_$(obj_name_upper) = (s, $JS_OBJECT_VARIABLE) => { $body }
         }
     }
 }
@@ -70,15 +78,19 @@ pub mod strukt {
 pub mod tuple_struct {
     use genco::{lang::js::Tokens, quote};
 
-    use crate::{code_gen::generateable::js_types::*, type_info::JsType, utils::StrExt};
+    use crate::{
+        code_gen::{generateable::js_types::*, JS_OBJECT_VARIABLE},
+        type_info::JsType,
+        utils::StrExt,
+    };
 
     use super::gen_accessors_tuple;
 
     pub fn gen_function(obj_name: impl AsRef<str>, fields: impl AsRef<[JsType]>) -> Tokens {
         let obj_name_upper = obj_name.as_ref().to_obj_identifier();
-        let body = gen_accessors_tuple(fields, ser::InnerTypeAccess::Direct);
+        let body = gen_accessors_tuple(fields, ser::VariablePath::default());
         quote! {
-            const serialize_$(obj_name_upper) = (s, v) => { $body }
+            const serialize_$(obj_name_upper) = (s, $JS_OBJECT_VARIABLE) => { $body }
         }
     }
 }
@@ -92,7 +104,10 @@ pub mod enum_ty {
     };
 
     use crate::{
-        code_gen::{generateable::js_types::*, utils::semicolon_chain, JS_ENUM_VARIANT_KEY},
+        code_gen::{
+            generateable::js_types::*, utils::semicolon_chain, JS_ENUM_VARIANT_KEY,
+            JS_ENUM_VARIANT_VALUE,
+        },
         registry::{EnumVariant, EnumVariantType},
         utils::StrExt,
     };
@@ -132,15 +147,16 @@ pub mod enum_ty {
 
     fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
         let variant_name = quoted(variant.name);
+        let variable_path = ser::VariablePath::default()
+            .modify_push(ser::VariableAccess::Field(JS_ENUM_VARIANT_VALUE.into()));
         let body = match &variant.inner_type {
             EnumVariantType::Empty => CaseBody::None,
             EnumVariantType::Tuple(fields) => {
-                CaseBody::Body(gen_accessors_tuple(fields, ser::InnerTypeAccess::EnumInner))
+                CaseBody::Body(gen_accessors_tuple(fields, variable_path))
             }
-            EnumVariantType::NewType(fields) => CaseBody::Body(gen_accessors_struct(
-                fields,
-                ser::InnerTypeAccess::EnumInner,
-            )),
+            EnumVariantType::NewType(fields) => {
+                CaseBody::Body(gen_accessors_struct(fields, variable_path))
+            }
         };
 
         quote!(case $variant_name: s.serialize_number(U32_BYTES, false, $index); $body break)
