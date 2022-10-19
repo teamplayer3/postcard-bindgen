@@ -28,7 +28,7 @@ pub fn gen_ser_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
         BindingType::Enum(ty) => generate_js_enum(ty),
         BindingType::Struct(ty) => generate_js_object(ty),
         BindingType::TupleStruct(ty) => generate_js_object_tuple(ty),
-        BindingType::UnitStruct(ty) => generate_js_obj_unit(&ty.name),
+        BindingType::UnitStruct(ty) => generate_js_obj_unit(ty.name),
     }))
 }
 

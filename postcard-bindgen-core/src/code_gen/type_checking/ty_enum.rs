@@ -23,13 +23,11 @@ pub fn gen_check_func(variants: impl AsRef<[EnumVariant]>) -> Tokens {
     let simple_variant_checks = gen_simple_type_checks(simple_variants);
     let complex_variant_checks = gen_complex_type_checks(complex_variants);
 
-    let combined = or_chain(
+    or_chain(
         [simple_variant_checks, complex_variant_checks]
             .into_iter()
-            .filter_map(|v| v),
-    );
-
-    quote!($combined)
+            .flatten(),
+    )
 }
 
 fn gen_simple_type_checks<'a>(

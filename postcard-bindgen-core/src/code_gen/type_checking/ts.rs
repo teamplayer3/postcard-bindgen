@@ -96,7 +96,7 @@ impl FormatInto<JavaScript> for JsType {
 }
 
 fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_brake_chain(bindings.as_ref().iter().map(|b| gen_binding_type(b)))
+    line_brake_chain(bindings.as_ref().iter().map(gen_binding_type))
 }
 
 fn gen_binding_type(binding: &BindingType) -> Tokens {
