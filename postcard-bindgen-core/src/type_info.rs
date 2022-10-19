@@ -8,19 +8,6 @@ pub enum JsType {
     Range(RangeMeta),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RangeMeta {
-    pub(crate) bounds_type: Box<JsType>,
-}
-
-impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
-    fn get_type() -> JsType {
-        JsType::Range(RangeMeta {
-            bounds_type: Box::new(T::get_type()),
-        })
-    }
-}
-
 impl ToString for JsType {
     fn to_string(&self) -> String {
         match self {
@@ -46,6 +33,11 @@ pub fn bool_to_js_bool(value: bool) -> &'static str {
     } else {
         "false"
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RangeMeta {
+    pub(crate) bounds_type: Box<JsType>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -174,6 +166,14 @@ impl<T: GenJsBinding> GenJsBinding for [T] {
 impl<'a> GenJsBinding for &'a str {
     fn get_type() -> JsType {
         JsType::String(StringMeta {})
+    }
+}
+
+impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
+    fn get_type() -> JsType {
+        JsType::Range(RangeMeta {
+            bounds_type: Box::new(T::get_type()),
+        })
     }
 }
 

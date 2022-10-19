@@ -78,7 +78,7 @@ fn js_type_format_into(tokens: &mut Tokens, ty: &JsType) {
             JsType::Object(ObjectMeta {name}) => $(*name),
             JsType::Optional(OptionalMeta {inner}) => $(inner.as_ref()) | undefined,
             JsType::String(_) => string,
-            JsType::Range(RangeMeta {bounds_type}) => {{ start: $(bounds_type.as_ref()), stop: $(bounds_type.as_ref()) }}
+            JsType::Range(RangeMeta {bounds_type}) => {{ start: $(bounds_type.as_ref()), end: $(bounds_type.as_ref()) }}
         })
     }
 }
