@@ -8,6 +8,8 @@ pub trait BindingTypeGenerateable {
     fn gen_des_body(&self) -> Tokens;
 
     fn gen_ty_check_body(&self) -> Tokens;
+
+    fn gen_ts_typings_body(&self) -> Tokens;
 }
 
 mod ser {
@@ -113,5 +115,30 @@ mod ty_check {
             field.gen_ty_check(path)
         }));
         quote!(Array.isArray($(variable_path.to_owned())) && $variable_path.length === $arr_len && $field_checks)
+    }
+}
+
+pub mod ts {
+    use genco::{prelude::js::Tokens, quote};
+
+    use crate::{
+        code_gen::{generateable::js_types::JsTypeGenerateable, utils::comma_chain},
+        registry::StructField,
+        type_info::JsType,
+    };
+
+    pub fn gen_typings_indexed(fields: impl AsRef<[JsType]>) -> Tokens {
+        let body = comma_chain(fields.as_ref().iter().map(|f| quote!($(f.gen_ts_type()))));
+        quote!([$body])
+    }
+
+    pub fn gen_typings_fields(fields: impl AsRef<[StructField]>) -> Tokens {
+        let body = comma_chain(
+            fields
+                .as_ref()
+                .iter()
+                .map(|f| quote!($(f.name): $(f.js_type.gen_ts_type()))),
+        );
+        quote!({ $body })
     }
 }

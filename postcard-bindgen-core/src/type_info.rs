@@ -69,21 +69,6 @@ impl NumberMeta {
             _ => unreachable!(),
         }
     }
-
-    pub(crate) fn as_ts_type(&self) -> String {
-        let prefix = if self.signed { "i" } else { "u" };
-        let bits = match self.bytes {
-            1 => "8",
-            2 => "16",
-            4 => "32",
-            8 => "64",
-            16 => "128",
-            _ => unreachable!(),
-        };
-        let mut out = String::from(prefix);
-        out.push_str(bits);
-        out
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

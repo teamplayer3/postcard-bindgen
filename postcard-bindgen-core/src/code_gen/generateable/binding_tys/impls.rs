@@ -9,7 +9,7 @@ use crate::{
     registry::{BindingType, EnumType, StructType, TupleStructType, UnitStructType},
 };
 
-use super::{des, ser, ty_check, BindingTypeGenerateable};
+use super::{des, ser, ts, ty_check, BindingTypeGenerateable};
 
 impl BindingTypeGenerateable for BindingType {
     fn gen_ser_body(&self) -> genco::prelude::js::Tokens {
@@ -40,6 +40,15 @@ impl BindingTypeGenerateable for BindingType {
             Self::Enum(enum_type) => enum_type.gen_ty_check_body(),
         }
     }
+
+    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+        match self {
+            Self::Struct(struct_type) => struct_type.gen_ts_typings_body(),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ts_typings_body(),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ts_typings_body(),
+            Self::Enum(enum_type) => enum_type.gen_ts_typings_body(),
+        }
+    }
 }
 
 impl BindingTypeGenerateable for StructType {
@@ -53,6 +62,10 @@ impl BindingTypeGenerateable for StructType {
 
     fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
         ty_check::gen_object_checks(&self.fields, VariablePath::default())
+    }
+
+    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+        ts::gen_typings_fields(&self.fields)
     }
 }
 
@@ -68,6 +81,10 @@ impl BindingTypeGenerateable for TupleStructType {
     fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
         ty_check::gen_array_checks(&self.fields, VariablePath::default())
     }
+
+    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+        ts::gen_typings_indexed(&self.fields)
+    }
 }
 
 impl BindingTypeGenerateable for UnitStructType {
@@ -82,6 +99,10 @@ impl BindingTypeGenerateable for UnitStructType {
     fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
         quote!(typeof $JS_OBJECT_VARIABLE === "object" && Object.keys($JS_OBJECT_VARIABLE).length === 0)
     }
+
+    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+        ts::gen_typings_fields([])
+    }
 }
 
 impl BindingTypeGenerateable for EnumType {
@@ -95,6 +116,10 @@ impl BindingTypeGenerateable for EnumType {
 
     fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
         enum_ty::ty_check::gen_check_func(&self.variants)
+    }
+
+    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+        enum_ty::ts::gen_typings(&self.variants)
     }
 }
 
@@ -271,6 +296,38 @@ pub mod enum_ty {
 
         fn complex_enum_type_check() -> Tokens {
             quote!(typeof $JS_OBJECT_VARIABLE === "object" && $(quoted(JS_ENUM_VARIANT_KEY)) in $JS_OBJECT_VARIABLE && $(quoted(JS_ENUM_VARIANT_VALUE)) in $JS_OBJECT_VARIABLE)
+        }
+    }
+
+    pub mod ts {
+        use genco::{prelude::js::Tokens, quote, tokens::quoted};
+
+        use crate::{
+            code_gen::{
+                generateable::binding_tys, utils::divider_chain, JS_ENUM_VARIANT_KEY,
+                JS_ENUM_VARIANT_VALUE,
+            },
+            registry::{EnumVariant, EnumVariantType},
+        };
+
+        pub fn gen_typings(variants: impl AsRef<[EnumVariant]>) -> Tokens {
+            let body = divider_chain(variants.as_ref().iter().map(gen_variant_typings));
+            quote!($body)
+        }
+
+        fn gen_variant_typings(variant: &EnumVariant) -> Tokens {
+            let name = quoted(variant.name);
+            match &variant.inner_type {
+                EnumVariantType::Empty => quote!({ $JS_ENUM_VARIANT_KEY: $name }),
+                t => {
+                    let body = match t {
+                        EnumVariantType::Tuple(t) => binding_tys::ts::gen_typings_indexed(t),
+                        EnumVariantType::NewType(n) => binding_tys::ts::gen_typings_fields(n),
+                        _ => unreachable!(),
+                    };
+                    quote!({ $JS_ENUM_VARIANT_KEY: $name, $JS_ENUM_VARIANT_VALUE: $body })
+                }
+            }
         }
     }
 }

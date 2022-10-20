@@ -52,6 +52,17 @@ impl JsTypeGenerateable for JsType {
             Self::Range(range_meta) => range_meta.gen_ty_check(variable_path),
         }
     }
+
+    fn gen_ts_type(&self) -> Tokens {
+        match self {
+            Self::Number(number_meta) => number_meta.gen_ts_type(),
+            Self::Array(array_meta) => array_meta.gen_ts_type(),
+            Self::Object(object_meta) => object_meta.gen_ts_type(),
+            Self::Optional(optional_meta) => optional_meta.gen_ts_type(),
+            Self::String(string_meta) => string_meta.gen_ts_type(),
+            Self::Range(range_meta) => range_meta.gen_ts_type(),
+        }
+    }
 }
 
 impl JsTypeGenerateable for RangeMeta {
@@ -74,6 +85,10 @@ impl JsTypeGenerateable for RangeMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         quote!(typeof $(variable_path.to_owned()) === "object" && "start" in $(variable_path.to_owned()) && "end" in $variable_path)
+    }
+
+    fn gen_ts_type(&self) -> Tokens {
+        quote!({ start: $(self.bounds_type.gen_ts_type()), end: $(self.bounds_type.gen_ts_type()) })
     }
 }
 
@@ -101,6 +116,10 @@ impl JsTypeGenerateable for OptionalMeta {
             }
         }
     }
+
+    fn gen_ts_type(&self) -> Tokens {
+        quote!($(self.inner.gen_ts_type()) | undefined)
+    }
 }
 
 impl JsTypeGenerateable for StringMeta {
@@ -114,6 +133,10 @@ impl JsTypeGenerateable for StringMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         quote!(typeof $variable_path === "string")
+    }
+
+    fn gen_ts_type(&self) -> Tokens {
+        quote!(string)
     }
 }
 
@@ -132,6 +155,10 @@ impl JsTypeGenerateable for ObjectMeta {
         let obj_ident = self.name.to_obj_identifier();
         quote!(is_$obj_ident($variable_path))
     }
+
+    fn gen_ts_type(&self) -> Tokens {
+        quote!($(self.name))
+    }
 }
 
 impl JsTypeGenerateable for ArrayMeta {
@@ -147,6 +174,10 @@ impl JsTypeGenerateable for ArrayMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         quote!(Array.isArray($variable_path))
+    }
+
+    fn gen_ts_type(&self) -> Tokens {
+        quote!($(self.items_type.gen_ts_type())[])
     }
 }
 
@@ -165,5 +196,18 @@ impl JsTypeGenerateable for NumberMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         quote!(typeof $variable_path === "number")
+    }
+
+    fn gen_ts_type(&self) -> Tokens {
+        let prefix = if self.signed { "i" } else { "u" };
+        let bits = match self.bytes {
+            1 => "8",
+            2 => "16",
+            4 => "32",
+            8 => "64",
+            16 => "128",
+            _ => unreachable!(),
+        };
+        quote!($prefix$bits)
     }
 }

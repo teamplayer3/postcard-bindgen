@@ -10,6 +10,8 @@ pub trait JsTypeGenerateable {
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens;
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens;
+
+    fn gen_ts_type(&self) -> Tokens;
 }
 
 pub mod des {
