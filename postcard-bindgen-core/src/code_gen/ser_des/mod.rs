@@ -1,17 +1,12 @@
-mod des;
-mod ser;
-
 #[cfg(test)]
 mod test;
 
-pub use des::gen_deserialize_func;
-pub use ser::gen_serialize_func;
+use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
-use genco::{prelude::js::Tokens, quote};
+use crate::{code_gen::utils::line_brake_chain, registry::BindingType, utils::StrExt};
 
-use crate::{
-    code_gen::utils::line_brake_chain,
-    registry::{BindingType, EnumType, StructType, TupleStructType},
+use super::{
+    generateable::binding_tys::BindingTypeGenerateable, utils::semicolon_chain, JS_OBJECT_VARIABLE,
 };
 
 pub fn gen_ser_des_classes() -> Tokens {
@@ -24,41 +19,56 @@ pub fn gen_ser_des_classes() -> Tokens {
 }
 
 pub fn gen_ser_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_brake_chain(bindings.as_ref().iter().map(|binding| match binding {
-        BindingType::Enum(ty) => generate_js_enum(ty),
-        BindingType::Struct(ty) => generate_js_object(ty),
-        BindingType::TupleStruct(ty) => generate_js_object_tuple(ty),
-        BindingType::UnitStruct(ty) => generate_js_obj_unit(ty.name),
-    }))
+    line_brake_chain(bindings.as_ref().iter().map(gen_ser_des_funcs))
 }
 
-fn generate_js_obj_unit(name: impl AsRef<str>) -> Tokens {
-    quote! {
-        $(ser::strukt::gen_function(name.as_ref(), &[]))
-        $(des::strukt::gen_function(name, &[]))
-    }
+pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
+    let body = semicolon_chain(defines.as_ref().iter().map(gen_ser_case));
+    quote!(
+        module.exports.serialize = (type, value) => {
+            if (!(typeof type === "string")) {
+                throw "type must be a string"
+            }
+            const s = new Serializer()
+            switch (type) { $body }
+            return s.finish()
+        }
+    )
 }
 
-fn generate_js_object(ty: &StructType) -> Tokens {
-    let obj_name = &ty.name;
-    quote! {
-        $(ser::strukt::gen_function(obj_name, &ty.fields))
-        $(des::strukt::gen_function(obj_name, &ty.fields))
-    }
+pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
+    let body = semicolon_chain(defines.as_ref().iter().map(gen_des_case));
+    quote!(
+        module.exports.deserialize = (type, bytes) => {
+            if (!(typeof type === "string")) {
+                throw "type must be a string"
+            }
+            const d = new Deserializer(bytes)
+            switch (type) { $body }
+        }
+    )
 }
 
-fn generate_js_object_tuple(ty: &TupleStructType) -> Tokens {
-    let obj_name = &ty.name;
-    quote! {
-        $(ser::tuple_struct::gen_function(obj_name, &ty.fields))
-        $(des::tuple_struct::gen_function(obj_name, &ty.fields))
-    }
+fn gen_ser_case(define: &BindingType) -> Tokens {
+    let name = define.inner_name();
+    let case_str = quoted(name);
+    let type_name = name.to_obj_identifier();
+    quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
 }
 
-fn generate_js_enum(ty: &EnumType) -> Tokens {
-    let obj_name = &ty.name;
+fn gen_des_case(define: &BindingType) -> Tokens {
+    let name = define.inner_name();
+    let case_str = quoted(name);
+    let type_name = name.to_obj_identifier();
+    quote!(case $case_str: return deserialize_$type_name(d))
+}
+
+fn gen_ser_des_funcs(binding_type: &BindingType) -> Tokens {
+    let obj_name = binding_type.inner_name().to_obj_identifier();
+    let ser_body = binding_type.gen_ser_body();
+    let des_body = binding_type.gen_des_body();
     quote! {
-        $(ser::enum_ty::gen_function(obj_name, &ty.variants))
-        $(des::enum_ty::gen_function(obj_name, &ty.variants))
+        const serialize_$(&obj_name) = (s, $JS_OBJECT_VARIABLE) => { $ser_body }
+        const deserialize_$obj_name = (d) => $des_body
     }
 }

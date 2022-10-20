@@ -36,6 +36,14 @@ pub fn divider_chain(parts: impl IntoIterator<Item = Tokens>) -> Tokens {
     quote!($(for part in parts join ( | ) => $part))
 }
 
+pub fn wrapped_brackets(inner: Tokens) -> Tokens {
+    quote!(($inner))
+}
+
+pub fn wrapped_curly_brackets(inner: Tokens) -> Tokens {
+    quote!({ $inner })
+}
+
 #[cfg(test)]
 mod test {
     use genco::quote;
