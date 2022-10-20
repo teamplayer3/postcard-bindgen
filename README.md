@@ -37,7 +37,6 @@ fn main() {
 
 ## JavaScript Type mapping
 
-### Unit Type
 <table>
 <tr><td> Type Name </td> <td> Rust </td> <td> Js </td></tr>
 <tr><td>Unit Type</td><td>
