@@ -10,7 +10,7 @@ This `crate` can generate bindings from the rust structures for other languages 
 
 ## Supported languages
 
-- [ ] JavaScript (WIP)
+- [x] JavaScript
 - [ ] Python
 
 ## Usage
