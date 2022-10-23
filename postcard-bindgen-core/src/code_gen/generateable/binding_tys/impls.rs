@@ -135,7 +135,9 @@ pub mod enum_ty {
 
         use crate::{
             code_gen::{
-                generateable::{binding_tys::ser, VariableAccess, VariablePath},
+                generateable::{
+                    binding_tys::ser, js_types::JsTypeGenerateable, VariableAccess, VariablePath,
+                },
                 utils::semicolon_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
@@ -172,9 +174,10 @@ pub mod enum_ty {
                 .modify_push(VariableAccess::Field(JS_ENUM_VARIANT_VALUE.into()));
             let body = match &variant.inner_type {
                 EnumVariantType::Empty => CaseBody::None,
-                EnumVariantType::Tuple(fields) => {
-                    CaseBody::Body(ser::gen_accessors_indexed(fields, variable_path))
-                }
+                EnumVariantType::Tuple(fields) => CaseBody::Body(match fields.len() {
+                    1 => fields[0].gen_ser_accessor(variable_path),
+                    _ => ser::gen_accessors_indexed(fields, variable_path),
+                }),
                 EnumVariantType::NewType(fields) => {
                     CaseBody::Body(ser::gen_accessors_fields(fields, variable_path))
                 }
@@ -185,12 +188,21 @@ pub mod enum_ty {
     }
 
     pub mod des {
-        use genco::{lang::js::Tokens, quote, tokens::quoted};
+        use genco::{
+            lang::js::Tokens,
+            prelude::JavaScript,
+            quote, quote_in,
+            tokens::{quoted, FormatInto},
+        };
 
         use crate::{
             code_gen::{
-                generateable::binding_tys::des, utils::semicolon_chain, JS_ENUM_VARIANT_KEY,
-                JS_ENUM_VARIANT_VALUE,
+                generateable::{
+                    binding_tys::des,
+                    js_types::{self, JsTypeGenerateable},
+                },
+                utils::semicolon_chain,
+                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
             registry::{EnumVariant, EnumVariantType},
         };
@@ -203,16 +215,33 @@ pub mod enum_ty {
             quote!(switch (d.deserialize_number(U32_BYTES, false)) { $switch_body; default: throw "variant not implemented" })
         }
 
+        enum CaseBody {
+            Body(Tokens),
+            None,
+        }
+
+        impl FormatInto<JavaScript> for CaseBody {
+            fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
+                quote_in! { *tokens =>
+                    $(match self {
+                        CaseBody::Body(b) => {, $JS_ENUM_VARIANT_VALUE: $b},
+                        CaseBody::None => ()
+                    })
+                }
+            }
+        }
+
         fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
             let variant_name = quoted(variant.name);
             let body = match &variant.inner_type {
-                EnumVariantType::Empty => Tokens::new(),
+                EnumVariantType::Empty => CaseBody::None,
                 EnumVariantType::NewType(fields) => {
-                    quote!(, $JS_ENUM_VARIANT_VALUE: $(des::gen_accessors_fields(fields)))
+                    CaseBody::Body(des::gen_accessors_fields(fields))
                 }
-                EnumVariantType::Tuple(fields) => {
-                    quote!(, $JS_ENUM_VARIANT_VALUE: $(des::gen_accessors_indexed(fields)))
-                }
+                EnumVariantType::Tuple(fields) => CaseBody::Body(match fields.len() {
+                    1 => fields[0].gen_des_accessor(js_types::des::FieldAccessor::None),
+                    _ => des::gen_accessors_indexed(fields),
+                }),
             };
             quote!(case $index: return { $JS_ENUM_VARIANT_KEY: $variant_name $body})
         }
@@ -223,7 +252,10 @@ pub mod enum_ty {
 
         use crate::{
             code_gen::{
-                generateable::{binding_tys::ty_check, VariableAccess, VariablePath},
+                generateable::{
+                    binding_tys::ty_check, js_types::JsTypeGenerateable, VariableAccess,
+                    VariablePath,
+                },
                 utils::{and_chain, or_chain},
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
             },
@@ -286,7 +318,10 @@ pub mod enum_ty {
                 EnumVariantType::NewType(fields) => {
                     ty_check::gen_object_checks(fields, variable_path)
                 }
-                EnumVariantType::Tuple(fields) => ty_check::gen_array_checks(fields, variable_path),
+                EnumVariantType::Tuple(fields) => match fields.len() {
+                    1 => fields[0].gen_ty_check(variable_path),
+                    _ => ty_check::gen_array_checks(fields, variable_path),
+                },
             }
         }
 
@@ -304,8 +339,9 @@ pub mod enum_ty {
 
         use crate::{
             code_gen::{
-                generateable::binding_tys, utils::divider_chain, JS_ENUM_VARIANT_KEY,
-                JS_ENUM_VARIANT_VALUE,
+                generateable::{binding_tys, js_types::JsTypeGenerateable},
+                utils::divider_chain,
+                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
             registry::{EnumVariant, EnumVariantType},
         };
@@ -321,7 +357,10 @@ pub mod enum_ty {
                 EnumVariantType::Empty => quote!({ $JS_ENUM_VARIANT_KEY: $name }),
                 t => {
                     let body = match t {
-                        EnumVariantType::Tuple(t) => binding_tys::ts::gen_typings_indexed(t),
+                        EnumVariantType::Tuple(t) => match t.len() {
+                            1 => t[0].gen_ts_type(),
+                            _ => binding_tys::ts::gen_typings_indexed(t),
+                        },
                         EnumVariantType::NewType(n) => binding_tys::ts::gen_typings_fields(n),
                         _ => unreachable!(),
                     };
