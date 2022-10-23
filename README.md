@@ -108,7 +108,7 @@ enum Enum {
 },
 {
     key: "B",
-    value: [123]
+    value: 123
 },
 {
     key: "C",
