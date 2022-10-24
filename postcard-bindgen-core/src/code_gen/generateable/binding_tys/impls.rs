@@ -243,7 +243,7 @@ pub mod enum_ty {
                     _ => des::gen_accessors_indexed(fields),
                 }),
             };
-            quote!(case $index: return { $JS_ENUM_VARIANT_KEY: $variant_name $body})
+            quote!(case $index: return { $JS_ENUM_VARIANT_KEY: $variant_name $body })
         }
     }
 
