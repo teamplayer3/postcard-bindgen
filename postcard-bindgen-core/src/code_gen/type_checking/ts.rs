@@ -248,7 +248,7 @@ mod test {
 
         assert_tokens(
             test_binding,
-            quote!(export type A = { tag: "A" } | { tag: "B", value: [u8] }),
+            quote!(export type A = { tag: "A" } | { tag: "B", value: u8 }),
         )
     }
 }
