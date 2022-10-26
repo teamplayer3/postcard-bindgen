@@ -1,6 +1,6 @@
 use std::{io::Write, ops::Range};
 
-use postcard_bindgen::{build_npm_package, generate_bindings, PostcardBindings};
+use postcard_bindgen::{build_npm_package, generate_bindings, PacketInfo, PostcardBindings};
 use serde_derive::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
@@ -33,6 +33,10 @@ struct D {
 fn main() {
     build_npm_package(
         std::env::current_dir().unwrap().as_path(),
+        PacketInfo {
+            name: "test-bindings".into(),
+            version: "0.1.0".try_into().unwrap(),
+        },
         generate_bindings!(A, B, C, D),
     )
     .unwrap();
