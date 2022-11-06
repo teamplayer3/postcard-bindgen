@@ -40,7 +40,7 @@ pub use postcard_bindgen_core::{
     build_npm_package, export_bindings, gen_ts_typings, generate_js, ExportStrings, PacketInfo,
     Version,
 };
-pub use postcard_bindgen_proc_macro::PostcardBindings;
+pub use postcard_bindgen_derive::PostcardBindings;
 
 #[doc(hidden)]
 pub mod private {
@@ -55,7 +55,7 @@ pub mod private {
 ///
 /// The supplied structures needs to implement the `trait` [`crate::private::JsBindings`].
 /// This `trait` is automatically implemented when deriving the
-/// [`postcard_bindgen_proc_macro::PostcardBindings`] on the types.
+/// [`postcard_bindgen_derive::PostcardBindings`] on the types.
 ///
 /// # Example
 /// ```ignore

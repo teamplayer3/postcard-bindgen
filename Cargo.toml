@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "postcard-bindgen-proc-macro",
+    "postcard-bindgen-derive",
     "postcard-bindgen-core",
     "postcard-bindgen",
 ]

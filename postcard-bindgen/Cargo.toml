@@ -2,6 +2,13 @@
 name = "postcard-bindgen"
 version = "0.1.0"
 edition = "2021"
+authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
+repository = "https://github.com/teamplayer3/postcard-bindgen.git"
+description = "A crate to generate bindings for the postcard binary format for other languages than Rust."
+keywords = ["postcard", "generating", "javascript", "serde", "serialize"]
+categories = ["embedded", "encoding", "no-std"]
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
 
 [features]
 default = []
@@ -10,8 +17,8 @@ alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 
 [dependencies]
-postcard-bindgen-proc-macro = {path = "../postcard-bindgen-proc-macro"}
-postcard-bindgen-core = {path = "../postcard-bindgen-core"}
+postcard-bindgen-derive = {version = "0.1.0", path = "../postcard-bindgen-derive"}
+postcard-bindgen-core = {version = "0.1.0", path = "../postcard-bindgen-core"}
 
 [dev-dependencies]
 serde = "1"
