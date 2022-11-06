@@ -2,7 +2,7 @@ pub use postcard_bindgen_core::{
     build_npm_package, export_bindings, gen_ts_typings, generate_js,
     registry::*,
     type_info::{GenJsBinding, JsType, ObjectMeta},
-    ArchPointerLen, ExportStrings, PacketInfo,
+    ArchPointerLen, ExportStrings, PacketInfo, Version,
 };
 pub use postcard_bindgen_proc_macro::PostcardBindings;
 

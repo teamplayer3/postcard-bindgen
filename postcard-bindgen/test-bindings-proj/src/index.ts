@@ -2,7 +2,9 @@ import { readFileSync } from "fs";
 import { deserialize, serialize } from "test-postcard-bindings";
 
 
-const bytes = serialize("B", [234, [234], "Hello"])
+const map = new Map()
+map.set(234, 21)
+const bytes = serialize("B", [234, [234], "Hello", map])
 console.log(bytes)
 const b = deserialize("B", bytes)
 console.log(b)

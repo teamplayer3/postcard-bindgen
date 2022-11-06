@@ -7,6 +7,7 @@ edition = "2021"
 default = []
 alloc = []
 heapless = ["dep:heapless"]
+std = ["alloc"]
 
 [dependencies]
 genco = "0.17.2"

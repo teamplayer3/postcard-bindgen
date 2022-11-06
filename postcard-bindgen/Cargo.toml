@@ -5,7 +5,7 @@ edition = "2021"
 
 [features]
 default = []
-std = ["postcard-bindgen-core/alloc"]
+std = ["postcard-bindgen-core/std"]
 alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 

@@ -147,6 +147,25 @@ struct OptionStruct {
 }
 ```
 </td><tr>
+<tr><td>Map</td><td>
+
+```rust
+let map_string_key = HashMap::<string, u8>::new();
+
+let map_any_key = HashMap::<u16, u8>::new();
+```
+</td><td>
+
+```javascript
+// map_string_key
+{
+    key: value
+}
+
+// map_any_key
+new Map()
+```
+</td><tr>
 </table>
 
 

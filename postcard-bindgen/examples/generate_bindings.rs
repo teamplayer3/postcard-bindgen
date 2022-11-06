@@ -1,4 +1,4 @@
-use std::{io::Write, ops::Range};
+use std::{collections::HashMap, io::Write, ops::Range};
 
 use postcard_bindgen::{build_npm_package, generate_bindings, PacketInfo, PostcardBindings};
 use serde_derive::Serialize;
@@ -7,7 +7,7 @@ use serde_derive::Serialize;
 struct A;
 
 #[derive(Serialize, PostcardBindings)]
-struct B(u8, Vec<u16>, String);
+struct B(u8, Vec<u16>, String, HashMap<u16, u8>);
 
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
@@ -28,6 +28,8 @@ struct D {
     f: &'static [u8],
     g: &'static str,
     h: Range<u16>,
+    i: HashMap<String, u16>,
+    j: HashMap<u16, u8>,
 }
 
 fn main() {
@@ -45,7 +47,12 @@ fn main() {
         a: 123,
         b: C::D {
             a: vec![6, 123],
-            b: B(231, vec![182, 1234], "hello from rust".into()),
+            b: B(
+                231,
+                vec![182, 1234],
+                "hello from rust".into(),
+                HashMap::new(),
+            ),
         },
         c: A,
         d: vec![234, 21],
@@ -53,6 +60,17 @@ fn main() {
         f: &[123, 23],
         g: "Hello",
         h: (10..30),
+        i: {
+            let mut map = HashMap::new();
+            map.insert("a".into(), 23);
+            map
+        },
+        j: {
+            let mut map = HashMap::new();
+            map.insert(234, 23);
+            map.insert(23, 99);
+            map
+        },
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

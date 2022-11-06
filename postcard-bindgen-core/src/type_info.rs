@@ -6,6 +6,7 @@ pub enum JsType {
     Object(ObjectMeta),
     Optional(OptionalMeta),
     Range(RangeMeta),
+    Map(MapMeta),
 }
 
 impl ToString for JsType {
@@ -17,6 +18,7 @@ impl ToString for JsType {
             JsType::String(_) => "string".into(),
             JsType::Optional(_) => "optional".into(),
             JsType::Range(_) => "range".into(),
+            JsType::Map(_) => "map".into(),
         }
     }
 }
@@ -33,6 +35,12 @@ pub fn bool_to_js_bool(value: bool) -> &'static str {
     } else {
         "false"
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MapMeta {
+    pub(crate) key_type: Box<JsType>,
+    pub(crate) value_type: Box<JsType>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -163,6 +171,16 @@ impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
 }
 
 #[cfg(feature = "alloc")]
+impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for alloc::collections::BTreeMap<K, V> {
+    fn get_type() -> JsType {
+        JsType::Map(MapMeta {
+            key_type: Box::new(K::get_type()),
+            value_type: Box::new(V::get_type()),
+        })
+    }
+}
+
+#[cfg(feature = "alloc")]
 impl GenJsBinding for alloc::string::String {
     fn get_type() -> JsType {
         JsType::String(StringMeta {})
@@ -174,6 +192,16 @@ impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
+#[cfg(feature = "std")]
+impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for std::collections::HashMap<K, V> {
+    fn get_type() -> JsType {
+        JsType::Map(MapMeta {
+            key_type: Box::new(K::get_type()),
+            value_type: Box::new(V::get_type()),
         })
     }
 }
@@ -191,5 +219,17 @@ impl<T: GenJsBinding, const N: usize> GenJsBinding for heapless::Vec<T, N> {
 impl<const N: usize> GenJsBinding for heapless::String<N> {
     fn get_type() -> JsType {
         JsType::String(StringMeta {})
+    }
+}
+
+#[cfg(feature = "heapless")]
+impl<K: GenJsBinding, V: GenJsBinding, const N: usize> GenJsBinding
+    for heapless::LinearMap<K, V, N>
+{
+    fn get_type() -> JsType {
+        JsType::Map(MapMeta {
+            key_type: Box::new(K::get_type()),
+            value_type: Box::new(V::get_type()),
+        })
     }
 }
