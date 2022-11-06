@@ -24,7 +24,7 @@ pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -
             }
         });
     quote!(
-        let mut ty = _pb::EnumType::new(#enum_name.into());
+        let mut ty = _pb::private::EnumType::new(#enum_name.into());
         #(#body);*;
         reg.register_enum_binding(ty);
     )
@@ -43,7 +43,7 @@ fn derive_newtype_variant(
     let variant_name = variant_name.as_ref();
     let ty = field.ty;
     quote!(
-        let mut fields = _pb::TupleFields::default();
+        let mut fields = _pb::private::TupleFields::default();
         fields.register_field::<#ty>();
         ty.register_variant_tuple(#variant_name.into(), fields);
     )
@@ -61,7 +61,7 @@ fn derive_struct_variant<'a>(
         quote!(fields.register_field::<#ty>(#field_name.into());)
     });
     quote!(
-        let mut fields = _pb::StructFields::default();
+        let mut fields = _pb::private::StructFields::default();
         #(#body);*;
         ty.register_unnamed_struct(#variant_name.into(), fields);
     )
@@ -78,7 +78,7 @@ fn derive_tuple_variant<'a>(
         quote!(fields.register_field::<#ty>();)
     });
     quote!(
-        let mut fields = _pb::TupleFields::default();
+        let mut fields = _pb::private::TupleFields::default();
         #(#body);*;
         ty.register_variant_tuple(#variant_name.into(), fields);
     )

@@ -18,7 +18,7 @@ pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStr
 fn derive_unit_struct_type(ident: Ident) -> TokenStream {
     let ident_str = ident.to_string();
     quote!(
-        let mut ty = _pb::UnitStructType::new(#ident_str.into());
+        let mut ty = _pb::private::UnitStructType::new(#ident_str.into());
         reg.register_unit_struct_binding(ty);
     )
 }
@@ -30,7 +30,7 @@ fn derive_tuple_struct_type(ident: Ident, fields: Vec<Field>) -> TokenStream {
         quote!(ty.register_field::<#ty>())
     });
     quote!(
-        let mut ty = _pb::TupleStructType::new(#ident_str.into());
+        let mut ty = _pb::private::TupleStructType::new(#ident_str.into());
         #(#body);*;
         reg.register_tuple_struct_binding(ty);
     )
@@ -44,7 +44,7 @@ fn derive_struct_type(ident: Ident, fields: Vec<Field>) -> TokenStream {
         quote!(ty.register_field::<#ty>(#ident_str.into()))
     });
     quote!(
-        let mut ty = _pb::StructType::new(#ident_str.into());
+        let mut ty = _pb::private::StructType::new(#ident_str.into());
         #(#body);*;
         reg.register_struct_binding(ty);
     )

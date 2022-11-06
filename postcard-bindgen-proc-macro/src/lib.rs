@@ -35,15 +35,15 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
             const _: () = {
                 #[allow(unused_extern_crates, clippy::useless_attribute)]
                 extern crate postcard_bindgen as _pb;
-                impl _pb::JsBindings for #ident {
-                    fn create_bindings(reg: &mut _pb::BindingsRegistry) {
+                impl _pb::private::JsBindings for #ident {
+                    fn create_bindings(reg: &mut _pb::private::BindingsRegistry) {
                         #body
                     }
                 }
 
-                impl _pb::GenJsBinding for #ident {
-                    fn get_type() -> _pb::JsType {
-                        _pb::JsType::Object(_pb::ObjectMeta {
+                impl _pb::private::GenJsBinding for #ident {
+                    fn get_type() -> _pb::private::JsType {
+                        _pb::private::JsType::Object(_pb::private::ObjectMeta {
                             name: #container_name.into()
                         })
                     }
