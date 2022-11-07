@@ -1,7 +1,7 @@
 extern crate alloc;
 
 mod code_gen;
-mod npm_packet;
+mod npm_package;
 mod utils;
 
 pub mod registry;
@@ -14,7 +14,7 @@ use std::{
 };
 
 pub use code_gen::{generate_js, type_checking::ts::gen_ts_typings};
-pub use npm_packet::{build_npm_package, PacketInfo, Version, VersionFromStrError};
+pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
 
 pub enum ArchPointerLen {
     U32,

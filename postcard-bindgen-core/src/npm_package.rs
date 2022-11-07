@@ -15,7 +15,7 @@ use crate::ExportStrings;
 
 static PACKAGE_FILE_TEMPLATE: &[u8] = include_bytes!("gen_src/package-template.json");
 
-/// Builds a npm packet from create language binding strings.
+/// Builds a npm package from create language binding strings.
 ///
 /// # Example
 /// ```ignore
@@ -25,20 +25,23 @@ static PACKAGE_FILE_TEMPLATE: &[u8] = include_bytes!("gen_src/package-template.j
 /// }
 ///
 /// let parent_dir = std::env::current_dir().unwrap().as_path();
-/// build_npm_packet(parent_dir, generate_bindings!(Test))
+/// build_npm_package(parent_dir, generate_bindings!(Test))
 /// ```
 pub fn build_npm_package(
     parent_dir: &Path,
-    packet_info: PacketInfo,
+    package_info: PackageInfo,
     bindings: ExportStrings,
 ) -> io::Result<()> {
     let mut dir = parent_dir.to_path_buf();
-    dir.push(packet_info.name.as_str());
+    dir.push(package_info.name.as_str());
 
     std::fs::create_dir_all(&dir)?;
 
-    let package_json =
-        package_file_src(packet_info.name.to_owned(), packet_info.version.to_string()).unwrap();
+    let package_json = package_file_src(
+        package_info.name.to_owned(),
+        package_info.version.to_string(),
+    )
+    .unwrap();
 
     let mut package_json_path = dir.to_owned();
     package_json_path.push("package.json");
@@ -100,7 +103,7 @@ pub struct Version {
 }
 
 /// Wraps more infos for the npm package.
-pub struct PacketInfo {
+pub struct PackageInfo {
     pub name: String,
     pub version: Version,
 }

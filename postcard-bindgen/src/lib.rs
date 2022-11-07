@@ -6,7 +6,7 @@
 //! # Example
 //! ```
 //! # use serde_derive::Serialize;
-//! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_npm_package, PacketInfo};
+//! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_npm_package, PackageInfo};
 //! # extern crate alloc;
 //! #[derive(Serialize, PostcardBindings)]
 //! struct A(u8);
@@ -27,7 +27,7 @@
 //! fn main() {
 //!     build_npm_package(
 //!         std::env::current_dir().unwrap().as_path(),
-//!         PacketInfo {
+//!         PackageInfo {
 //!             name: "test-bindings".into(),
 //!             version: "0.1.0".try_into().unwrap(),
 //!         },
@@ -37,7 +37,7 @@
 //! }
 
 pub use postcard_bindgen_core::{
-    build_npm_package, export_bindings, gen_ts_typings, generate_js, ExportStrings, PacketInfo,
+    build_npm_package, export_bindings, gen_ts_typings, generate_js, ExportStrings, PackageInfo,
     Version,
 };
 pub use postcard_bindgen_derive::PostcardBindings;
