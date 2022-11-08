@@ -1,0 +1,7 @@
+{
+    "name": "test-package",
+    "description": "Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.",
+    "version": "0.1.0",
+    "main": "index.js",
+    "types": "index.d.ts"
+}

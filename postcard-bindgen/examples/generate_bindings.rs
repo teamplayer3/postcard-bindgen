@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io::Write, ops::Range};
 
 use postcard_bindgen::{build_npm_package, generate_bindings, PackageInfo, PostcardBindings};
-use serde_derive::Serialize;
+use serde::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
 struct A;

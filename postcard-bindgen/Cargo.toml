@@ -20,9 +20,10 @@ heapless = ["postcard-bindgen-core/heapless"]
 postcard-bindgen-derive = {version = "0.1.1", path = "../postcard-bindgen-derive"}
 postcard-bindgen-core = {version = "0.1.1", path = "../postcard-bindgen-core"}
 
+serde = {version = "1.0", features = ["derive"]}
+handlebars = "4.3.5"
+
 [dev-dependencies]
-serde = "1"
-serde_derive = "1"
 postcard = "1.0.2"
 
 [[example]]

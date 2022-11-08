@@ -18,14 +18,23 @@ static PACKAGE_FILE_TEMPLATE: &[u8] = include_bytes!("gen_src/package-template.j
 /// Builds a npm package from create language binding strings.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// # use postcard_bindgen::{build_npm_package, PackageInfo, PostcardBindings, generate_bindings};
+/// # use serde::Serialize;
 /// #[derive(Serialize, PostcardBindings)]
 /// struct Test {
 ///     field: u8
 /// }
 ///
-/// let parent_dir = std::env::current_dir().unwrap().as_path();
-/// build_npm_package(parent_dir, generate_bindings!(Test))
+/// # fn main() {
+/// let parent_dir = std::env::current_dir().unwrap();
+/// let package_info = PackageInfo {
+///     name: "test-package".into(),
+///     version: "0.1.0".try_into().unwrap()
+/// };
+///
+/// build_npm_package(parent_dir.as_path(), package_info, generate_bindings!(Test));
+/// # }
 /// ```
 pub fn build_npm_package(
     parent_dir: &Path,
@@ -84,14 +93,14 @@ fn package_file_src(
 ///
 /// # Examples
 /// ```
-/// # use postcard_bindgen_core::Version;
+/// # use postcard_bindgen::Version;
 /// let version = Version::from_array([2, 10, 2]);
 /// assert_eq!(version.to_string(), String::from("2.10.2"))
 /// ```
 ///
 /// ```
 /// # use std::str::FromStr;
-/// # use postcard_bindgen_core::Version;
+/// # use postcard_bindgen::Version;
 /// let version = Version::from_str("2.10.2").unwrap();
 /// assert_eq!(version.to_string(), String::from("2.10.2"))
 /// ```

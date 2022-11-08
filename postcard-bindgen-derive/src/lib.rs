@@ -14,7 +14,6 @@ pub fn postcard_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 }
 
 fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
-    // eprintln!(".........[input] {}", input);
     let input: DeriveInput = syn::parse(input).unwrap();
 
     let cx = Ctxt::new();

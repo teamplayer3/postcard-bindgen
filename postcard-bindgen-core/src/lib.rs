@@ -1,20 +1,12 @@
 extern crate alloc;
 
 mod code_gen;
-mod npm_package;
 mod utils;
 
 pub mod registry;
 pub mod type_info;
 
-use std::{
-    fs::File,
-    io::{self, Write},
-    path::Path,
-};
-
 pub use code_gen::{generate_js, type_checking::ts::gen_ts_typings};
-pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
 
 pub enum ArchPointerLen {
     U32,
@@ -35,10 +27,4 @@ impl ArchPointerLen {
 pub struct ExportStrings {
     pub js_file: String,
     pub ts_file: String,
-}
-
-pub fn export_bindings(path: &Path, bindings: impl AsRef<str>) -> io::Result<()> {
-    let mut file = File::create(path.join("js_export.js"))?;
-    file.write_all(bindings.as_ref().as_bytes())?;
-    Ok(())
 }

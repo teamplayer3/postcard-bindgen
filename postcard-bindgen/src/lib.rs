@@ -1,12 +1,18 @@
 //! # Postcard Bindgen
 //!
-//! This crate allows generating automatically javascript bindings to
+//! This crate allows generating javascript bindings automatically to
 //! serialize javascript objects to postcard format and vice versa.
 //!
 //! # Example
-//! ```
-//! # use serde_derive::Serialize;
+//!
+//! This example shows how to generate a `npm` package out of the rust
+//! structures. A new folder with the package name will be created. A
+//! javascript file and typescript typings as well as a package.json
+//! will be paced in it.
+//!
+//! ```rust
 //! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_npm_package, PackageInfo};
+//! # use serde::Serialize;
 //! # extern crate alloc;
 //! #[derive(Serialize, PostcardBindings)]
 //! struct A(u8);
@@ -35,16 +41,51 @@
 //!     )
 //!     .unwrap();
 //! }
+//! ```
+//!
+//! ```text
+//! // JavaScript
+//! import { serialize } form "test-bindings"
+//!
+//! const c = {
+//!     tag: "C",
+//!     value: [
+//!         123,
+//!         {
+//!             a: 234
+//!         }
+//!     ]
+//! }
+//!
+//! const bytes = serialize("C", c)
+//! ```
 
-pub use postcard_bindgen_core::{
-    build_npm_package, export_bindings, gen_ts_typings, generate_js, ExportStrings, PackageInfo,
-    Version,
-};
+mod export;
+mod npm_package;
+
+pub use export::export_bindings;
+pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
+pub use postcard_bindgen_core::ExportStrings;
+
+/// Macro to annotate structs or enums for which bindings should be generated.
+///
+/// For this macro to work, the [`serde::Serialize`] macro must be derived as well.
+///
+/// # Example
+/// ```rust
+/// # use serde::Serialize;
+/// # use postcard_bindgen_derive::PostcardBindings;
+/// #[derive(Serialize, PostcardBindings)]
+/// struct Test {
+///    a: u32
+/// }
+/// ```
 pub use postcard_bindgen_derive::PostcardBindings;
 
 #[doc(hidden)]
 pub mod private {
     pub use postcard_bindgen_core::{
+        gen_ts_typings, generate_js,
         registry::*,
         type_info::{GenJsBinding, JsType, ObjectMeta},
     };
@@ -58,7 +99,9 @@ pub mod private {
 /// [`postcard_bindgen_derive::PostcardBindings`] on the types.
 ///
 /// # Example
-/// ```ignore
+/// ```rust
+/// # use serde::Serialize;
+/// # use postcard_bindgen::{PostcardBindings, generate_bindings};
 /// #[derive(Serialize, PostcardBindings)]
 /// struct Test {
 ///     field: u8
@@ -76,8 +119,8 @@ macro_rules! generate_bindings {
             )*
             let bindings = reg.into_entries();
             postcard_bindgen::ExportStrings {
-                js_file: postcard_bindgen::generate_js(&bindings).to_file_string().unwrap(),
-                ts_file: postcard_bindgen::gen_ts_typings(bindings).to_file_string().unwrap()
+                js_file: postcard_bindgen::private::generate_js(&bindings).to_file_string().unwrap(),
+                ts_file: postcard_bindgen::private::gen_ts_typings(bindings).to_file_string().unwrap()
             }
         }
     };
