@@ -2,8 +2,6 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use serde_derive_internals::ast::{self, Style};
 
-use super::PRIVATE_IMPORT_PATH;
-
 pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -> TokenStream {
     let enum_name = ident.to_string();
     let body = variants.as_ref().iter().map(|variant| {
@@ -11,7 +9,7 @@ pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -
         derive_variant_style(&variant.style, &variant_name, &variant.fields)
     });
     quote!(
-        let mut ty = #PRIVATE_IMPORT_PATH::EnumType::new(#enum_name.into());
+        let mut ty = _pb::__private::EnumType::new(#enum_name.into());
         #(#body);*;
         reg.register_enum_binding(ty);
     )
@@ -39,7 +37,7 @@ fn derive_newtype_variant(variant_name: impl AsRef<str>, field: &ast::Field<'_>)
     let variant_name = variant_name.as_ref();
     let ty = field.ty;
     quote!(
-        let mut fields = #PRIVATE_IMPORT_PATH::TupleFields::default();
+        let mut fields = _pb::__private::TupleFields::default();
         fields.register_field::<#ty>();
         ty.register_variant_tuple(#variant_name.into(), fields);
     )
@@ -56,7 +54,7 @@ fn derive_struct_variant<'a>(
         quote!(fields.register_field::<#ty>(#field_name.into());)
     });
     quote!(
-        let mut fields = #PRIVATE_IMPORT_PATH::StructFields::default();
+        let mut fields = _pb::__private::StructFields::default();
         #(#body);*;
         ty.register_unnamed_struct(#variant_name.into(), fields);
     )
@@ -72,7 +70,7 @@ fn derive_tuple_variant<'a>(
         quote!(fields.register_field::<#ty>();)
     });
     quote!(
-        let mut fields = #PRIVATE_IMPORT_PATH::TupleFields::default();
+        let mut fields = _pb::__private::TupleFields::default();
         #(#body);*;
         ty.register_variant_tuple(#variant_name.into(), fields);
     )
