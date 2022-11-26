@@ -17,6 +17,8 @@ Structs and enums for which bindings should be generated must be annotated with 
 
 The process is divided into two steps. Firstly the annotation step. This is done mostly in a library crate. Secondly in a extra binary crate the annotated structs and enums must be imported (this means the library crate must be defined as a dependency) and as a main function the generation logic added. To generate the npm package this extra binary crate must be run.
 
+> When the `postcard-bindgen` crate is added as a dependency in the generation binary crate the future `generating` must be enabled.
+
 ## Example
 
 This example shows how to easily generate a npm package. For this the struct `Test` and the generation logic is in the same rust file.
