@@ -88,7 +88,7 @@ pub use postcard_bindgen_core::ExportStrings;
 pub use postcard_bindgen_derive::PostcardBindings;
 
 #[doc(hidden)]
-pub mod private {
+pub mod __private {
     pub use postcard_bindgen_core::{
         gen_ts_typings, generate_js,
         registry::*,
@@ -119,14 +119,14 @@ pub mod private {
 macro_rules! generate_bindings {
     ($( $x:ty ),*) => {
         {
-            let mut reg = postcard_bindgen::private::BindingsRegistry::default();
+            let mut reg = postcard_bindgen::__private::BindingsRegistry::default();
             $(
-                <$x as postcard_bindgen::private::JsBindings>::create_bindings(&mut reg);
+                <$x as postcard_bindgen::__private::JsBindings>::create_bindings(&mut reg);
             )*
             let bindings = reg.into_entries();
             postcard_bindgen::ExportStrings {
-                js_file: postcard_bindgen::private::generate_js(&bindings).to_file_string().unwrap(),
-                ts_file: postcard_bindgen::private::gen_ts_typings(bindings).to_file_string().unwrap()
+                js_file: postcard_bindgen::__private::generate_js(&bindings).to_file_string().unwrap(),
+                ts_file: postcard_bindgen::__private::gen_ts_typings(bindings).to_file_string().unwrap()
             }
         }
     };
