@@ -5,22 +5,21 @@
 [![Crates.io](https://img.shields.io/crates/v/postcard-bindgen.svg)](https://crates.io/crates/postcard-bindgen)
 [![Documentation](https://docs.rs/postcard-bindgen/badge.svg)](https://docs.rs/postcard-bindgen)
 
-The [postcard crate](https://github.com/jamesmunns/postcard) serializes and deserializes rust structs by using the [serde crate](https://github.com/serde-rs/serde) to a byte format. The resulting byte size is minimal. This is very useful if serialization and deserialization is done in rust and share the same structures.
+`Postcard Bindgen` allows generating code for other languages to serialize to and deserialize from [postcard](https://github.com/jamesmunns/postcard) byte format. This helps to setup a communication between for example a microcontroller and a App using the `postcard crate` and its lightweight memory format.
 
-This `crate` can generate bindings from the rust structures for other languages than rust. This allows to use the `postcard crate` from other languages.
+As main types structs and enums can be annotated with `PostcardBindings` to generate code for them. The generated code can be exported to a npm package to import it into a javascript project.
 
 > `Crate` is work in progress. By now it can't be used for productions.
 
-## Supported languages
-
-- [x] JavaScript
-- [ ] Python
-
 ## Usage
 
-The structs for which bindings should be generated must be annotated with the `PostcardBindings` macro. This macro understands `serde` annotation. This means renaming fields and other functionality by `serde` is supported.
+Structs and enums for which bindings should be generated must be annotated with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
+
+The process is divided into two steps. Firstly the annotation step. This is done mostly in a library crate. Secondly in a extra binary crate the annotated structs and enums must be imported (this means the library crate must be defined as a dependency) and as a main function the generation logic added. To generate the npm package this extra binary crate must be run.
 
 ## Example
+
+This example shows how to easily generate a npm package. For this the struct `Test` and the generation logic is in the same rust file.
 
 ```rust
 #[derive(Serialize, PostcardBindings)]
@@ -30,12 +29,27 @@ struct Test {
 }
 
 fn main() {
-    export_bindings(
-        Path::new("./js_export.js"),
-        generate_bindings!(Test), // register container for generating bindings
+    build_npm_package(
+        std::env::current_dir().unwrap().as_path(),
+        PackageInfo {
+            name: "test".into(),
+            version: "0.1.0".try_into().unwrap(),
+        },
+        generate_bindings!(Test),
     )
     .unwrap();
 }
+```
+
+To now serialize a struct in javascript the following code can be used.
+
+```js
+const test = {
+    name: "test",
+    other: 23
+}
+
+const bytes = serialize("Test", test)
 ```
 
 ## JavaScript Type mapping
@@ -171,4 +185,8 @@ new Map()
 </td><tr>
 </table>
 
+### License
 
+Licensed under either of Apache License, Version 2.0 or MIT license at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in Postcard Bindgen by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions
