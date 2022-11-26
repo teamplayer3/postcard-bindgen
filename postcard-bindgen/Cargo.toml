@@ -12,20 +12,26 @@ readme = "../README.md"
 
 [features]
 default = []
+
+generating = ["postcard-bindgen-core/generating"]
+
 std = ["postcard-bindgen-core/std"]
 alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 
-[dependencies]
-postcard-bindgen-derive = {version = "0.1.1", path = "../postcard-bindgen-derive"}
-postcard-bindgen-core = {version = "0.1.1", path = "../postcard-bindgen-core"}
+[dependencies.postcard-bindgen-core]
+version = "0.1.1"
+path = "../postcard-bindgen-core"
 
-serde = {version = "1.0", features = ["derive"]}
-handlebars = "4.3.5"
+[dependencies.postcard-bindgen-derive]
+version = "0.1.1"
+path = "../postcard-bindgen-derive"
+features = ["expanding"]
 
 [dev-dependencies]
 postcard = "1.0.2"
+serde = {version = "1.0", features = ["derive"]}
 
 [[example]]
 name = "generate_bindings"
-required-features = ["std"]
+required-features = ["std", "generating"]
