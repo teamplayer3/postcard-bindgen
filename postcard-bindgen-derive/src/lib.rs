@@ -29,7 +29,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let ident = container.ident;
     let container_name = ident.to_string();
 
-    let expanded = if cfg!(any(debug_assertions, feature = "export-js")) {
+    let expanded = if cfg!(feature = "expanding") {
         quote!(
             const _: () = {
                 #[allow(unused_extern_crates, clippy::useless_attribute)]

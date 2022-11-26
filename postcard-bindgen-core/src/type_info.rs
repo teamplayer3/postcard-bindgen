@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsType {
     Number(NumberMeta),
@@ -7,20 +9,6 @@ pub enum JsType {
     Optional(OptionalMeta),
     Range(RangeMeta),
     Map(MapMeta),
-}
-
-impl ToString for JsType {
-    fn to_string(&self) -> String {
-        match self {
-            JsType::Array(_) => "array".into(),
-            JsType::Number(_) => "number".into(),
-            JsType::Object(_) => "object".into(),
-            JsType::String(_) => "string".into(),
-            JsType::Optional(_) => "optional".into(),
-            JsType::Range(_) => "range".into(),
-            JsType::Map(_) => "map".into(),
-        }
-    }
 }
 
 impl AsRef<JsType> for JsType {
@@ -59,22 +47,27 @@ pub struct NumberMeta {
     pub(crate) signed: bool,
 }
 
-const U8_BYTES_CONST: &str = "U8_BYTES";
-const U16_BYTES_CONST: &str = "U16_BYTES";
-const U32_BYTES_CONST: &str = "U32_BYTES";
-const U64_BYTES_CONST: &str = "U64_BYTES";
-const U128_BYTES_CONST: &str = "U128_BYTES";
-// const USIZE_BYTES_CONST: &str = "USIZE_BYTES";
+#[cfg(feature = "generating")]
+mod int_byte_len {
+    use super::NumberMeta;
 
-impl NumberMeta {
-    pub(crate) fn as_byte_js_string(&self) -> &'static str {
-        match self.bytes {
-            1 => U8_BYTES_CONST,
-            2 => U16_BYTES_CONST,
-            4 => U32_BYTES_CONST,
-            8 => U64_BYTES_CONST,
-            16 => U128_BYTES_CONST,
-            _ => unreachable!(),
+    const U8_BYTES_CONST: &str = "U8_BYTES";
+    const U16_BYTES_CONST: &str = "U16_BYTES";
+    const U32_BYTES_CONST: &str = "U32_BYTES";
+    const U64_BYTES_CONST: &str = "U64_BYTES";
+    const U128_BYTES_CONST: &str = "U128_BYTES";
+    // const USIZE_BYTES_CONST: &str = "USIZE_BYTES";
+
+    impl NumberMeta {
+        pub(crate) fn as_byte_js_string(&self) -> &'static str {
+            match self.bytes {
+                1 => U8_BYTES_CONST,
+                2 => U16_BYTES_CONST,
+                4 => U32_BYTES_CONST,
+                8 => U64_BYTES_CONST,
+                16 => U128_BYTES_CONST,
+                _ => unreachable!(),
+            }
         }
     }
 }

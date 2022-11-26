@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use alloc::vec::Vec;
 
 use crate::type_info::{GenJsBinding, JsType};
 
@@ -13,10 +13,10 @@ pub enum BindingType {
 impl BindingType {
     pub fn inner_name(&self) -> &'static str {
         match self {
-            Self::Struct(StructType { name, fields: _ }) => name.to_owned(),
-            Self::TupleStruct(TupleStructType { name, fields: _ }) => name.to_owned(),
-            Self::Enum(EnumType { name, variants: _ }) => name.to_owned(),
-            Self::UnitStruct(UnitStructType { name }) => name.to_owned(),
+            Self::Struct(StructType { name, fields: _ }) => name,
+            Self::TupleStruct(TupleStructType { name, fields: _ }) => name,
+            Self::Enum(EnumType { name, variants: _ }) => name,
+            Self::UnitStruct(UnitStructType { name }) => name,
         }
     }
 }

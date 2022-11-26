@@ -60,11 +60,16 @@
 //! const bytes = serialize("C", c)
 //! ```
 
+#[cfg(feature = "generating")]
 mod export;
+#[cfg(feature = "generating")]
 mod npm_package;
 
+#[cfg(feature = "generating")]
 pub use export::export_bindings;
+#[cfg(feature = "generating")]
 pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
+#[cfg(feature = "generating")]
 pub use postcard_bindgen_core::ExportStrings;
 
 /// Macro to annotate structs or enums for which bindings should be generated.
@@ -109,6 +114,7 @@ pub mod private {
 ///
 /// let bindings = generate_bindings!(Test);
 /// ```
+#[cfg(feature = "generating")]
 #[macro_export]
 macro_rules! generate_bindings {
     ($( $x:ty ),*) => {
