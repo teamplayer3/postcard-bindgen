@@ -8,6 +8,8 @@ use syn::DeriveInput;
 mod derive_enum;
 mod derive_struct;
 
+const PRIVATE_IMPORT_PATH: &str = "_pb::__private";
+
 #[proc_macro_derive(PostcardBindings)]
 pub fn postcard_bindings(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     derive_js_implementation(input).into()
@@ -34,15 +36,15 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
             const _: () = {
                 #[allow(unused_extern_crates, clippy::useless_attribute)]
                 extern crate postcard_bindgen as _pb;
-                impl _pb::private::JsBindings for #ident {
-                    fn create_bindings(reg: &mut _pb::private::BindingsRegistry) {
+                impl #PRIVATE_IMPORT_PATH::JsBindings for #ident {
+                    fn create_bindings(reg: &mut #PRIVATE_IMPORT_PATH::BindingsRegistry) {
                         #body
                     }
                 }
 
-                impl _pb::private::GenJsBinding for #ident {
-                    fn get_type() -> _pb::private::JsType {
-                        _pb::private::JsType::Object(_pb::private::ObjectMeta {
+                impl #PRIVATE_IMPORT_PATH::GenJsBinding for #ident {
+                    fn get_type() -> #PRIVATE_IMPORT_PATH::JsType {
+                        #PRIVATE_IMPORT_PATH::JsType::Object(#PRIVATE_IMPORT_PATH::ObjectMeta {
                             name: #container_name.into()
                         })
                     }

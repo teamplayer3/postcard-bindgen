@@ -2,6 +2,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use serde_derive_internals::ast::{Field, Style};
 
+use super::PRIVATE_IMPORT_PATH;
+
 pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStream {
     let fields = fields
         .into_iter()
@@ -18,7 +20,7 @@ pub fn derive_struct(style: Style, ident: Ident, fields: Vec<Field>) -> TokenStr
 fn derive_unit_struct_type(ident: Ident) -> TokenStream {
     let ident_str = ident.to_string();
     quote!(
-        let mut ty = _pb::private::UnitStructType::new(#ident_str.into());
+        let mut ty = #PRIVATE_IMPORT_PATH::UnitStructType::new(#ident_str.into());
         reg.register_unit_struct_binding(ty);
     )
 }
@@ -30,7 +32,7 @@ fn derive_tuple_struct_type(ident: Ident, fields: Vec<Field>) -> TokenStream {
         quote!(ty.register_field::<#ty>())
     });
     quote!(
-        let mut ty = _pb::private::TupleStructType::new(#ident_str.into());
+        let mut ty = #PRIVATE_IMPORT_PATH::TupleStructType::new(#ident_str.into());
         #(#body);*;
         reg.register_tuple_struct_binding(ty);
     )
@@ -44,7 +46,7 @@ fn derive_struct_type(ident: Ident, fields: Vec<Field>) -> TokenStream {
         quote!(ty.register_field::<#ty>(#ident_str.into()))
     });
     quote!(
-        let mut ty = _pb::private::StructType::new(#ident_str.into());
+        let mut ty = #PRIVATE_IMPORT_PATH::StructType::new(#ident_str.into());
         #(#body);*;
         reg.register_struct_binding(ty);
     )
