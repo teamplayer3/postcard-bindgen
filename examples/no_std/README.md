@@ -1,6 +1,6 @@
 # Example no_std
 
-Shows how this crate can be used in a project to generate bindings.
+Shows how to use this crate in a project to generate bindings.
 
 ## Setup
 
@@ -13,9 +13,27 @@ members = [
 ]
 ```
 
+Important is to enable the `generating` feature in the `gen-bindings` crate. In the main library crate the feature is not enabled. This allows using this crate in a `no_std` and different target than this computer context.
+
+Main `Cargo.toml`:
+```toml
+[dependencies]
+postcard-bindgen = "0.1"
+
+serde = { version = "1", features = ["derive"]}
+```
+
+Package `gen-bindings` `Cargo.toml`:
+```toml
+[dependencies]
+postcard-bindgen = { version = "0.1", features = ["generating"] }
+
+no-std = { path = "../" }
+```
+
 ## Usage
 
-To build the bindings run the following in the workspace root dir:
+To build the javascript bindings run one of the following scripts in the current directory:
 
 - Windows
   ```bash
