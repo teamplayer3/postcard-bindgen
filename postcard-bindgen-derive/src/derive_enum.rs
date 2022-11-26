@@ -6,7 +6,7 @@ pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -
     let enum_name = ident.to_string();
     let body = variants.as_ref().iter().map(|variant| {
         let variant_name = variant.attrs.name().serialize_name();
-        derive_variant_style(&variant.style, &variant_name, &variant.fields)
+        derive_variant_style(&variant.style, variant_name, &variant.fields)
     });
     quote!(
         let mut ty = _pb::__private::EnumType::new(#enum_name.into());
