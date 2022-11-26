@@ -7,13 +7,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::Serialize;
-
-use handlebars::Handlebars;
-
 use crate::ExportStrings;
-
-static PACKAGE_FILE_TEMPLATE: &[u8] = include_bytes!("gen_src/package-template.json");
 
 /// Builds a npm package from create language binding strings.
 ///
@@ -46,11 +40,7 @@ pub fn build_npm_package(
 
     std::fs::create_dir_all(&dir)?;
 
-    let package_json = package_file_src(
-        package_info.name.to_owned(),
-        package_info.version.to_string(),
-    )
-    .unwrap();
+    let package_json = package_file_src(package_info.name.as_str(), &package_info.version);
 
     let mut package_json_path = dir.to_owned();
     package_json_path.push("package.json");
@@ -67,25 +57,17 @@ pub fn build_npm_package(
     Ok(())
 }
 
-fn package_file_src(
-    package_name: String,
-    package_version: String,
-) -> Result<String, handlebars::RenderError> {
-    #[derive(Serialize)]
-    struct TemplateData {
-        package_name: String,
-        package_version: String,
-    }
-
-    let template_data = TemplateData {
-        package_name,
-        package_version,
-    };
-    Handlebars::new().render_template(
-        String::from_utf8(PACKAGE_FILE_TEMPLATE.into())
-            .unwrap()
-            .as_str(),
-        &template_data,
+fn package_file_src(package_name: impl AsRef<str>, package_version: &Version) -> String {
+    format!(
+        "{{\
+            \"name\": \"{:?}\",\
+            \"description\": \"Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.\",\
+            \"version\": \"{:?}\",\
+            \"main\": \"index.js\",\
+            \"types\": \"index.d.ts\"\
+        }}
+    ",
+        package_name.as_ref(), package_version.to_string()
     )
 }
 
