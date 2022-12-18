@@ -66,11 +66,16 @@ mod export;
 mod npm_package;
 
 #[cfg(feature = "generating")]
+#[doc_cfg(feature = "generating")]
 pub use export::export_bindings;
 #[cfg(feature = "generating")]
+#[doc_cfg(feature = "generating")]
 pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
 #[cfg(feature = "generating")]
+#[doc_cfg(feature = "generating")]
 pub use postcard_bindgen_core::ExportStrings;
+
+pub use postcard_bindgen_core::type_info::GenJsBinding;
 
 /// Macro to annotate structs or enums for which bindings should be generated.
 ///

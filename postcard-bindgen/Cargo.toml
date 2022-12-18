@@ -19,6 +19,8 @@ std = ["postcard-bindgen-core/std"]
 alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 
+unstable-doc-cfg = []
+
 [dependencies.postcard-bindgen-core]
 version = "0.1.2"
 path = "../postcard-bindgen-core"
@@ -28,6 +30,9 @@ version = "0.1.2"
 path = "../postcard-bindgen-derive"
 features = ["expanding"]
 
+[dependencies.doc-cfg]
+version = "0.1.0"
+
 [dev-dependencies]
 postcard = "1.0.2"
 serde = {version = "1.0", features = ["derive"]}
@@ -35,3 +40,6 @@ serde = {version = "1.0", features = ["derive"]}
 [[example]]
 name = "generate_bindings"
 required-features = ["std", "generating"]
+
+[package.metadata.docs.rs]
+features = ["unstable-doc-cfg", "generating", "std", "heapless"]
