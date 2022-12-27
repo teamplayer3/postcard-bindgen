@@ -1,6 +1,6 @@
 [package]
 name = "postcard-bindgen"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
 repository = "https://github.com/teamplayer3/postcard-bindgen.git"
@@ -22,11 +22,11 @@ heapless = ["postcard-bindgen-core/heapless"]
 unstable-doc-cfg = []
 
 [dependencies.postcard-bindgen-core]
-version = "0.1.2"
+version = "0.1.3"
 path = "../postcard-bindgen-core"
 
 [dependencies.postcard-bindgen-derive]
-version = "0.1.2"
+version = "0.1.3"
 path = "../postcard-bindgen-derive"
 features = ["expanding"]
 
