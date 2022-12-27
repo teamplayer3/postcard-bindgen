@@ -61,6 +61,8 @@
 //! ```
 
 #[cfg(feature = "generating")]
+use doc_cfg::doc_cfg;
+#[cfg(feature = "generating")]
 mod export;
 #[cfg(feature = "generating")]
 mod npm_package;
