@@ -60,21 +60,23 @@
 //! const bytes = serialize("C", c)
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #[cfg(feature = "generating")]
-use doc_cfg::doc_cfg;
-#[cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 mod export;
 #[cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 mod npm_package;
 
 #[cfg(feature = "generating")]
-#[doc_cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use export::export_bindings;
 #[cfg(feature = "generating")]
-#[doc_cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
 #[cfg(feature = "generating")]
-#[doc_cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use postcard_bindgen_core::ExportStrings;
 
 pub use postcard_bindgen_core::type_info::GenJsBinding;
@@ -122,6 +124,7 @@ pub mod __private {
 /// let bindings = generate_bindings!(Test);
 /// ```
 #[cfg(feature = "generating")]
+#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 #[macro_export]
 macro_rules! generate_bindings {
     ($( $x:ty ),*) => {
