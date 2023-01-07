@@ -9,13 +9,13 @@
 
 As main types structs and enums can be annotated with `PostcardBindings` to generate code for them. The generated code can be exported to a npm package to import it into a javascript project.
 
-> `Crate` is work in progress. By now it can't be used for productions.
-
 ## Usage
 
 Structs and enums for which bindings should be generated must be annotated with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
 
 The process is divided into two steps. Firstly the annotation step. This is done mostly in a library crate. Secondly in a extra binary crate the annotated structs and enums must be imported (this means the library crate must be defined as a dependency) and as a main function the generation logic added. To generate the npm package this extra binary crate must be run.
+
+> If the `postcard-bindgen` crate in the generation binary crate is added as a dependency the future `generating` must be enabled.
 
 ## Example
 
