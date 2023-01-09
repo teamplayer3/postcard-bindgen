@@ -21,14 +21,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gen-bindings"
-version = "0.1.0"
-dependencies = [
- "no-std",
- "postcard-bindgen",
-]
-
-[[package]]
 name = "genco"
 version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -72,7 +64,7 @@ checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "postcard-bindgen"
-version = "0.1.1"
+version = "0.1.31"
 dependencies = [
  "postcard-bindgen-core",
  "postcard-bindgen-derive",
@@ -80,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "postcard-bindgen-core"
-version = "0.1.1"
+version = "0.1.31"
 dependencies = [
  "convert_case",
  "genco",
@@ -88,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "postcard-bindgen-derive"
-version = "0.1.1"
+version = "0.1.31"
 dependencies = [
  "convert_case",
  "genco",

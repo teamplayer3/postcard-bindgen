@@ -1,6 +1,6 @@
 //! # Postcard Bindgen
 //!
-//! This crate allows generating javascript bindings automatically to
+//! This crate allows automatically generating javascript bindings to
 //! serialize javascript objects to postcard format and vice versa.
 //!
 //! # Example
@@ -8,7 +8,7 @@
 //! This example shows how to generate a `npm` package out of the rust
 //! structures. A new folder with the package name will be created. A
 //! javascript file and typescript typings as well as a package.json
-//! will be paced in it.
+//! will be placed in it.
 //!
 //! ```rust
 //! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_npm_package, PackageInfo};
@@ -37,7 +37,7 @@
 //!             name: "test-bindings".into(),
 //!             version: "0.1.0".try_into().unwrap(),
 //!         },
-//!         generate_bindings!(A, B),
+//!         generate_bindings!(A, B, C),
 //!     )
 //!     .unwrap();
 //! }
@@ -79,7 +79,25 @@ pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrErr
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use postcard_bindgen_core::ExportStrings;
 
-pub use postcard_bindgen_core::type_info::GenJsBinding;
+/// This trait must be implemented by types to export them.
+///
+/// It is implemented for all basic types of rust.
+///
+/// # Example
+/// As an example the trait is implemented for a u32 as follows:
+///
+/// ```
+/// impl GenJsBinding for u32 {
+///     fn get_type() -> JsType {
+///         JsType::Number(NumberMeta {
+///             bytes: 4,
+///             signed: false,
+///         })
+///     }
+/// }
+/// ```
+///
+// pub use postcard_bindgen_core::type_info::GenJsBinding;
 
 /// Macro to annotate structs or enums for which bindings should be generated.
 ///

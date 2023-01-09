@@ -93,7 +93,7 @@ pub struct Version {
     patch: u32,
 }
 
-/// Wraps more infos for the npm package.
+/// Holds npm package info.
 pub struct PackageInfo {
     pub name: String,
     pub version: Version,
@@ -109,7 +109,7 @@ impl Version {
     }
 }
 
-/// Error type indicates that supplied string is not a version.
+/// Error type that indicates that the supplied string is not a version formatted string.
 pub struct VersionFromStrError;
 
 impl Debug for VersionFromStrError {
