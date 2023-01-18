@@ -60,9 +60,9 @@ pub fn build_npm_package(
 fn package_file_src(package_name: impl AsRef<str>, package_version: &Version) -> String {
     format!(
         "{{\
-            \"name\": \"{:?}\",\
+            \"name\": {:?},\
             \"description\": \"Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.\",\
-            \"version\": \"{:?}\",\
+            \"version\": {:?},\
             \"main\": \"index.js\",\
             \"types\": \"index.d.ts\"\
         }}
