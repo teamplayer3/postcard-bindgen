@@ -121,14 +121,14 @@ enum Enum {
 
 ```javascript
 {
-    key: "A",
+    tag: "A",
 },
 {
-    key: "B",
+    tag: "B",
     value: 123
 },
 {
-    key: "C",
+    tag: "C",
     value: {
         a: 123
     }
