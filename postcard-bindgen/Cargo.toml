@@ -13,7 +13,7 @@ readme = "../README.md"
 [features]
 default = []
 
-generating = ["postcard-bindgen-core/generating"]
+generating = ["postcard-bindgen-core/generating", "postcard-bindgen-derive/expanding"]
 
 std = ["postcard-bindgen-core/std"]
 alloc = ["postcard-bindgen-core/alloc"]
@@ -26,7 +26,6 @@ path = "../postcard-bindgen-core"
 [dependencies.postcard-bindgen-derive]
 version = "0.1.31"
 path = "../postcard-bindgen-derive"
-features = ["expanding"]
 
 [dev-dependencies]
 postcard = "1.0.2"
