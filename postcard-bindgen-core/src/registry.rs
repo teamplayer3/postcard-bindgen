@@ -229,7 +229,6 @@ mod test {
 
         let mut registry = BindingsRegistry::default();
         Test::create_bindings(&mut registry);
-        println!("{:?}", registry)
     }
 
     #[test]
@@ -250,7 +249,6 @@ mod test {
 
         let mut registry = BindingsRegistry::default();
         Test::create_bindings(&mut registry);
-        println!("{:?}", registry)
     }
 
     #[test]
@@ -283,6 +281,5 @@ mod test {
 
         let mut registry = BindingsRegistry::default();
         Test::create_bindings(&mut registry);
-        println!("{:?}", registry)
     }
 }
