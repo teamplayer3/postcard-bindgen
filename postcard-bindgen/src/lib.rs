@@ -108,7 +108,7 @@ pub mod __private {
 /// Macro to generate javascript and typescript binding strings which
 /// can be exported into files.
 ///
-/// The supplied structures needs to implement the `trait` [`crate::private::JsBindings`].
+/// The supplied structures needs to implement the `trait` [`crate::__private::JsBindings`].
 /// This `trait` is automatically implemented when deriving the
 /// [`postcard_bindgen_derive::PostcardBindings`] on the types.
 ///
