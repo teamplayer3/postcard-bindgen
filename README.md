@@ -167,7 +167,7 @@ struct OptionStruct {
 <tr><td>Map</td><td>
 
 ```rust
-let map_string_key = HashMap::<string, u8>::new();
+let map_string_key = HashMap::<String, u8>::new();
 
 let map_any_key = HashMap::<u16, u8>::new();
 ```
