@@ -80,26 +80,6 @@ pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrErr
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use postcard_bindgen_core::ExportStrings;
 
-/// This trait must be implemented by types to export them.
-///
-/// It is implemented for all basic types of rust.
-///
-/// # Example
-/// As an example the trait is implemented for a u32 as follows:
-///
-/// ```
-/// impl GenJsBinding for u32 {
-///     fn get_type() -> JsType {
-///         JsType::Number(NumberMeta {
-///             bytes: 4,
-///             signed: false,
-///         })
-///     }
-/// }
-/// ```
-///
-// pub use postcard_bindgen_core::type_info::GenJsBinding;
-
 /// Macro to annotate structs or enums for which bindings should be generated.
 ///
 /// For this macro to work, the [`serde::Serialize`] macro must be derived as well.

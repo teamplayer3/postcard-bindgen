@@ -34,7 +34,6 @@ serde = {version = "1.0", features = ["derive"]}
 [[example]]
 name = "generate_bindings"
 required-features = ["std", "generating"]
-doc-scrape-examples = true
 
 [package.metadata.docs.rs]
 features = ["generating", "std", "heapless"]
