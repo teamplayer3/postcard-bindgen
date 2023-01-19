@@ -27,6 +27,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     };
 
     let ident = container.ident;
+    let generics = container.generics;
     let container_name = ident.to_string();
 
     let expanded = if cfg!(feature = "expanding") {
@@ -34,13 +35,13 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
             const _: () = {
                 #[allow(unused_extern_crates, clippy::useless_attribute)]
                 extern crate postcard_bindgen as _pb;
-                impl _pb::__private::JsBindings for #ident {
+                impl #generics _pb::__private::JsBindings for #ident #generics {
                     fn create_bindings(reg: &mut _pb::__private::BindingsRegistry) {
                         #body
                     }
                 }
 
-                impl _pb::__private::GenJsBinding for #ident {
+                impl #generics _pb::__private::GenJsBinding for #ident #generics {
                     fn get_type() -> _pb::__private::JsType {
                         _pb::__private::JsType::Object(_pb::__private::ObjectMeta {
                             name: #container_name.into()
