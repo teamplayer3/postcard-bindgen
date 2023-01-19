@@ -1,7 +1,8 @@
-// import { serialize, deserialize } from "./js_export.js";
-import fs from "fs";
+// Before running this with `$node .\test_js_export.mj` run the rust example with 
+// `$cargo run --example generate_bindings --features std,generating`.
 
-import { serialize, deserialize } from "./test-bindings"
+import fs from "fs";
+import { serialize, deserialize } from "./test-bindings/index.js"
 
 const d = {
     a: 22,
@@ -9,13 +10,22 @@ const d = {
         tag: "D",
         value: {
             a: [234, 224],
-            b: [123, [123, 431, 123232], "Hello"]
+            b: [123, [123, 431, 1232], "Hello", new Map([[12, 32]])]
         }
     },
     c: {},
     d: [234, 213, 123],
+    e: undefined,
     f: [12, 123],
-    g: "hello from js"
+    g: "hello from js",
+    h: {
+        start: 23,
+        end: 45
+    },
+    i: {
+        name: 23,
+    },
+    j: new Map([[12, 32]])
 }
 
 const bytes = serialize("D", d)
