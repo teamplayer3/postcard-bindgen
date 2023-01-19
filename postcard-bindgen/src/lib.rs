@@ -60,6 +60,7 @@
 //! const bytes = serialize("C", c)
 //! ```
 
+#![cfg_attr(not(feature = "generating"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "generating")]
@@ -114,6 +115,7 @@ pub use postcard_bindgen_core::ExportStrings;
 /// ```
 pub use postcard_bindgen_derive::PostcardBindings;
 
+#[cfg(feature = "generating")]
 #[doc(hidden)]
 pub mod __private {
     pub use postcard_bindgen_core::{
