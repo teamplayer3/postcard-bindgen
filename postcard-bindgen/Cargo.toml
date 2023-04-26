@@ -35,6 +35,10 @@ serde = {version = "1.0", features = ["derive"]}
 name = "generate_bindings"
 required-features = ["std", "generating"]
 
+[[example]]
+name = "small"
+required-features = ["std", "generating"]
+
 [package.metadata.docs.rs]
 features = ["generating", "std", "heapless"]
 rustdoc-args = ["--cfg", "docsrs"]
