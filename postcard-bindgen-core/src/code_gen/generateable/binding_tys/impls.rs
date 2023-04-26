@@ -136,7 +136,7 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 generateable::{
-                    binding_tys::ser, js_types::JsTypeGenerateable, VariableAccess, VariablePath,
+                    binding_tys::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
                 utils::semicolon_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
@@ -199,7 +199,7 @@ pub mod enum_ty {
             code_gen::{
                 generateable::{
                     binding_tys::des,
-                    js_types::{self, JsTypeGenerateable},
+                    types::{self, JsTypeGenerateable},
                 },
                 utils::semicolon_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
@@ -239,7 +239,7 @@ pub mod enum_ty {
                     CaseBody::Body(des::gen_accessors_fields(fields))
                 }
                 EnumVariantType::Tuple(fields) => CaseBody::Body(match fields.len() {
-                    1 => fields[0].gen_des_accessor(js_types::des::FieldAccessor::None),
+                    1 => fields[0].gen_des_accessor(types::des::FieldAccessor::None),
                     _ => des::gen_accessors_indexed(fields),
                 }),
             };
@@ -253,8 +253,7 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 generateable::{
-                    binding_tys::ty_check, js_types::JsTypeGenerateable, VariableAccess,
-                    VariablePath,
+                    binding_tys::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
                 utils::{and_chain, or_chain},
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
@@ -339,7 +338,7 @@ pub mod enum_ty {
 
         use crate::{
             code_gen::{
-                generateable::{binding_tys, js_types::JsTypeGenerateable},
+                generateable::{binding_tys, types::JsTypeGenerateable},
                 utils::divider_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },

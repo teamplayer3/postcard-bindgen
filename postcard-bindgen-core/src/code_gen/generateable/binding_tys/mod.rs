@@ -17,7 +17,7 @@ mod ser {
 
     use crate::{
         code_gen::{
-            generateable::{js_types::JsTypeGenerateable, VariableAccess, VariablePath},
+            generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::semicolon_chain,
         },
         registry::StructField,
@@ -54,7 +54,7 @@ mod des {
 
     use crate::{
         code_gen::{
-            generateable::js_types::{self, JsTypeGenerateable},
+            generateable::types::{self, JsTypeGenerateable},
             utils::comma_chain,
         },
         registry::StructField,
@@ -65,18 +65,19 @@ mod des {
         let body = comma_chain(fields.as_ref().iter().map(|field| {
             field
                 .js_type
-                .gen_des_accessor(js_types::des::FieldAccessor::Object(field.name))
+                .gen_des_accessor(types::des::FieldAccessor::Object(field.name))
         }));
         quote!({ $body })
     }
 
     pub fn gen_accessors_indexed(fields: impl AsRef<[JsType]>) -> Tokens {
-        let body =
-            comma_chain(
-                fields.as_ref().iter().enumerate().map(|(_, js_type)| {
-                    js_type.gen_des_accessor(js_types::des::FieldAccessor::Array)
-                }),
-            );
+        let body = comma_chain(
+            fields
+                .as_ref()
+                .iter()
+                .enumerate()
+                .map(|(_, js_type)| js_type.gen_des_accessor(types::des::FieldAccessor::Array)),
+        );
         quote!([$body])
     }
 }
@@ -86,7 +87,7 @@ mod ty_check {
 
     use crate::{
         code_gen::{
-            generateable::{js_types::JsTypeGenerateable, VariableAccess, VariablePath},
+            generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::and_chain,
         },
         registry::StructField,
@@ -122,7 +123,7 @@ pub mod ts {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::{generateable::js_types::JsTypeGenerateable, utils::comma_chain},
+        code_gen::{generateable::types::JsTypeGenerateable, utils::comma_chain},
         registry::StructField,
         type_info::JsType,
     };

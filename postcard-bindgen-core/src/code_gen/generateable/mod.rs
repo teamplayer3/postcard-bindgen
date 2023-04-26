@@ -3,7 +3,7 @@ use genco::{prelude::JavaScript, quote_in, tokens::FormatInto};
 use super::JS_OBJECT_VARIABLE;
 
 pub mod binding_tys;
-pub mod js_types;
+pub mod types;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VariablePath {

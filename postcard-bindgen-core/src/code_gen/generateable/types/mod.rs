@@ -1,4 +1,12 @@
-pub mod impls;
+pub mod array;
+pub mod map;
+pub mod number;
+pub mod object;
+pub mod optional;
+pub mod range;
+pub mod string;
+
+pub mod js_type;
 
 use genco::prelude::js::Tokens;
 
