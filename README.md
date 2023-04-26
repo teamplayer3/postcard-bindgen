@@ -32,7 +32,7 @@ fn main() {
     build_npm_package(
         std::env::current_dir().unwrap().as_path(),
         PackageInfo {
-            name: "test".into(),
+            name: "generation-test".into(),
             version: "0.1.0".try_into().unwrap(),
         },
         generate_bindings!(Test),
@@ -41,9 +41,11 @@ fn main() {
 }
 ```
 
-To now serialize a struct in javascript the following code can be used.
+The following code can now be used to serialize an object in Javascript.
 
 ```js
+import { serialize } from "generation-test";
+
 const test = {
     name: "test",
     other: 23
