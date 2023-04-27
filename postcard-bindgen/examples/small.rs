@@ -3,8 +3,8 @@ use serde::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
 struct Test {
-    name: u8,
-    other: u16,
+    name: String,
+    other: i64,
 }
 
 fn main() {
