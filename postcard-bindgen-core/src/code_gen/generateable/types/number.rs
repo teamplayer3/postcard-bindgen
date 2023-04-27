@@ -21,7 +21,9 @@ impl JsTypeGenerateable for NumberMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        quote!(typeof $variable_path === "number")
+        let byte_amount_str = self.as_byte_js_string();
+        let signed = bool_to_js_bool(self.signed);
+        quote!((typeof $(variable_path.to_owned()) === "number" || typeof $(variable_path.to_owned()) === "bigint") && check_bounds($byte_amount_str, $signed, $variable_path))
     }
 
     fn gen_ts_type(&self) -> Tokens {
