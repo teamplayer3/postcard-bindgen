@@ -3,7 +3,7 @@ use genco::{prelude::js::Tokens, quote, tokens::quoted};
 use crate::{
     code_gen::{
         generateable::container::BindingTypeGenerateable,
-        utils::{colon_chain, divider_chain, line_brake_chain},
+        utils::{colon_chain, divider_chain, line_break_chain},
     },
     registry::BindingType,
 };
@@ -66,7 +66,7 @@ fn gen_ser_des_decls() -> Tokens {
 }
 
 fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_brake_chain(bindings.as_ref().iter().map(gen_binding_type))
+    line_break_chain(bindings.as_ref().iter().map(gen_binding_type))
 }
 
 fn gen_binding_type(binding: &BindingType) -> Tokens {

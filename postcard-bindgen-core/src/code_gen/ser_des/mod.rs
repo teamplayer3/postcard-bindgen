@@ -3,7 +3,7 @@ mod test;
 
 use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
-use crate::{code_gen::utils::line_brake_chain, registry::BindingType, utils::StrExt};
+use crate::{code_gen::utils::line_break_chain, registry::BindingType, utils::StrExt};
 
 use super::{
     generateable::container::BindingTypeGenerateable, utils::semicolon_chain, JS_OBJECT_VARIABLE,
@@ -51,7 +51,7 @@ pub fn gen_ser_des_classes() -> Tokens {
 }
 
 pub fn gen_ser_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_brake_chain(bindings.as_ref().iter().map(gen_ser_des_funcs))
+    line_break_chain(bindings.as_ref().iter().map(gen_ser_des_funcs))
 }
 
 pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
