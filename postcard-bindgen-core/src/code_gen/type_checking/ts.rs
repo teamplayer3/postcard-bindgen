@@ -2,7 +2,7 @@ use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
 use crate::{
     code_gen::{
-        generateable::binding_tys::BindingTypeGenerateable,
+        generateable::container::BindingTypeGenerateable,
         utils::{colon_chain, divider_chain, line_brake_chain},
     },
     registry::BindingType,
@@ -80,7 +80,7 @@ mod test {
     use genco::quote;
 
     use crate::{
-        code_gen::generateable::{binding_tys::BindingTypeGenerateable, types::JsTypeGenerateable},
+        code_gen::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
         registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
         type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
         utils::assert_tokens,

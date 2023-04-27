@@ -6,7 +6,7 @@ use genco::{prelude::js::Tokens, quote, tokens::quoted};
 use crate::{code_gen::utils::line_brake_chain, registry::BindingType, utils::StrExt};
 
 use super::{
-    generateable::binding_tys::BindingTypeGenerateable, utils::semicolon_chain, JS_OBJECT_VARIABLE,
+    generateable::container::BindingTypeGenerateable, utils::semicolon_chain, JS_OBJECT_VARIABLE,
 };
 
 pub fn gen_ser_des_classes() -> Tokens {

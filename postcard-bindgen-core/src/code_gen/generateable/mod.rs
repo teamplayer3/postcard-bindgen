@@ -2,7 +2,7 @@ use genco::{prelude::JavaScript, quote_in, tokens::FormatInto};
 
 use super::JS_OBJECT_VARIABLE;
 
-pub mod binding_tys;
+pub mod container;
 pub mod types;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -4,7 +4,7 @@ use genco::{lang::js::Tokens, quote};
 
 use crate::{code_gen::utils::line_brake_chain, registry::BindingType, utils::StrExt};
 
-use super::{generateable::binding_tys::BindingTypeGenerateable, JS_OBJECT_VARIABLE};
+use super::{generateable::container::BindingTypeGenerateable, JS_OBJECT_VARIABLE};
 
 pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
     line_brake_chain(bindings.as_ref().iter().map(gen_type_check))

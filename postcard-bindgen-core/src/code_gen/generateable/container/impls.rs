@@ -136,7 +136,7 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 generateable::{
-                    binding_tys::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
+                    container::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
                 utils::semicolon_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
@@ -198,7 +198,7 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 generateable::{
-                    binding_tys::des,
+                    container::des,
                     types::{self, JsTypeGenerateable},
                 },
                 utils::semicolon_chain,
@@ -253,7 +253,7 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 generateable::{
-                    binding_tys::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
+                    container::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
                 utils::{and_chain, or_chain},
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
@@ -338,7 +338,7 @@ pub mod enum_ty {
 
         use crate::{
             code_gen::{
-                generateable::{binding_tys, types::JsTypeGenerateable},
+                generateable::{container, types::JsTypeGenerateable},
                 utils::divider_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
@@ -358,9 +358,9 @@ pub mod enum_ty {
                     let body = match t {
                         EnumVariantType::Tuple(t) => match t.len() {
                             1 => t[0].gen_ts_type(),
-                            _ => binding_tys::ts::gen_typings_indexed(t),
+                            _ => container::ts::gen_typings_indexed(t),
                         },
-                        EnumVariantType::NewType(n) => binding_tys::ts::gen_typings_fields(n),
+                        EnumVariantType::NewType(n) => container::ts::gen_typings_fields(n),
                         _ => unreachable!(),
                     };
                     quote!({ $JS_ENUM_VARIANT_KEY: $name, $JS_ENUM_VARIANT_VALUE: $body })
