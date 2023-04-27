@@ -80,9 +80,7 @@ mod test {
     use genco::quote;
 
     use crate::{
-        code_gen::generateable::{
-            binding_tys::BindingTypeGenerateable, js_types::JsTypeGenerateable,
-        },
+        code_gen::generateable::{binding_tys::BindingTypeGenerateable, types::JsTypeGenerateable},
         registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
         type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
         utils::assert_tokens,
