@@ -9,7 +9,11 @@ use super::{
     generateable::container::BindingTypeGenerateable, utils::semicolon_chain, JS_OBJECT_VARIABLE,
 };
 
-pub fn gen_ser_des_classes() -> Tokens {
+pub struct CodeConfig {
+    pub incl_bounds_checking: bool,
+}
+
+pub fn gen_ser_des_classes(config: CodeConfig) -> Tokens {
     quote!(
         const BITS_PER_BYTE = 8, BITS_PER_VARINT_BYTE = 7, U8_BYTES = 1, U16_BYTES = 2, U32_BYTES = 4, U64_BYTES = 8, U128_BYTES = 16
 
@@ -46,7 +50,7 @@ pub fn gen_ser_des_classes() -> Tokens {
             serialize_map = (ser, map) => { this.push_n(varint(U32_BYTES, map.size)); map.forEach((v, k) => ser(this, k, v)) }
         }
 
-        const check_bounds = (n_bytes, signed, value) => { const max = BigInt(2 ** (n_bytes * BITS_PER_BYTE)), value_b = BigInt(value); if (signed) { const bounds = max / 2n; return value_b >= -bounds && value_b < bounds } else { return value_b < max && value_b >= 0 } }
+        $(if config.incl_bounds_checking => const check_bounds = (n_bytes, signed, value) => { const max = BigInt(2 ** (n_bytes * BITS_PER_BYTE)), value_b = BigInt(value); if (signed) { const bounds = max / 2n; return value_b >= -bounds && value_b < bounds } else { return value_b < max && value_b >= 0 } })
     )
 }
 
@@ -54,8 +58,13 @@ pub fn gen_ser_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
     line_break_chain(bindings.as_ref().iter().map(gen_ser_des_funcs))
 }
 
-pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
-    let body = semicolon_chain(defines.as_ref().iter().map(gen_ser_case));
+pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>, type_checks: bool) -> Tokens {
+    let body = semicolon_chain(
+        defines
+            .as_ref()
+            .iter()
+            .map(|d| gen_ser_case(d, type_checks)),
+    );
     quote!(
         module.exports.serialize = (type, value) => {
             if (!(typeof type === "string")) {
@@ -81,11 +90,15 @@ pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
     )
 }
 
-fn gen_ser_case(define: &BindingType) -> Tokens {
+fn gen_ser_case(define: &BindingType, type_checks: bool) -> Tokens {
     let name = define.inner_name();
     let case_str = quoted(name);
     let type_name = name.to_obj_identifier();
-    quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
+    if type_checks {
+        quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
+    } else {
+        quote!(case $case_str: serialize_$(type_name)(s, value); break)
+    }
 }
 
 fn gen_des_case(define: &BindingType) -> Tokens {

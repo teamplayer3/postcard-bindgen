@@ -135,7 +135,7 @@ macro_rules! generate_bindings {
             )*
             let bindings = reg.into_entries();
             postcard_bindgen::ExportStrings {
-                js_file: postcard_bindgen::__private::generate_js(&bindings).to_file_string().unwrap(),
+                js_file: postcard_bindgen::__private::generate_js(&bindings, false).to_file_string().unwrap(),
                 ts_file: postcard_bindgen::__private::gen_ts_typings(bindings).to_file_string().unwrap()
             }
         }
