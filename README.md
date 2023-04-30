@@ -11,6 +11,8 @@ As main types structs and enums can be annotated with `PostcardBindings` to gene
 
 ## Usage
 
+> :warning: Run the crate that generates the bindings with rust nightly. This is necessary because this crate depends on [genco](https://github.com/udoprog/genco) and this crate uses a nightly feature to detect column changes.
+
 Structs and enums for which bindings should be generated must be annotated with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
 
 The process is divided into two steps. Firstly the annotation step. This is done mostly in a library crate. Secondly in a extra binary crate the annotated structs and enums must be imported (this means the library crate must be defined as a dependency) and as a main function the generation logic added. To generate the npm package this extra binary crate must be run.
