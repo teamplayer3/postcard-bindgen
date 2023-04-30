@@ -117,7 +117,7 @@ mod test {
         let assert_combs = number_combs.iter().zip(js_type);
 
         for assertion in assert_combs.clone() {
-            let ty = JsType::Number(NumberMeta {
+            let ty = JsType::Number(NumberMeta::Integer {
                 bytes: assertion.0 .0,
                 signed: assertion.0 .1,
             });
@@ -126,7 +126,7 @@ mod test {
 
         for assertion in assert_combs.clone() {
             let ty = JsType::Array(ArrayMeta {
-                items_type: Box::new(JsType::Number(NumberMeta {
+                items_type: Box::new(JsType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
                 })),
@@ -137,7 +137,7 @@ mod test {
 
         for assertion in assert_combs {
             let ty = JsType::Optional(OptionalMeta {
-                inner: Box::new(JsType::Number(NumberMeta {
+                inner: Box::new(JsType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
                 })),
@@ -166,7 +166,7 @@ mod test {
             fields: vec![
                 StructField {
                     name: "a",
-                    js_type: JsType::Number(NumberMeta {
+                    js_type: JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),
@@ -182,7 +182,7 @@ mod test {
                 StructField {
                     name: "d",
                     js_type: JsType::Array(ArrayMeta {
-                        items_type: Box::new(JsType::Number(NumberMeta {
+                        items_type: Box::new(JsType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
                         })),
@@ -191,7 +191,7 @@ mod test {
                 StructField {
                     name: "e",
                     js_type: JsType::Optional(OptionalMeta {
-                        inner: Box::new(JsType::Number(NumberMeta {
+                        inner: Box::new(JsType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
                         })),
@@ -213,7 +213,7 @@ mod test {
             name: "A",
             fields: vec![StructField {
                 name: "a",
-                js_type: JsType::Number(NumberMeta {
+                js_type: JsType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 }),
@@ -236,7 +236,7 @@ mod test {
                 EnumVariant {
                     name: "B",
                     index: 1,
-                    inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta {
+                    inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     })]),

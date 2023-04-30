@@ -28,7 +28,7 @@ fn test_binding_struct_unit() {
 fn test_binding_struct_new_type() {
     let binding = BindingType::TupleStruct(TupleStructType {
         name: "A",
-        fields: vec![JsType::Number(NumberMeta {
+        fields: vec![JsType::Number(NumberMeta::Integer {
             bytes: 1,
             signed: false,
         })],
@@ -48,11 +48,11 @@ fn test_binding_struct_tuple_2() {
     let binding = BindingType::TupleStruct(TupleStructType {
         name: "A",
         fields: vec![
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
@@ -73,15 +73,15 @@ fn test_binding_struct_tuple_3() {
     let binding = BindingType::TupleStruct(TupleStructType {
         name: "A",
         fields: vec![
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
@@ -102,19 +102,19 @@ fn test_binding_struct_tuple_different_types() {
     let binding = BindingType::TupleStruct(TupleStructType {
         name: "A",
         fields: vec![
-            JsType::Number(NumberMeta {
+            JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
             JsType::String(StringMeta {}),
             JsType::Optional(OptionalMeta {
-                inner: Box::new(JsType::Number(NumberMeta {
+                inner: Box::new(JsType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 })),
             }),
             JsType::Array(ArrayMeta {
-                items_type: Box::new(JsType::Number(NumberMeta {
+                items_type: Box::new(JsType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 })),
@@ -138,7 +138,7 @@ fn test_binding_struct() {
         name: "A",
         fields: vec![StructField {
             name: "a",
-            js_type: JsType::Number(NumberMeta {
+            js_type: JsType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
@@ -161,7 +161,7 @@ fn test_binding_struct_different_types() {
         fields: vec![
             StructField {
                 name: "a",
-                js_type: JsType::Number(NumberMeta {
+                js_type: JsType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 }),
@@ -173,7 +173,7 @@ fn test_binding_struct_different_types() {
             StructField {
                 name: "c",
                 js_type: JsType::Optional(OptionalMeta {
-                    inner: Box::new(JsType::Number(NumberMeta {
+                    inner: Box::new(JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     })),
@@ -182,7 +182,7 @@ fn test_binding_struct_different_types() {
             StructField {
                 name: "d",
                 js_type: JsType::Array(ArrayMeta {
-                    items_type: Box::new(JsType::Number(NumberMeta {
+                    items_type: Box::new(JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     })),
@@ -219,7 +219,7 @@ fn test_binding_enum() {
                 name: "B",
                 inner_type: EnumVariantType::NewType(vec![StructField {
                     name: "a",
-                    js_type: JsType::Number(NumberMeta {
+                    js_type: JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),
@@ -228,7 +228,7 @@ fn test_binding_enum() {
             EnumVariant {
                 index: 2,
                 name: "C",
-                inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta {
+                inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 })]),
@@ -237,11 +237,11 @@ fn test_binding_enum() {
                 index: 3,
                 name: "D",
                 inner_type: EnumVariantType::Tuple(vec![
-                    JsType::Number(NumberMeta {
+                    JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),
-                    JsType::Number(NumberMeta {
+                    JsType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),

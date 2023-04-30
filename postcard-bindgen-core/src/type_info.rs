@@ -42,9 +42,9 @@ pub struct OptionalMeta {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct NumberMeta {
-    pub(crate) bytes: usize,
-    pub(crate) signed: bool,
+pub enum NumberMeta {
+    Integer { bytes: usize, signed: bool },
+    FloatingPoint { bytes: usize },
 }
 
 #[cfg(feature = "generating")]
@@ -60,7 +60,11 @@ mod int_byte_len {
 
     impl NumberMeta {
         pub(crate) fn as_byte_js_string(&self) -> &'static str {
-            match self.bytes {
+            let bytes = match self {
+                NumberMeta::Integer { bytes, .. } => bytes,
+                NumberMeta::FloatingPoint { bytes } => bytes,
+            };
+            match bytes {
                 1 => U8_BYTES_CONST,
                 2 => U16_BYTES_CONST,
                 4 => U32_BYTES_CONST,
@@ -96,11 +100,11 @@ impl<T: GenJsBinding> GenJsBinding for &mut T {
     }
 }
 
-macro_rules! impl_gen_js_binding_numbers {
+macro_rules! impl_gen_js_binding_numbers_ints {
     ($ty:ty, $bytes:expr, $signed:ident) => {
         impl GenJsBinding for $ty {
             fn get_type() -> JsType {
-                JsType::Number(NumberMeta {
+                JsType::Number(NumberMeta::Integer {
                     bytes: $bytes,
                     signed: $signed,
                 })
@@ -109,21 +113,34 @@ macro_rules! impl_gen_js_binding_numbers {
     };
 }
 
-impl_gen_js_binding_numbers!(u8, 1, false);
-impl_gen_js_binding_numbers!(u16, 2, false);
-impl_gen_js_binding_numbers!(u32, 4, false);
-impl_gen_js_binding_numbers!(u64, 8, false);
-impl_gen_js_binding_numbers!(u128, 16, false);
-// TODO check for operating system
-impl_gen_js_binding_numbers!(usize, 4, false);
+macro_rules! impl_gen_js_binding_numbers_floats {
+    ($ty:ty, $bytes:expr) => {
+        impl GenJsBinding for $ty {
+            fn get_type() -> JsType {
+                JsType::Number(NumberMeta::FloatingPoint { bytes: $bytes })
+            }
+        }
+    };
+}
 
-impl_gen_js_binding_numbers!(i8, 1, true);
-impl_gen_js_binding_numbers!(i16, 2, true);
-impl_gen_js_binding_numbers!(i32, 4, true);
-impl_gen_js_binding_numbers!(i64, 8, true);
-impl_gen_js_binding_numbers!(i128, 16, true);
+impl_gen_js_binding_numbers_ints!(u8, 1, false);
+impl_gen_js_binding_numbers_ints!(u16, 2, false);
+impl_gen_js_binding_numbers_ints!(u32, 4, false);
+impl_gen_js_binding_numbers_ints!(u64, 8, false);
+impl_gen_js_binding_numbers_ints!(u128, 16, false);
 // TODO check for operating system
-impl_gen_js_binding_numbers!(isize, 4, true);
+impl_gen_js_binding_numbers_ints!(usize, 4, false);
+
+impl_gen_js_binding_numbers_ints!(i8, 1, true);
+impl_gen_js_binding_numbers_ints!(i16, 2, true);
+impl_gen_js_binding_numbers_ints!(i32, 4, true);
+impl_gen_js_binding_numbers_ints!(i64, 8, true);
+impl_gen_js_binding_numbers_ints!(i128, 16, true);
+// TODO check for operating system
+impl_gen_js_binding_numbers_ints!(isize, 4, true);
+
+impl_gen_js_binding_numbers_floats!(f32, 4);
+impl_gen_js_binding_numbers_floats!(f64, 8);
 
 impl<T: GenJsBinding> GenJsBinding for Option<T> {
     fn get_type() -> JsType {

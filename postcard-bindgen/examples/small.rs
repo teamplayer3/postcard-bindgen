@@ -4,10 +4,19 @@ use serde::Serialize;
 #[derive(Serialize, PostcardBindings)]
 struct Test {
     name: String,
-    other: i64,
+    other: f64,
 }
 
 fn main() {
+    println!(
+        "{:?}",
+        postcard::to_vec::<_, 20>(&Test {
+            name: "test".into(),
+            other: 17.2343,
+        })
+        .unwrap()
+    );
+
     build_npm_package(
         std::env::current_dir().unwrap().as_path(),
         PackageInfo {
