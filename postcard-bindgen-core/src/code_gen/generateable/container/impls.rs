@@ -301,9 +301,9 @@ pub mod enum_ty {
                 None
             } else {
                 let variant_checks = or_chain(variants.map(|(_, variant)| {
-            let inner_type_checks = gen_variant_check(variant);
-            quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(variant.name)) && $inner_type_checks))
-        }));
+                    let inner_type_checks = gen_variant_check(variant);
+                    quote!((v.$JS_ENUM_VARIANT_KEY === $(quoted(variant.name)) && $inner_type_checks))
+                }));
                 let type_check = complex_enum_type_check();
                 Some(quote!(($type_check && $variant_checks)))
             }
@@ -325,7 +325,7 @@ pub mod enum_ty {
         }
 
         fn simple_enum_type_check() -> Tokens {
-            quote!(typeof $JS_OBJECT_VARIABLE === "object" && $(quoted(JS_ENUM_VARIANT_KEY)))
+            quote!(typeof $JS_OBJECT_VARIABLE === "object" && $(quoted(JS_ENUM_VARIANT_KEY)) in $JS_OBJECT_VARIABLE)
         }
 
         fn complex_enum_type_check() -> Tokens {
