@@ -286,7 +286,7 @@ pub mod enum_ty {
             if variants.to_owned().count() == 0 {
                 None
             } else {
-                let variant_checks = and_chain(variants.map(
+                let variant_checks = or_chain(variants.map(
                     |(_, variant)| quote!(v.$JS_ENUM_VARIANT_KEY === $(quoted(variant.name))),
                 ));
                 let type_check = simple_enum_type_check();
