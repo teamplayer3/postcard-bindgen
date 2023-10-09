@@ -166,6 +166,14 @@ impl<T: GenJsBinding> GenJsBinding for [T] {
     }
 }
 
+impl<T: GenJsBinding, const S: usize> GenJsBinding for [T; S] {
+    fn get_type() -> JsType {
+        JsType::Array(ArrayMeta {
+            items_type: Box::new(T::get_type()),
+        })
+    }
+}
+
 impl<'a> GenJsBinding for &'a str {
     fn get_type() -> JsType {
         JsType::String(StringMeta {})
