@@ -2,37 +2,66 @@ name: Rust
 
 on:
   push:
+    branches: [main]
+    paths: ["**/*.rs", "**/Cargo.toml", "**/Cargo.lock", ".github/**/*.yml"]
   pull_request:
-
-permissions:
-  contents: read
-
-env:
-  CARGO_TERM_COLOR: always
+    branches: [main]
+    paths: ["**/*.rs", "**/Cargo.toml", "**/Cargo.lock"]
 
 jobs:
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt
+      - run: rustup component add rustfmt
+      - run: cargo fmt -- --check
+
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "build-cache"
+      - run: cargo hack check --feature-powerset
+
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
-          override: true
-          components: rustfmt, clippy
-      - run: cargo fmt
-      - run: cargo-clippy --deny
+          components: clippy
+      - uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "build-cache"
+      - run: cargo hack clippy --feature-powerset
 
   test:
-    name: Tests
+    name: Test Suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
-          override: true
-      - run: cargo test --features generating
+      - uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "build-cache"
+      - run: cargo hack test --feature-powerset
+
