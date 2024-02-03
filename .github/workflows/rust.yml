@@ -49,7 +49,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-cache"
-      - run: cargo hack clippy --feature-powerset
+      - run: cargo hack clippy --feature-powerset --deny
 
   test:
     name: Test Suite
@@ -59,9 +59,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-      - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-cache"
-      - run: cargo hack test --feature-powerset
+      - run: cargo test --package postcard-bindgen --features=generating
 
