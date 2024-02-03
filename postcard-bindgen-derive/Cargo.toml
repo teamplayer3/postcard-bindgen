@@ -19,7 +19,7 @@ proc-macro = true
 [dependencies]
 quote = "1.0.21"
 serde_derive_internals = "0.26"
-syn = "1.0.99"
+syn = "1.0.109"
 serde = "1"
 proc-macro2 = "1.0"
 genco = "0.17.8"
