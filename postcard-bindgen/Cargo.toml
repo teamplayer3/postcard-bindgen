@@ -27,7 +27,7 @@ version = "0.3.3"
 path = "../postcard-bindgen-core"
 
 [dependencies.postcard-bindgen-derive]
-version = "0.3.2"
+version = "0.3.3"
 path = "../postcard-bindgen-derive"
 
 [dev-dependencies]
