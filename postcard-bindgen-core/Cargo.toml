@@ -19,7 +19,7 @@ std = ["alloc"]
 generating = ["std", "dep:genco", "dep:convert_case"]
 
 [dependencies.genco]
-version = "0.17.2"
+version = "0.17.8"
 optional = true
 
 [dependencies.convert_case]
