@@ -255,7 +255,7 @@ pub mod enum_ty {
                 generateable::{
                     container::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
-                utils::{and_chain, or_chain},
+                utils::or_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
             },
             registry::{EnumVariant, EnumVariantType},
