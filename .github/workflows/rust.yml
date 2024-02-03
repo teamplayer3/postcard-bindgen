@@ -49,7 +49,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-cache"
-      - run: cargo hack clippy --feature-powerset --deny
+      - run: cargo hack clippy --feature-powerset --deny warnings
 
   test:
     name: Test Suite
