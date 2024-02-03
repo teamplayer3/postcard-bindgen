@@ -17,7 +17,7 @@ expanding = []
 proc-macro = true
 
 [dependencies]
-quote = "1.0.21"
+quote = "1.0.35"
 serde_derive_internals = "0.26"
 syn = "1.0.99"
 serde = "1"
