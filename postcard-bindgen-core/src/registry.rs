@@ -233,6 +233,7 @@ mod test {
 
     #[test]
     fn test_registry_tuple_struct() {
+        #[allow(dead_code)]
         struct Test(u8, &'static str, &'static [u8]);
 
         impl JsBindings for Test {
