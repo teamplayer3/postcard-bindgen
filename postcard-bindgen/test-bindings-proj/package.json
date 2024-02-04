@@ -23,6 +23,6 @@
     ],
     "typings": "./lib/index.d.ts",
     "devDependencies": {
-        "@types/node": "^18.11.0"
+        "@types/node": "^20.0.0"
     }
 }
