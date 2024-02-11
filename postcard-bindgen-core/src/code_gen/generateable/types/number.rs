@@ -38,7 +38,7 @@ impl JsTypeGenerateable for NumberMeta {
         let byte_amount_str = self.as_byte_js_string();
         match self {
             NumberMeta::FloatingPoint { .. } => {
-                quote!(typeof $(variable_path.to_owned()) === "number" && !Number.isInteger($(variable_path.to_owned())) && Number.isFinite($(variable_path.to_owned())))
+                quote!(typeof $(variable_path.to_owned()) === "number" && Number.isFinite($(variable_path.to_owned())))
             }
             NumberMeta::Integer { signed, .. } => {
                 let signed = bool_to_js_bool(*signed);
