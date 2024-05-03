@@ -32,7 +32,7 @@ path = "../postcard-bindgen-derive"
 
 [dev-dependencies]
 postcard = "1.0.8"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.200", features = ["derive"] }
 
 [[example]]
 name = "generate_bindings"
