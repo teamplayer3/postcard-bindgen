@@ -214,6 +214,20 @@ impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<T: GenJsBinding> GenJsBinding for alloc::rc::Rc<T> {
+    fn get_type() -> JsType {
+        T::get_type()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: GenJsBinding> GenJsBinding for alloc::sync::Arc<T> {
+    fn get_type() -> JsType {
+        T::get_type()
+    }
+}
+
 #[cfg(feature = "std")]
 impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for std::collections::HashMap<K, V> {
     fn get_type() -> JsType {
@@ -221,6 +235,13 @@ impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for std::collections::HashMa
             key_type: Box::new(K::get_type()),
             value_type: Box::new(V::get_type()),
         })
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T: GenJsBinding> GenJsBinding for std::sync::RwLock<T> {
+    fn get_type() -> JsType {
+        T::get_type()
     }
 }
 
