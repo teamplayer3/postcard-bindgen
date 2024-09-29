@@ -67,7 +67,7 @@ fn package_file_src(package_name: impl AsRef<str>, package_version: &Version) ->
             \"types\": \"index.d.ts\"\
         }}
     ",
-        package_name.as_ref(), package_version.to_string()
+        package_name.as_ref(), package_version
     )
 }
 
@@ -146,9 +146,9 @@ impl FromStr for Version {
     }
 }
 
-impl ToString for Version {
-    fn to_string(&self) -> String {
-        format!("{}.{}.{}", self.major, self.minor, self.patch)
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
     }
 }
 
