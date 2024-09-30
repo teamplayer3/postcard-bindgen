@@ -1,10 +1,10 @@
 use genco::prelude::js::Tokens;
 
-use crate::{code_gen::generateable::VariablePath, type_info::JsType};
+use crate::{code_gen::generateable::VariablePath, type_info::ValueType};
 
 use super::{des, JsTypeGenerateable};
 
-impl JsTypeGenerateable for JsType {
+impl JsTypeGenerateable for ValueType {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         match self {
             Self::Number(number_meta) => number_meta.gen_ser_accessor(variable_path),

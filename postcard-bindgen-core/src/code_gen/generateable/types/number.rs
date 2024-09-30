@@ -2,10 +2,10 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::generateable::VariablePath,
-    type_info::{bool_to_js_bool, NumberMeta},
+    type_info::NumberMeta,
 };
 
-use super::{des, JsTypeGenerateable};
+use super::{des, JsTypeGenerateable, bool::bool_to_js_bool};
 
 impl JsTypeGenerateable for NumberMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {

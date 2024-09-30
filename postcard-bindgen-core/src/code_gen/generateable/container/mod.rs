@@ -21,11 +21,11 @@ mod ser {
             utils::semicolon_chain,
         },
         registry::StructField,
-        type_info::JsType,
+        type_info::ValueType,
     };
 
     pub fn gen_accessors_indexed(
-        fields: impl AsRef<[JsType]>,
+        fields: impl AsRef<[ValueType]>,
         variable_path: VariablePath,
     ) -> Tokens {
         semicolon_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
@@ -58,7 +58,7 @@ mod des {
             utils::comma_chain,
         },
         registry::StructField,
-        type_info::JsType,
+        type_info::ValueType,
     };
 
     pub fn gen_accessors_fields(fields: impl AsRef<[StructField]>) -> Tokens {
@@ -70,7 +70,7 @@ mod des {
         quote!({ $body })
     }
 
-    pub fn gen_accessors_indexed(fields: impl AsRef<[JsType]>) -> Tokens {
+    pub fn gen_accessors_indexed(fields: impl AsRef<[ValueType]>) -> Tokens {
         let body = comma_chain(
             fields
                 .as_ref()
@@ -91,7 +91,7 @@ mod ty_check {
             utils::and_chain,
         },
         registry::StructField,
-        type_info::JsType,
+        type_info::ValueType,
     };
 
     pub fn gen_object_checks(
@@ -107,7 +107,7 @@ mod ty_check {
         quote!(typeof $variable_path === "object" && $field_checks)
     }
 
-    pub fn gen_array_checks(fields: impl AsRef<[JsType]>, variable_path: VariablePath) -> Tokens {
+    pub fn gen_array_checks(fields: impl AsRef<[ValueType]>, variable_path: VariablePath) -> Tokens {
         let arr_len = fields.as_ref().len();
         let field_checks = and_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
             let path = variable_path
@@ -125,10 +125,10 @@ pub mod ts {
     use crate::{
         code_gen::{generateable::types::JsTypeGenerateable, utils::comma_chain},
         registry::StructField,
-        type_info::JsType,
+        type_info::ValueType,
     };
 
-    pub fn gen_typings_indexed(fields: impl AsRef<[JsType]>) -> Tokens {
+    pub fn gen_typings_indexed(fields: impl AsRef<[ValueType]>) -> Tokens {
         let body = comma_chain(fields.as_ref().iter().map(|f| quote!($(f.gen_ts_type()))));
         quote!([$body])
     }

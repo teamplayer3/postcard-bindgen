@@ -6,6 +6,8 @@ pub mod optional;
 pub mod range;
 pub mod string;
 
+mod bool;
+
 pub mod js_type;
 
 use genco::prelude::js::Tokens;

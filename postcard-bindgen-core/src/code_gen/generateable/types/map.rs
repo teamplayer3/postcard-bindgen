@@ -4,7 +4,7 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::{generateable::VariablePath, utils::and_chain},
-    type_info::{JsType, MapMeta},
+    type_info::{ValueType, MapMeta},
 };
 
 use super::{des, JsTypeGenerateable};
@@ -12,7 +12,7 @@ use super::{des, JsTypeGenerateable};
 impl JsTypeGenerateable for MapMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         match self.key_type.deref() {
-            &JsType::String(_) => {
+            &ValueType::String(_) => {
                 let inner_type_accessor = self.value_type.gen_ser_accessor(VariablePath::default());
                 quote!(s.serialize_string_key_map((s, v) => $inner_type_accessor, $variable_path))
             }
@@ -30,7 +30,7 @@ impl JsTypeGenerateable for MapMeta {
 
     fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
         match self.key_type.deref() {
-            &JsType::String(_) => {
+            &ValueType::String(_) => {
                 let inner_type_accessor =
                     self.value_type.gen_des_accessor(des::FieldAccessor::None);
                 quote!($(field_accessor)d.deserialize_string_key_map(((d) => $inner_type_accessor)))
@@ -47,7 +47,7 @@ impl JsTypeGenerateable for MapMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         match self.key_type.deref() {
-            &JsType::String(_) => {
+            &ValueType::String(_) => {
                 let inner_type_check = self.value_type.gen_ty_check(VariablePath::new("v".into()));
                 let inner_type_checks = quote!(Object.values($(variable_path.to_owned())).map((v) => $inner_type_check).every((v) => v));
                 and_chain([
@@ -61,7 +61,7 @@ impl JsTypeGenerateable for MapMeta {
 
     fn gen_ts_type(&self) -> Tokens {
         match self.key_type.deref() {
-            &JsType::String(_) => {
+            &ValueType::String(_) => {
                 let value_type = self.value_type.gen_ts_type();
                 quote!({
                     [key: string]: $value_type;

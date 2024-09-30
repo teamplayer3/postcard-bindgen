@@ -17,14 +17,6 @@ impl AsRef<ValueType> for ValueType {
     }
 }
 
-pub fn bool_to_js_bool(value: bool) -> &'static str {
-    if value {
-        "true"
-    } else {
-        "false"
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MapMeta {
     pub(crate) key_type: Box<ValueType>,

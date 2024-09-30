@@ -82,7 +82,7 @@ mod test {
     use crate::{
         code_gen::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
         registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
-        type_info::{ArrayMeta, JsType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
+        type_info::{ArrayMeta, ValueType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
         utils::assert_tokens,
     };
 
@@ -117,7 +117,7 @@ mod test {
         let assert_combs = number_combs.iter().zip(js_type);
 
         for assertion in assert_combs.clone() {
-            let ty = JsType::Number(NumberMeta::Integer {
+            let ty = ValueType::Number(NumberMeta::Integer {
                 bytes: assertion.0 .0,
                 signed: assertion.0 .1,
             });
@@ -125,8 +125,8 @@ mod test {
         }
 
         for assertion in assert_combs.clone() {
-            let ty = JsType::Array(ArrayMeta {
-                items_type: Box::new(JsType::Number(NumberMeta::Integer {
+            let ty = ValueType::Array(ArrayMeta {
+                items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
                 })),
@@ -136,8 +136,8 @@ mod test {
         }
 
         for assertion in assert_combs {
-            let ty = JsType::Optional(OptionalMeta {
-                inner: Box::new(JsType::Number(NumberMeta::Integer {
+            let ty = ValueType::Optional(OptionalMeta {
+                inner: Box::new(ValueType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
                 })),
@@ -152,10 +152,10 @@ mod test {
 
     #[test]
     fn test_js_type_without_number_typings() {
-        let ty = JsType::Object(ObjectMeta { name: "A" });
+        let ty = ValueType::Object(ObjectMeta { name: "A" });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
-        let ty = JsType::String(StringMeta {});
+        let ty = ValueType::String(StringMeta {});
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(string));
     }
 
@@ -166,23 +166,23 @@ mod test {
             fields: vec![
                 StructField {
                     name: "a",
-                    js_type: JsType::Number(NumberMeta::Integer {
+                    js_type: ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),
                 },
                 StructField {
                     name: "b",
-                    js_type: JsType::Object(ObjectMeta { name: "B" }),
+                    js_type: ValueType::Object(ObjectMeta { name: "B" }),
                 },
                 StructField {
                     name: "c",
-                    js_type: JsType::String(StringMeta {}),
+                    js_type: ValueType::String(StringMeta {}),
                 },
                 StructField {
                     name: "d",
-                    js_type: JsType::Array(ArrayMeta {
-                        items_type: Box::new(JsType::Number(NumberMeta::Integer {
+                    js_type: ValueType::Array(ArrayMeta {
+                        items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
                         })),
@@ -190,8 +190,8 @@ mod test {
                 },
                 StructField {
                     name: "e",
-                    js_type: JsType::Optional(OptionalMeta {
-                        inner: Box::new(JsType::Number(NumberMeta::Integer {
+                    js_type: ValueType::Optional(OptionalMeta {
+                        inner: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
                         })),
@@ -213,7 +213,7 @@ mod test {
             name: "A",
             fields: vec![StructField {
                 name: "a",
-                js_type: JsType::Number(NumberMeta::Integer {
+                js_type: ValueType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 }),
@@ -236,7 +236,7 @@ mod test {
                 EnumVariant {
                     name: "B",
                     index: 1,
-                    inner_type: EnumVariantType::Tuple(vec![JsType::Number(NumberMeta::Integer {
+                    inner_type: EnumVariantType::Tuple(vec![ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     })]),
