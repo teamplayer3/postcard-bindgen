@@ -3,7 +3,7 @@ use core::ops::Deref;
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::{generateable::VariablePath, utils::and_chain},
+    code_gen::js::{generateable::VariablePath, utils::and_chain},
     type_info::{ValueType, MapMeta},
 };
 

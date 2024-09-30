@@ -1,7 +1,7 @@
 use genco::quote;
 
 use crate::{
-    code_gen::{
+    code_gen::js::{
         generateable::VariablePath,
         utils::{wrapped_brackets, wrapped_curly_brackets},
         JS_OBJECT_VARIABLE,
@@ -134,7 +134,7 @@ pub mod enum_ty {
         };
 
         use crate::{
-            code_gen::{
+            code_gen::js::{
                 generateable::{
                     container::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
@@ -196,7 +196,7 @@ pub mod enum_ty {
         };
 
         use crate::{
-            code_gen::{
+            code_gen::js::{
                 generateable::{
                     container::des,
                     types::{self, JsTypeGenerateable},
@@ -251,7 +251,7 @@ pub mod enum_ty {
         use genco::{lang::js::Tokens, quote, tokens::quoted};
 
         use crate::{
-            code_gen::{
+            code_gen::js::{
                 generateable::{
                     container::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
                 },
@@ -337,7 +337,7 @@ pub mod enum_ty {
         use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
         use crate::{
-            code_gen::{
+            code_gen::js::{
                 generateable::{container, types::JsTypeGenerateable},
                 utils::divider_chain,
                 JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,

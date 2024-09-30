@@ -1,7 +1,7 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::{generateable::VariablePath, JS_OBJECT_VARIABLE},
+    code_gen::js::{generateable::VariablePath, JS_OBJECT_VARIABLE},
     type_info::ArrayMeta,
 };
 

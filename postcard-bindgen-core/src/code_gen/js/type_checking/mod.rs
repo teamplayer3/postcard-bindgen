@@ -2,7 +2,7 @@ pub mod ts;
 
 use genco::{lang::js::Tokens, quote};
 
-use crate::{code_gen::utils::line_break_chain, registry::BindingType, utils::StrExt};
+use crate::{code_gen::js::utils::line_break_chain, registry::BindingType, utils::StrExt};
 
 use super::{generateable::container::BindingTypeGenerateable, JS_OBJECT_VARIABLE};
 

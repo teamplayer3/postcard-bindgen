@@ -1,6 +1,6 @@
 use genco::{prelude::js::Tokens, quote};
 
-use crate::{code_gen::generateable::VariablePath, type_info::OptionalMeta};
+use crate::{code_gen::js::generateable::VariablePath, type_info::OptionalMeta};
 
 use super::{
     des,

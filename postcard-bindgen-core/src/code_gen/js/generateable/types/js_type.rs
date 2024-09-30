@@ -1,6 +1,6 @@
 use genco::prelude::js::Tokens;
 
-use crate::{code_gen::generateable::VariablePath, type_info::ValueType};
+use crate::{code_gen::js::generateable::VariablePath, type_info::ValueType};
 
 use super::{des, JsTypeGenerateable};
 

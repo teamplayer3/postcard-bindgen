@@ -16,7 +16,7 @@ mod ser {
     use genco::prelude::js::Tokens;
 
     use crate::{
-        code_gen::{
+        code_gen::js::{
             generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::semicolon_chain,
         },
@@ -53,7 +53,7 @@ mod des {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::{
+        code_gen::js::{
             generateable::types::{self, JsTypeGenerateable},
             utils::comma_chain,
         },
@@ -86,7 +86,7 @@ mod ty_check {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::{
+        code_gen::js::{
             generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::and_chain,
         },
@@ -123,7 +123,7 @@ pub mod ts {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::{generateable::types::JsTypeGenerateable, utils::comma_chain},
+        code_gen::js::{generateable::types::JsTypeGenerateable, utils::comma_chain},
         registry::StructField,
         type_info::ValueType,
     };

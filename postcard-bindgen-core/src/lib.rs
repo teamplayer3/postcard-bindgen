@@ -12,7 +12,7 @@ pub mod registry;
 pub mod type_info;
 
 #[cfg(feature = "generating")]
-pub use code_gen::{generate_js, type_checking::ts::gen_ts_typings};
+pub use code_gen::{generate, generate_typings};
 
 pub enum ArchPointerLen {
     U32,

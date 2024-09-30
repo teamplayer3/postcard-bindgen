@@ -99,7 +99,7 @@ pub use postcard_bindgen_derive::PostcardBindings;
 #[doc(hidden)]
 pub mod __private {
     pub use postcard_bindgen_core::{
-        gen_ts_typings, generate_js,
+        generate_typings, generate,
         registry::*,
         type_info::{GenJsBinding, ValueType, ObjectMeta},
     };
@@ -135,8 +135,8 @@ macro_rules! generate_bindings {
             )*
             let bindings = reg.into_entries();
             postcard_bindgen::ExportStrings {
-                js_file: postcard_bindgen::__private::generate_js(&bindings).to_file_string().unwrap(),
-                ts_file: postcard_bindgen::__private::gen_ts_typings(bindings).to_file_string().unwrap()
+                js_file: postcard_bindgen::__private::generate(&bindings).to_file_string().unwrap(),
+                ts_file: postcard_bindgen::__private::generate_typings(bindings).to_file_string().unwrap()
             }
         }
     };

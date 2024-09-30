@@ -57,7 +57,7 @@ pub mod ty_check {
         tokens::{quoted, FormatInto},
     };
 
-    use crate::code_gen::generateable::{VariableAccess, VariablePath};
+    use crate::code_gen::js::generateable::{VariableAccess, VariablePath};
 
     #[derive(Clone)]
     pub enum AvailableCheck {
