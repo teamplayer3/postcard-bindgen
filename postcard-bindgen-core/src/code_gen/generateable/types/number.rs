@@ -7,6 +7,13 @@ use crate::{
 
 use super::{des, JsTypeGenerateable, bool::bool_to_js_bool};
 
+// const USIZE_BYTES_CONST: &str = "USIZE_BYTES";
+const U8_BYTES_CONST: &str = "U8_BYTES";
+const U16_BYTES_CONST: &str = "U16_BYTES";
+const U32_BYTES_CONST: &str = "U32_BYTES";
+const U64_BYTES_CONST: &str = "U64_BYTES";
+const U128_BYTES_CONST: &str = "U128_BYTES";
+
 impl JsTypeGenerateable for NumberMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         let byte_amount_str = self.as_byte_js_string();
@@ -69,6 +76,23 @@ impl JsTypeGenerateable for NumberMeta {
                 };
                 quote!($prefix$bits)
             }
+        }
+    }
+}
+
+impl NumberMeta {
+    pub(crate) fn as_byte_js_string(&self) -> &'static str {
+        let bytes = match self {
+            NumberMeta::Integer { bytes, .. } => bytes,
+            NumberMeta::FloatingPoint { bytes } => bytes,
+        };
+        match bytes {
+            1 => U8_BYTES_CONST,
+            2 => U16_BYTES_CONST,
+            4 => U32_BYTES_CONST,
+            8 => U64_BYTES_CONST,
+            16 => U128_BYTES_CONST,
+            _ => unreachable!(),
         }
     }
 }

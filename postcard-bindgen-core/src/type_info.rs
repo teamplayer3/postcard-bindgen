@@ -39,35 +39,6 @@ pub enum NumberMeta {
     FloatingPoint { bytes: usize },
 }
 
-#[cfg(feature = "generating")]
-mod int_byte_len {
-    use super::NumberMeta;
-
-    const U8_BYTES_CONST: &str = "U8_BYTES";
-    const U16_BYTES_CONST: &str = "U16_BYTES";
-    const U32_BYTES_CONST: &str = "U32_BYTES";
-    const U64_BYTES_CONST: &str = "U64_BYTES";
-    const U128_BYTES_CONST: &str = "U128_BYTES";
-    // const USIZE_BYTES_CONST: &str = "USIZE_BYTES";
-
-    impl NumberMeta {
-        pub(crate) fn as_byte_js_string(&self) -> &'static str {
-            let bytes = match self {
-                NumberMeta::Integer { bytes, .. } => bytes,
-                NumberMeta::FloatingPoint { bytes } => bytes,
-            };
-            match bytes {
-                1 => U8_BYTES_CONST,
-                2 => U16_BYTES_CONST,
-                4 => U32_BYTES_CONST,
-                8 => U64_BYTES_CONST,
-                16 => U128_BYTES_CONST,
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArrayMeta {
     // Boxed to avoid infinite recursion
