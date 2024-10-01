@@ -1,8 +1,13 @@
 #[cfg(feature = "js")]
 mod npm_package;
+#[cfg(feature = "python")]
+mod pip_module;
 
 #[cfg(feature = "js")]
 pub use npm_package::build_npm_package as build_package;
+#[cfg(feature = "python")]
+pub use pip_module::build_pip_module as build_package;
+
 
 use std::{
     error::Error,
