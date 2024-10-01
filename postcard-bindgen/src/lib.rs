@@ -11,7 +11,7 @@
 //! will be placed in it.
 //!
 //! ```rust
-//! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_npm_package, PackageInfo};
+//! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_package, PackageInfo};
 //! # use serde::Serialize;
 //! # extern crate alloc;
 //! #[derive(Serialize, PostcardBindings)]
@@ -31,7 +31,7 @@
 //! }
 //!
 //! fn main() {
-//!     build_npm_package(
+//!     build_package(
 //!         std::env::current_dir().unwrap().as_path(),
 //!         PackageInfo {
 //!             name: "test-bindings".into(),
@@ -68,14 +68,14 @@
 mod export;
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-mod npm_package;
+mod package;
 
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use export::export_bindings;
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-pub use npm_package::{build_npm_package, PackageInfo, Version, VersionFromStrError};
+pub use package::{build_package, PackageInfo, Version, VersionFromStrError};
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 pub use postcard_bindgen_core::ExportStrings;
@@ -135,8 +135,8 @@ macro_rules! generate_bindings {
             )*
             let bindings = reg.into_entries();
             postcard_bindgen::ExportStrings {
-                js_file: postcard_bindgen::__private::generate(&bindings).to_file_string().unwrap(),
-                ts_file: postcard_bindgen::__private::generate_typings(bindings).to_file_string().unwrap()
+                bindings: postcard_bindgen::__private::generate(&bindings).to_file_string().unwrap(),
+                types: postcard_bindgen::__private::generate_typings(bindings).to_file_string().unwrap()
             }
         }
     };

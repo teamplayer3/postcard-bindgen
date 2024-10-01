@@ -18,6 +18,6 @@ pub fn export_bindings(
     bindings: ExportStrings,
 ) -> io::Result<()> {
     let mut file = File::create(path.join(file_name.as_ref()))?;
-    file.write_all(bindings.js_file.as_bytes())?;
+    file.write_all(bindings.bindings.as_bytes())?;
     Ok(())
 }
