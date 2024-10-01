@@ -11,10 +11,14 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 
 [features]
-default = []
+default = ["generating", "js"]
+
+std = ["alloc"]
 alloc = []
 heapless = ["dep:heapless"]
-std = ["alloc"]
+
+js = []
+python = []
 
 generating = ["std", "dep:genco", "dep:convert_case"]
 
