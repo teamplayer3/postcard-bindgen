@@ -44,7 +44,7 @@ mod ser {
             let path = variable_path
                 .to_owned()
                 .modify_push(VariableAccess::Field(field.name.into()));
-            field.js_type.gen_ser_accessor(path)
+            field.v_type.gen_ser_accessor(path)
         }))
     }
 }
@@ -64,7 +64,7 @@ mod des {
     pub fn gen_accessors_fields(fields: impl AsRef<[StructField]>) -> Tokens {
         let body = comma_chain(fields.as_ref().iter().map(|field| {
             field
-                .js_type
+                .v_type
                 .gen_des_accessor(types::des::FieldAccessor::Object(field.name))
         }));
         quote!({ $body })
@@ -102,7 +102,7 @@ mod ty_check {
             let path = variable_path
                 .to_owned()
                 .modify_push(VariableAccess::Field(field.name.into()));
-            field.js_type.gen_ty_check(path)
+            field.v_type.gen_ty_check(path)
         }));
         quote!(typeof $variable_path === "object" && $field_checks)
     }
@@ -138,7 +138,7 @@ pub mod ts {
             fields
                 .as_ref()
                 .iter()
-                .map(|f| quote!($(f.name): $(f.js_type.gen_ts_type()))),
+                .map(|f| quote!($(f.name): $(f.v_type.gen_ts_type()))),
         );
         quote!({ $body })
     }

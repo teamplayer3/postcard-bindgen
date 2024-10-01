@@ -138,7 +138,7 @@ fn test_binding_struct() {
         name: "A",
         fields: vec![StructField {
             name: "a",
-            js_type: ValueType::Number(NumberMeta::Integer {
+            v_type: ValueType::Number(NumberMeta::Integer {
                 bytes: 1,
                 signed: false,
             }),
@@ -161,18 +161,18 @@ fn test_binding_struct_different_types() {
         fields: vec![
             StructField {
                 name: "a",
-                js_type: ValueType::Number(NumberMeta::Integer {
+                v_type: ValueType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 }),
             },
             StructField {
                 name: "b",
-                js_type: ValueType::String(StringMeta {}),
+                v_type: ValueType::String(StringMeta {}),
             },
             StructField {
                 name: "c",
-                js_type: ValueType::Optional(OptionalMeta {
+                v_type: ValueType::Optional(OptionalMeta {
                     inner: Box::new(ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
@@ -181,7 +181,7 @@ fn test_binding_struct_different_types() {
             },
             StructField {
                 name: "d",
-                js_type: ValueType::Array(ArrayMeta {
+                v_type: ValueType::Array(ArrayMeta {
                     items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
@@ -190,7 +190,7 @@ fn test_binding_struct_different_types() {
             },
             StructField {
                 name: "e",
-                js_type: ValueType::Object(ObjectMeta { name: "A" }),
+                v_type: ValueType::Object(ObjectMeta { name: "A" }),
             },
         ],
     });
@@ -219,7 +219,7 @@ fn test_binding_enum() {
                 name: "B",
                 inner_type: EnumVariantType::NewType(vec![StructField {
                     name: "a",
-                    js_type: ValueType::Number(NumberMeta::Integer {
+                    v_type: ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),

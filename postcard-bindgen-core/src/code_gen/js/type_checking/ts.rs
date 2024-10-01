@@ -166,22 +166,22 @@ mod test {
             fields: vec![
                 StructField {
                     name: "a",
-                    js_type: ValueType::Number(NumberMeta::Integer {
+                    v_type: ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
                     }),
                 },
                 StructField {
                     name: "b",
-                    js_type: ValueType::Object(ObjectMeta { name: "B" }),
+                    v_type: ValueType::Object(ObjectMeta { name: "B" }),
                 },
                 StructField {
                     name: "c",
-                    js_type: ValueType::String(StringMeta {}),
+                    v_type: ValueType::String(StringMeta {}),
                 },
                 StructField {
                     name: "d",
-                    js_type: ValueType::Array(ArrayMeta {
+                    v_type: ValueType::Array(ArrayMeta {
                         items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
@@ -190,7 +190,7 @@ mod test {
                 },
                 StructField {
                     name: "e",
-                    js_type: ValueType::Optional(OptionalMeta {
+                    v_type: ValueType::Optional(OptionalMeta {
                         inner: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
@@ -213,7 +213,7 @@ mod test {
             name: "A",
             fields: vec![StructField {
                 name: "a",
-                js_type: ValueType::Number(NumberMeta::Integer {
+                v_type: ValueType::Number(NumberMeta::Integer {
                     bytes: 1,
                     signed: false,
                 }),
