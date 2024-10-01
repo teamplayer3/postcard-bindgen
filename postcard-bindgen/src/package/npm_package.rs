@@ -8,7 +8,7 @@ use crate::ExportStrings;
 
 use super::{PackageInfo, Version};
 
-/// Builds a npm package from create language binding strings.
+/// Builds a npm package from created language binding strings.
 ///
 /// # Example
 /// ```
