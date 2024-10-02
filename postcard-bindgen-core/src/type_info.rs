@@ -1,4 +1,4 @@
-use alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, vec, vec::Vec};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsType {
@@ -196,6 +196,45 @@ impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
             bounds_type: Box::new(T::get_type()),
         })
     }
+}
+
+macro_rules! tuple_impls {
+    ($($($name:ident)+),+) => {
+        $(
+            impl<$($name: GenJsBinding),+> GenJsBinding for ($($name),+) {
+                fn get_type() -> JsType {
+                    JsType::Tuple(TupleMeta {
+                        items_types: vec![$($name::get_type()),+],
+                    })
+                }
+            }
+        )+
+    };
+}
+
+impl<T: GenJsBinding> GenJsBinding for (T,) {
+    fn get_type() -> JsType {
+        JsType::Tuple(TupleMeta {
+            items_types: vec![T::get_type()],
+        })
+    }
+}
+
+tuple_impls! {
+    T0 T1,
+    T0 T1 T2,
+    T0 T1 T2 T3,
+    T0 T1 T2 T3 T4,
+    T0 T1 T2 T3 T4 T5,
+    T0 T1 T2 T3 T4 T5 T6,
+    T0 T1 T2 T3 T4 T5 T6 T7,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14
 }
 
 #[cfg(feature = "alloc")]
