@@ -279,6 +279,7 @@ impl<T: GenJsBinding, const N: usize> GenJsBinding for heapless::Vec<T, N> {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
