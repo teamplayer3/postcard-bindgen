@@ -1,4 +1,4 @@
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsType {
@@ -9,6 +9,7 @@ pub enum JsType {
     Optional(OptionalMeta),
     Range(RangeMeta),
     Map(MapMeta),
+    Tuple(TupleMeta),
 }
 
 impl AsRef<JsType> for JsType {
@@ -80,6 +81,7 @@ mod int_byte_len {
 pub struct ArrayMeta {
     // Boxed to avoid infinite recursion
     pub(crate) items_type: Box<JsType>,
+    pub(crate) length: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,6 +90,11 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TupleMeta {
+    pub(crate) items_types: Vec<JsType>,
 }
 
 pub trait GenJsBinding {
@@ -154,6 +161,7 @@ impl<'a, T: GenJsBinding> GenJsBinding for &'a [T] {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
@@ -162,6 +170,7 @@ impl<T: GenJsBinding> GenJsBinding for [T] {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
@@ -170,6 +179,7 @@ impl<T: GenJsBinding, const S: usize> GenJsBinding for [T; S] {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: Some(S),
         })
     }
 }
@@ -210,6 +220,7 @@ impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
     fn get_type() -> JsType {
         JsType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
