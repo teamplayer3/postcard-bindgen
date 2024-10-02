@@ -5,6 +5,7 @@ pub mod object;
 pub mod optional;
 pub mod range;
 pub mod string;
+pub mod tuple;
 
 pub mod js_type;
 
