@@ -57,7 +57,7 @@ pub struct ObjectMeta {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TupleMeta {
-    pub(crate) items_types: Vec<JsType>,
+    pub(crate) items_types: Vec<ValueType>,
 }
 
 pub trait GenJsBinding {
@@ -165,8 +165,8 @@ macro_rules! tuple_impls {
     ($($($name:ident)+),+) => {
         $(
             impl<$($name: GenJsBinding),+> GenJsBinding for ($($name),+) {
-                fn get_type() -> JsType {
-                    JsType::Tuple(TupleMeta {
+                fn get_type() -> ValueType {
+                    ValueType::Tuple(TupleMeta {
                         items_types: vec![$($name::get_type()),+],
                     })
                 }
@@ -176,8 +176,8 @@ macro_rules! tuple_impls {
 }
 
 impl<T: GenJsBinding> GenJsBinding for (T,) {
-    fn get_type() -> JsType {
-        JsType::Tuple(TupleMeta {
+    fn get_type() -> ValueType {
+        ValueType::Tuple(TupleMeta {
             items_types: vec![T::get_type()],
         })
     }
@@ -229,14 +229,14 @@ impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
 
 #[cfg(feature = "alloc")]
 impl<T: GenJsBinding> GenJsBinding for alloc::rc::Rc<T> {
-    fn get_type() -> JsType {
+    fn get_type() -> ValueType {
         T::get_type()
     }
 }
 
 #[cfg(feature = "alloc")]
 impl<T: GenJsBinding> GenJsBinding for alloc::sync::Arc<T> {
-    fn get_type() -> JsType {
+    fn get_type() -> ValueType {
         T::get_type()
     }
 }
@@ -253,7 +253,7 @@ impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for std::collections::HashMa
 
 #[cfg(feature = "std")]
 impl<T: GenJsBinding> GenJsBinding for std::sync::RwLock<T> {
-    fn get_type() -> JsType {
+    fn get_type() -> ValueType {
         T::get_type()
     }
 }
