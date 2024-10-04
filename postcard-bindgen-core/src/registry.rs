@@ -100,7 +100,7 @@ impl StructType {
     pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.fields.push(StructField {
             name,
-            js_type: T::get_type(),
+            v_type: T::get_type(),
         })
     }
 }
@@ -138,7 +138,7 @@ impl UnitStructType {
 #[derive(Debug)]
 pub struct StructField {
     pub name: &'static str,
-    pub js_type: ValueType,
+    pub v_type: ValueType,
 }
 
 #[derive(Debug, Default)]
@@ -148,7 +148,7 @@ impl StructFields {
     pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.0.push(StructField {
             name,
-            js_type: T::get_type(),
+            v_type: T::get_type(),
         })
     }
 
