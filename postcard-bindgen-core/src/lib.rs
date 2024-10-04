@@ -32,6 +32,6 @@ impl ArchPointerLen {
 /// Helper struct to pass the generated language strings to an export function.
 #[cfg(feature = "generating")]
 pub struct ExportStrings {
-    pub js_file: String,
-    pub ts_file: String,
+    pub bindings: String,
+    pub types: String,
 }
