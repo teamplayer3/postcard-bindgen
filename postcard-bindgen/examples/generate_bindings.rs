@@ -31,6 +31,7 @@ struct D {
     i: HashMap<String, u16>,
     j: HashMap<u16, u8>,
     k: [u8; 10],
+    m: (u8, String, Vec<u8>),
 }
 
 fn main() {
@@ -73,6 +74,7 @@ fn main() {
             map
         },
         k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        m: (123, "hello".into(), vec![1, 2, 3]),
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

@@ -1,4 +1,4 @@
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec, vec::Vec};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueType {
@@ -9,6 +9,7 @@ pub enum ValueType {
     Optional(OptionalMeta),
     Range(RangeMeta),
     Map(MapMeta),
+    Tuple(TupleMeta),
 }
 
 impl AsRef<ValueType> for ValueType {
@@ -43,6 +44,7 @@ pub enum NumberMeta {
 pub struct ArrayMeta {
     // Boxed to avoid infinite recursion
     pub(crate) items_type: Box<ValueType>,
+    pub(crate) length: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,6 +53,11 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TupleMeta {
+    pub(crate) items_types: Vec<JsType>,
 }
 
 pub trait GenJsBinding {
@@ -117,6 +124,7 @@ impl<'a, T: GenJsBinding> GenJsBinding for &'a [T] {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
@@ -125,6 +133,7 @@ impl<T: GenJsBinding> GenJsBinding for [T] {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }
@@ -133,6 +142,7 @@ impl<T: GenJsBinding, const S: usize> GenJsBinding for [T; S] {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: Some(S),
         })
     }
 }
@@ -149,6 +159,45 @@ impl<T: GenJsBinding> GenJsBinding for core::ops::Range<T> {
             bounds_type: Box::new(T::get_type()),
         })
     }
+}
+
+macro_rules! tuple_impls {
+    ($($($name:ident)+),+) => {
+        $(
+            impl<$($name: GenJsBinding),+> GenJsBinding for ($($name),+) {
+                fn get_type() -> JsType {
+                    JsType::Tuple(TupleMeta {
+                        items_types: vec![$($name::get_type()),+],
+                    })
+                }
+            }
+        )+
+    };
+}
+
+impl<T: GenJsBinding> GenJsBinding for (T,) {
+    fn get_type() -> JsType {
+        JsType::Tuple(TupleMeta {
+            items_types: vec![T::get_type()],
+        })
+    }
+}
+
+tuple_impls! {
+    T0 T1,
+    T0 T1 T2,
+    T0 T1 T2 T3,
+    T0 T1 T2 T3 T4,
+    T0 T1 T2 T3 T4 T5,
+    T0 T1 T2 T3 T4 T5 T6,
+    T0 T1 T2 T3 T4 T5 T6 T7,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13,
+    T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14
 }
 
 #[cfg(feature = "alloc")]
@@ -173,7 +222,22 @@ impl<T: GenJsBinding> GenJsBinding for alloc::vec::Vec<T> {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: GenJsBinding> GenJsBinding for alloc::rc::Rc<T> {
+    fn get_type() -> JsType {
+        T::get_type()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: GenJsBinding> GenJsBinding for alloc::sync::Arc<T> {
+    fn get_type() -> JsType {
+        T::get_type()
     }
 }
 
@@ -187,11 +251,19 @@ impl<K: GenJsBinding, V: GenJsBinding> GenJsBinding for std::collections::HashMa
     }
 }
 
+#[cfg(feature = "std")]
+impl<T: GenJsBinding> GenJsBinding for std::sync::RwLock<T> {
+    fn get_type() -> JsType {
+        T::get_type()
+    }
+}
+
 #[cfg(feature = "heapless")]
 impl<T: GenJsBinding, const N: usize> GenJsBinding for heapless::Vec<T, N> {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
+            length: None,
         })
     }
 }

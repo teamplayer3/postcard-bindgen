@@ -25,7 +25,9 @@ const d = {
     i: {
         name: 23,
     },
-    j: new Map([[12, 32]])
+    j: new Map([[12, 32]]),
+    k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    m: [25, "hello", [34, 34, 22]],
 }
 
 const bytes = serialize("D", d)

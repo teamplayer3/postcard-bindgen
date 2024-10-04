@@ -1,6 +1,6 @@
 [package]
 name = "postcard-bindgen-core"
-version = "0.3.3"
+version = "0.3.5"
 edition = "2021"
 authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
 repository = "https://github.com/teamplayer3/postcard-bindgen.git"
@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 
 [features]
-default = ["generating", "js"]
+default = []
 
 std = ["alloc"]
 alloc = []

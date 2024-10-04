@@ -12,6 +12,8 @@ pub fn gen_ts_typings(bindings: impl AsRef<[BindingType]>) -> Tokens {
     quote!(
         $(gen_number_decls())
 
+        $(gen_extra_types_decls())
+
         $(gen_bindings_types(&bindings))
 
         $(gen_type_decl(&bindings))
@@ -35,6 +37,19 @@ fn gen_number_decls() -> Tokens {
         declare type i64 = number
         declare type i128 = number
         declare type isize = number
+    )
+}
+
+fn gen_extra_types_decls() -> Tokens {
+    quote!(
+        declare type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" |  "unshift"
+        declare type FixedLengthArray<T, L extends number, TObj = [T, ...Array<T>]> =
+            Pick<TObj, Exclude<keyof TObj, ArrayLengthMutationKeys>>
+            & {
+                readonly length: L
+                [ I : number ] : T
+                [Symbol.iterator]: () => IterableIterator<T>
+            }
     )
 }
 
@@ -130,6 +145,7 @@ mod test {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
                 })),
+                length: None,
             });
 
             assert_tokens(quote!($(ty.gen_ts_type())), quote!($(assertion.1)[]));
@@ -186,6 +202,7 @@ mod test {
                             bytes: 1,
                             signed: false,
                         })),
+                        length: None,
                     }),
                 },
                 StructField {

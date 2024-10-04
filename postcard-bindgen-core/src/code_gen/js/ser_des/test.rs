@@ -118,6 +118,7 @@ fn test_binding_struct_tuple_different_types() {
                     bytes: 1,
                     signed: false,
                 })),
+                length: None,
             }),
             ValueType::Object(ObjectMeta { name: "A" }),
         ],
@@ -186,6 +187,7 @@ fn test_binding_struct_different_types() {
                         bytes: 1,
                         signed: false,
                     })),
+                    length: None,
                 }),
             },
             StructField {

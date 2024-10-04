@@ -75,8 +75,7 @@ mod des {
             fields
                 .as_ref()
                 .iter()
-                .enumerate()
-                .map(|(_, v_type)| v_type.gen_des_accessor(types::des::FieldAccessor::Array)),
+                .map(|v_type| v_type.gen_des_accessor(types::des::FieldAccessor::Array)),
         );
         quote!([$body])
     }
