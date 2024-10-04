@@ -1,3 +1,5 @@
+mod utils;
+
 #[cfg(feature = "js")]
 mod js;
 

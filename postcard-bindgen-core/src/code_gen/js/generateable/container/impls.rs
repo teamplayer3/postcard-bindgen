@@ -1,10 +1,9 @@
 use genco::quote;
 
 use crate::{
-    code_gen::js::{
-        generateable::VariablePath,
+    code_gen::{
+        js::{generateable::VariablePath, JS_OBJECT_VARIABLE},
         utils::{wrapped_brackets, wrapped_curly_brackets},
-        JS_OBJECT_VARIABLE,
     },
     registry::{BindingType, EnumType, StructType, TupleStructType, UnitStructType},
 };
@@ -134,12 +133,14 @@ pub mod enum_ty {
         };
 
         use crate::{
-            code_gen::js::{
-                generateable::{
-                    container::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
+            code_gen::{
+                js::{
+                    generateable::{
+                        container::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
+                    },
+                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
                 },
                 utils::semicolon_chain,
-                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
             registry::{EnumVariant, EnumVariantType},
         };
@@ -196,13 +197,15 @@ pub mod enum_ty {
         };
 
         use crate::{
-            code_gen::js::{
-                generateable::{
-                    container::des,
-                    types::{self, JsTypeGenerateable},
+            code_gen::{
+                js::{
+                    generateable::{
+                        container::des,
+                        types::{self, JsTypeGenerateable},
+                    },
+                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
                 },
                 utils::semicolon_chain,
-                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
             registry::{EnumVariant, EnumVariantType},
         };
@@ -251,12 +254,15 @@ pub mod enum_ty {
         use genco::{lang::js::Tokens, quote, tokens::quoted};
 
         use crate::{
-            code_gen::js::{
-                generateable::{
-                    container::ty_check, types::JsTypeGenerateable, VariableAccess, VariablePath,
+            code_gen::{
+                js::{
+                    generateable::{
+                        container::ty_check, types::JsTypeGenerateable, VariableAccess,
+                        VariablePath,
+                    },
+                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
                 },
                 utils::or_chain,
-                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
             },
             registry::{EnumVariant, EnumVariantType},
         };
@@ -337,10 +343,12 @@ pub mod enum_ty {
         use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
         use crate::{
-            code_gen::js::{
-                generateable::{container, types::JsTypeGenerateable},
+            code_gen::{
+                js::{
+                    generateable::{container, types::JsTypeGenerateable},
+                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                },
                 utils::divider_chain,
-                JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
             },
             registry::{EnumVariant, EnumVariantType},
         };

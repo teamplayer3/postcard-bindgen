@@ -1,8 +1,8 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::js::{
-        generateable::{VariableAccess, VariablePath},
+    code_gen::{
+        js::generateable::{VariableAccess, VariablePath},
         utils::semicolon_chain,
     },
     type_info::RangeMeta,

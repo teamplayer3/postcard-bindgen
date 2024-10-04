@@ -1,8 +1,8 @@
 use genco::{lang::js::Tokens, quote};
 
 use crate::{
-    code_gen::js::{
-        generateable::{types::des::FieldAccessor, VariableAccess, VariablePath},
+    code_gen::{
+        js::generateable::{types::des::FieldAccessor, VariableAccess, VariablePath},
         utils::{comma_chain, semicolon_chain},
     },
     type_info::TupleMeta,

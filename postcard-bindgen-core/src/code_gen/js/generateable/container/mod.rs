@@ -16,8 +16,8 @@ mod ser {
     use genco::prelude::js::Tokens;
 
     use crate::{
-        code_gen::js::{
-            generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
+        code_gen::{
+            js::generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::semicolon_chain,
         },
         registry::StructField,
@@ -53,8 +53,8 @@ mod des {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::js::{
-            generateable::types::{self, JsTypeGenerateable},
+        code_gen::{
+            js::generateable::types::{self, JsTypeGenerateable},
             utils::comma_chain,
         },
         registry::StructField,
@@ -85,8 +85,8 @@ mod ty_check {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::js::{
-            generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
+        code_gen::{
+            js::generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::and_chain,
         },
         registry::StructField,
@@ -106,7 +106,10 @@ mod ty_check {
         quote!(typeof $variable_path === "object" && $field_checks)
     }
 
-    pub fn gen_array_checks(fields: impl AsRef<[ValueType]>, variable_path: VariablePath) -> Tokens {
+    pub fn gen_array_checks(
+        fields: impl AsRef<[ValueType]>,
+        variable_path: VariablePath,
+    ) -> Tokens {
         let arr_len = fields.as_ref().len();
         let field_checks = and_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
             let path = variable_path
@@ -122,7 +125,7 @@ pub mod ts {
     use genco::{prelude::js::Tokens, quote};
 
     use crate::{
-        code_gen::js::{generateable::types::JsTypeGenerateable, utils::comma_chain},
+        code_gen::{js::generateable::types::JsTypeGenerateable, utils::comma_chain},
         registry::StructField,
         type_info::ValueType,
     };

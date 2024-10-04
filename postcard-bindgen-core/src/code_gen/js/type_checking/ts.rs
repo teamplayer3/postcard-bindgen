@@ -1,8 +1,8 @@
 use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
 use crate::{
-    code_gen::js::{
-        generateable::container::BindingTypeGenerateable,
+    code_gen::{
+        js::generateable::container::BindingTypeGenerateable,
         utils::{colon_chain, divider_chain, line_break_chain},
     },
     registry::BindingType,
@@ -95,9 +95,11 @@ mod test {
     use genco::quote;
 
     use crate::{
-        code_gen::js::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
+        code_gen::js::generateable::{
+            container::BindingTypeGenerateable, types::JsTypeGenerateable,
+        },
         registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
-        type_info::{ArrayMeta, ValueType, NumberMeta, ObjectMeta, OptionalMeta, StringMeta},
+        type_info::{ArrayMeta, NumberMeta, ObjectMeta, OptionalMeta, StringMeta, ValueType},
         utils::assert_tokens,
     };
 
@@ -253,10 +255,12 @@ mod test {
                 EnumVariant {
                     name: "B",
                     index: 1,
-                    inner_type: EnumVariantType::Tuple(vec![ValueType::Number(NumberMeta::Integer {
-                        bytes: 1,
-                        signed: false,
-                    })]),
+                    inner_type: EnumVariantType::Tuple(vec![ValueType::Number(
+                        NumberMeta::Integer {
+                            bytes: 1,
+                            signed: false,
+                        },
+                    )]),
                 },
             ],
         }));
