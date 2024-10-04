@@ -2,13 +2,13 @@ use genco::{lang::js::Tokens, quote};
 
 use crate::{
     code_gen::{
-        js::generateable::{types::des::FieldAccessor, VariableAccess, VariablePath},
+        js::{FieldAccessor, VariableAccess, VariablePath},
         utils::{comma_chain, semicolon_chain},
     },
     type_info::TupleMeta,
 };
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for TupleMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -21,7 +21,7 @@ impl JsTypeGenerateable for TupleMeta {
         }))
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
         let inner_type_accessors = comma_chain(
             self.items_types
                 .iter()

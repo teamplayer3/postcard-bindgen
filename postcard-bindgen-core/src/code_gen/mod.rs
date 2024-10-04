@@ -1,4 +1,6 @@
+mod field_accessor;
 mod utils;
+mod variable_path;
 
 #[cfg(feature = "js")]
 mod js;

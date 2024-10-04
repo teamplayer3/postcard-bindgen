@@ -3,11 +3,14 @@ use core::ops::Deref;
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::{js::generateable::VariablePath, utils::and_chain},
+    code_gen::{
+        js::{FieldAccessor, VariablePath},
+        utils::and_chain,
+    },
     type_info::{MapMeta, ValueType},
 };
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for MapMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -28,18 +31,16 @@ impl JsTypeGenerateable for MapMeta {
         }
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
         match self.key_type.deref() {
             &ValueType::String(_) => {
-                let inner_type_accessor =
-                    self.value_type.gen_des_accessor(des::FieldAccessor::None);
+                let inner_type_accessor = self.value_type.gen_des_accessor(FieldAccessor::None);
                 quote!($(field_accessor)d.deserialize_string_key_map(((d) => $inner_type_accessor)))
             }
             _ => {
-                let inner_type_key_accessor =
-                    self.key_type.gen_des_accessor(des::FieldAccessor::None);
+                let inner_type_key_accessor = self.key_type.gen_des_accessor(FieldAccessor::None);
                 let inner_type_value_accessor =
-                    self.value_type.gen_des_accessor(des::FieldAccessor::None);
+                    self.value_type.gen_des_accessor(FieldAccessor::None);
                 quote!($(field_accessor)d.deserialize_map(((des) => [$inner_type_key_accessor, $inner_type_value_accessor])))
             }
         }

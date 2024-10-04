@@ -1,4 +1,5 @@
 pub mod array;
+mod bool;
 pub mod map;
 pub mod number;
 pub mod object;
@@ -6,48 +7,21 @@ pub mod optional;
 pub mod range;
 pub mod string;
 pub mod tuple;
-mod bool;
 
 pub mod js_type;
 
 use genco::prelude::js::Tokens;
 
-use super::VariablePath;
+use crate::code_gen::js::{FieldAccessor, VariablePath};
 
 pub trait JsTypeGenerateable {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens;
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens;
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens;
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens;
 
     fn gen_ts_type(&self) -> Tokens;
-}
-
-pub mod des {
-    use genco::{
-        prelude::{js::Tokens, JavaScript},
-        quote_in,
-        tokens::FormatInto,
-    };
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum FieldAccessor<'a> {
-        Object(&'a str),
-        Array,
-        None,
-    }
-
-    impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
-        fn format_into(self, tokens: &mut Tokens) {
-            quote_in! { *tokens =>
-                $(match self {
-                    Self::Array | Self::None => (),
-                    Self::Object(n) => $n:$[' '],
-                })
-            }
-        }
-    }
 }
 
 pub mod ty_check {
@@ -57,7 +31,7 @@ pub mod ty_check {
         tokens::{quoted, FormatInto},
     };
 
-    use crate::code_gen::js::generateable::{VariableAccess, VariablePath};
+    use crate::code_gen::js::{VariableAccess, VariablePath};
 
     #[derive(Clone)]
     pub enum AvailableCheck {

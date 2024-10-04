@@ -1,11 +1,11 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::js::{generateable::VariablePath, JS_OBJECT_VARIABLE},
+    code_gen::js::{FieldAccessor, VariablePath, JS_OBJECT_VARIABLE},
     type_info::ArrayMeta,
 };
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for ArrayMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -17,8 +17,8 @@ impl JsTypeGenerateable for ArrayMeta {
         }
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
-        let inner_type_accessor = self.items_type.gen_des_accessor(des::FieldAccessor::Array);
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
+        let inner_type_accessor = self.items_type.gen_des_accessor(FieldAccessor::Array);
         if let Some(len) = self.length {
             quote!($(field_accessor)d.deserialize_array(() => $inner_type_accessor, $len))
         } else {

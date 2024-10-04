@@ -1,11 +1,11 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::js::generateable::VariablePath,
+    code_gen::js::{FieldAccessor, VariablePath},
     type_info::NumberMeta,
 };
 
-use super::{des, JsTypeGenerateable, bool::bool_to_js_bool};
+use super::{bool::bool_to_js_bool, JsTypeGenerateable};
 
 // const USIZE_BYTES_CONST: &str = "USIZE_BYTES";
 const U8_BYTES_CONST: &str = "U8_BYTES";
@@ -28,7 +28,7 @@ impl JsTypeGenerateable for NumberMeta {
         }
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
         let byte_amount_str = self.as_byte_js_string();
         match self {
             NumberMeta::FloatingPoint { .. } => {

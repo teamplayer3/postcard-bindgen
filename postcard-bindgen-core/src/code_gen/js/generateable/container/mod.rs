@@ -17,7 +17,7 @@ mod ser {
 
     use crate::{
         code_gen::{
-            js::generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
+            js::{generateable::types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::semicolon_chain,
         },
         registry::StructField,
@@ -54,7 +54,7 @@ mod des {
 
     use crate::{
         code_gen::{
-            js::generateable::types::{self, JsTypeGenerateable},
+            js::{generateable::types::JsTypeGenerateable, FieldAccessor},
             utils::comma_chain,
         },
         registry::StructField,
@@ -65,7 +65,7 @@ mod des {
         let body = comma_chain(fields.as_ref().iter().map(|field| {
             field
                 .v_type
-                .gen_des_accessor(types::des::FieldAccessor::Object(field.name))
+                .gen_des_accessor(FieldAccessor::Object(field.name))
         }));
         quote!({ $body })
     }
@@ -75,7 +75,7 @@ mod des {
             fields
                 .as_ref()
                 .iter()
-                .map(|v_type| v_type.gen_des_accessor(types::des::FieldAccessor::Array)),
+                .map(|v_type| v_type.gen_des_accessor(FieldAccessor::Array)),
         );
         quote!([$body])
     }
@@ -86,7 +86,7 @@ mod ty_check {
 
     use crate::{
         code_gen::{
-            js::generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
+            js::{generateable::types::JsTypeGenerateable, VariableAccess, VariablePath},
             utils::and_chain,
         },
         registry::StructField,

@@ -1,8 +1,11 @@
 use genco::prelude::js::Tokens;
 
-use crate::{code_gen::js::generateable::VariablePath, type_info::ValueType};
+use crate::{
+    code_gen::js::{FieldAccessor, VariablePath},
+    type_info::ValueType,
+};
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for ValueType {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -18,7 +21,7 @@ impl JsTypeGenerateable for ValueType {
         }
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
         match self {
             Self::Number(number_meta) => number_meta.gen_des_accessor(field_accessor),
             Self::Array(array_meta) => array_meta.gen_des_accessor(field_accessor),

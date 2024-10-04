@@ -2,13 +2,13 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::{
-        js::generateable::{VariableAccess, VariablePath},
+        js::{FieldAccessor, VariableAccess, VariablePath},
         utils::semicolon_chain,
     },
     type_info::RangeMeta,
 };
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for RangeMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -23,8 +23,8 @@ impl JsTypeGenerateable for RangeMeta {
         semicolon_chain([start_accessor, stop_accessor])
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
-        let field_des = self.bounds_type.gen_des_accessor(des::FieldAccessor::None);
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
+        let field_des = self.bounds_type.gen_des_accessor(FieldAccessor::None);
         quote!($field_accessor{ start: $(field_des.to_owned()), end: $field_des })
     }
 

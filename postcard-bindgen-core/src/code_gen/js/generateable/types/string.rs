@@ -1,15 +1,18 @@
 use genco::{prelude::js::Tokens, quote};
 
-use crate::{code_gen::js::generateable::VariablePath, type_info::StringMeta};
+use crate::{
+    code_gen::js::{FieldAccessor, VariablePath},
+    type_info::StringMeta,
+};
 
-use super::{des, JsTypeGenerateable};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for StringMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         quote!(s.serialize_string($variable_path))
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
         quote!($(field_accessor)d.deserialize_string())
     }
 

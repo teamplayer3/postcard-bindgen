@@ -1,9 +1,11 @@
 use genco::{prelude::js::Tokens, quote};
 
-use crate::{code_gen::js::generateable::VariablePath, type_info::OptionalMeta};
+use crate::{
+    code_gen::js::{FieldAccessor, VariablePath},
+    type_info::OptionalMeta,
+};
 
 use super::{
-    des,
     ty_check::{self, AvailableCheck},
     JsTypeGenerateable,
 };
@@ -14,8 +16,8 @@ impl JsTypeGenerateable for OptionalMeta {
         quote!(if ($variable_path !== undefined) { s.serialize_number(U32_BYTES, false, 1); $type_accessor } else { s.serialize_number(U32_BYTES, false, 0) })
     }
 
-    fn gen_des_accessor(&self, field_accessor: des::FieldAccessor) -> Tokens {
-        let inner_accessor = self.inner.gen_des_accessor(des::FieldAccessor::None);
+    fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
+        let inner_accessor = self.inner.gen_des_accessor(FieldAccessor::None);
         quote!($(field_accessor)(d.deserialize_number(U32_BYTES, false) === 0) ? undefined : $inner_accessor)
     }
 

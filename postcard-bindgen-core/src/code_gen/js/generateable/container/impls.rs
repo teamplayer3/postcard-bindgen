@@ -2,8 +2,9 @@ use genco::quote;
 
 use crate::{
     code_gen::{
-        js::{generateable::VariablePath, JS_OBJECT_VARIABLE},
+        js::JS_OBJECT_VARIABLE,
         utils::{wrapped_brackets, wrapped_curly_brackets},
+        variable_path::VariablePath,
     },
     registry::{BindingType, EnumType, StructType, TupleStructType, UnitStructType},
 };
@@ -135,10 +136,8 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 js::{
-                    generateable::{
-                        container::ser, types::JsTypeGenerateable, VariableAccess, VariablePath,
-                    },
-                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                    generateable::{container::ser, types::JsTypeGenerateable},
+                    VariableAccess, VariablePath, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
                 },
                 utils::semicolon_chain,
             },
@@ -199,11 +198,8 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 js::{
-                    generateable::{
-                        container::des,
-                        types::{self, JsTypeGenerateable},
-                    },
-                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                    generateable::{container::des, types::JsTypeGenerateable},
+                    FieldAccessor, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
                 },
                 utils::semicolon_chain,
             },
@@ -242,7 +238,7 @@ pub mod enum_ty {
                     CaseBody::Body(des::gen_accessors_fields(fields))
                 }
                 EnumVariantType::Tuple(fields) => CaseBody::Body(match fields.len() {
-                    1 => fields[0].gen_des_accessor(types::des::FieldAccessor::None),
+                    1 => fields[0].gen_des_accessor(FieldAccessor::None),
                     _ => des::gen_accessors_indexed(fields),
                 }),
             };
@@ -256,11 +252,9 @@ pub mod enum_ty {
         use crate::{
             code_gen::{
                 js::{
-                    generateable::{
-                        container::ty_check, types::JsTypeGenerateable, VariableAccess,
-                        VariablePath,
-                    },
-                    JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE, JS_OBJECT_VARIABLE,
+                    generateable::{container::ty_check, types::JsTypeGenerateable},
+                    VariableAccess, VariablePath, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                    JS_OBJECT_VARIABLE,
                 },
                 utils::or_chain,
             },
