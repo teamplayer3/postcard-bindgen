@@ -15,7 +15,7 @@ enum C {
     A,
     B(u8),
     C(A, B),
-    D { a: Vec<u8>, b: B },
+    D { a: Vec<u8>, b: B, c: bool },
 }
 
 #[derive(Serialize, PostcardBindings)]
@@ -32,6 +32,7 @@ struct D {
     j: HashMap<u16, u8>,
     k: [u8; 10],
     m: (u8, String, Vec<u8>),
+    n: bool,
 }
 
 fn main() {
@@ -55,6 +56,7 @@ fn main() {
                 "hello from rust".into(),
                 HashMap::new(),
             ),
+            c: false,
         },
         c: A,
         d: vec![234, 21],
@@ -75,6 +77,7 @@ fn main() {
         },
         k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         m: (123, "hello".into(), vec![1, 2, 3]),
+        n: true,
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =
