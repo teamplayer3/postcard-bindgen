@@ -1,4 +1,5 @@
 pub mod array;
+pub mod bool;
 pub mod map;
 pub mod number;
 pub mod object;
