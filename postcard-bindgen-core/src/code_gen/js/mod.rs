@@ -2,7 +2,7 @@ mod des;
 mod general;
 mod generateable;
 mod ser;
-pub mod type_checking;
+mod type_checks;
 
 use core::borrow::Borrow;
 
@@ -13,11 +13,11 @@ use genco::{
     tokens::{quoted, FormatInto},
 };
 use general::gen_util;
+use generateable::gen_ts_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
+use type_checks::gen_type_checkings;
 
 use crate::{registry::BindingType, ExportFile, Exports};
-
-use self::type_checking::{gen_type_checkings, ts::gen_ts_typings};
 
 use super::utils::TokensIterExt;
 

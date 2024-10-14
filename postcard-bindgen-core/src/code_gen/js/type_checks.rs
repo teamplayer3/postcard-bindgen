@@ -1,5 +1,3 @@
-pub mod ts;
-
 use genco::{lang::js::Tokens, quote};
 
 use crate::{code_gen::utils::TokensIterExt, registry::BindingType, utils::StrExt};
