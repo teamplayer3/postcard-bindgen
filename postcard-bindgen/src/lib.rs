@@ -11,7 +11,7 @@
 //! will be placed in it.
 //!
 //! ```rust
-//! # use postcard_bindgen::{PostcardBindings, generate_bindings, build_package, PackageInfo};
+//! # use postcard_bindgen::{PostcardBindings, generate_bindings, javascript::{build_package, GenerationSettings}, PackageInfo};
 //! # use serde::Serialize;
 //! # extern crate alloc;
 //! #[derive(Serialize, PostcardBindings)]
@@ -37,6 +37,7 @@
 //!             name: "test-bindings".into(),
 //!             version: "0.1.0".try_into().unwrap(),
 //!         },
+//!         GenerationSettings::enable_all(),
 //!         generate_bindings!(A, B, C),
 //!     )
 //!     .unwrap();

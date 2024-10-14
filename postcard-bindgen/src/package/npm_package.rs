@@ -16,7 +16,7 @@ use super::{PackageInfo, Version};
 ///
 /// # Example
 /// ```
-/// # use postcard_bindgen::{javascript::build_package, PackageInfo, PostcardBindings, generate_bindings};
+/// # use postcard_bindgen::{javascript::{build_package, GenerationSettings}, PackageInfo, PostcardBindings, generate_bindings};
 /// # use serde::Serialize;
 /// #[derive(Serialize, PostcardBindings)]
 /// struct Test {
@@ -30,7 +30,7 @@ use super::{PackageInfo, Version};
 ///     version: "0.1.0".try_into().unwrap()
 /// };
 ///
-/// build_package(parent_dir.as_path(), package_info, generate_bindings!(Test));
+/// build_package(parent_dir.as_path(), package_info, GenerationSettings::enable_all(), generate_bindings!(Test));
 /// # }
 /// ```
 pub fn build_npm_package(
