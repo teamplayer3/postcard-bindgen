@@ -37,7 +37,7 @@ pub struct Exports<L: genco::lang::Lang> {
 
 #[cfg(feature = "generating")]
 impl<L: genco::lang::Lang> Exports<L> {
-    pub fn file<'a>(&'a self, content_type: impl AsRef<str>) -> Option<&'a genco::Tokens<L>> {
+    pub fn file(&self, content_type: impl AsRef<str>) -> Option<&genco::Tokens<L>> {
         self.files
             .iter()
             .find(|f| f.content_type.as_str() == content_type.as_ref())

@@ -31,10 +31,10 @@ impl PythonTypeGenerateable for ArrayMeta {
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         let assert_item_type_check_func = quote! {
-            def assert_$(variable_path.to_owned().to_string("_"))($PYTHON_OBJECT_VARIABLE):
+            def assert_$(variable_path.to_owned().into_string("_"))($PYTHON_OBJECT_VARIABLE):
                 $(self.items_type.gen_ty_check(VariablePath::default()))
         };
-        let item_ty_check = quote!([assert_$(variable_path.to_owned().to_string("_"))($PYTHON_OBJECT_VARIABLE) for $PYTHON_OBJECT_VARIABLE in $(variable_path.clone())]);
+        let item_ty_check = quote!([assert_$(variable_path.to_owned().into_string("_"))($PYTHON_OBJECT_VARIABLE) for $PYTHON_OBJECT_VARIABLE in $(variable_path.clone())]);
         if let Some(len) = self.length {
             [
                 quote!(assert isinstance($(variable_path.to_owned()), list), "{} is not a list".format($(variable_path.to_owned()))),

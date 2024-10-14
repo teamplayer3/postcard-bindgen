@@ -30,8 +30,7 @@ impl BindingTypeGenerateable for TupleStructType {
         let body = self
             .fields
             .iter()
-            .enumerate()
-            .map(|(_, v_type)| v_type.gen_des_accessor(FieldAccessor::None))
+            .map(|v_type| v_type.gen_des_accessor(FieldAccessor::None))
             .join_with_comma();
         // <struct_name>(#0, #1, ...)
         quote!(return $(self.name)($body))

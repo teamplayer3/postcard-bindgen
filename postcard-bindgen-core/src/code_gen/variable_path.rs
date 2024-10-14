@@ -35,13 +35,13 @@ impl<L> VariablePath<L> {
         (self, popped)
     }
 
-    pub fn to_string(self, joined_by: &str) -> String {
+    pub fn into_string(self, joined_by: &str) -> String {
         self.start_variable
             + joined_by
             + &self
                 .parts
                 .into_iter()
-                .map(|a| a.to_string())
+                .map(|a| a.into_string())
                 .collect::<Vec<_>>()
                 .join(joined_by)
     }
@@ -54,7 +54,7 @@ pub enum VariableAccess {
 }
 
 impl VariableAccess {
-    fn to_string(self) -> String {
+    fn into_string(self) -> String {
         match self {
             Self::Indexed(i) => format!("{}", i),
             Self::Field(f) => f,

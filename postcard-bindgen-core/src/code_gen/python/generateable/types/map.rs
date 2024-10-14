@@ -28,7 +28,7 @@ impl PythonTypeGenerateable for MapMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        let assert_func_name = quote!(assert_$(variable_path.to_owned().to_string("_")));
+        let assert_func_name = quote!(assert_$(variable_path.to_owned().into_string("_")));
         let assert_item_type_check_func = quote! {
             def $(&assert_func_name)(key, value):
                 $(self.key_type.gen_ty_check(VariablePath::new("key".to_owned())))

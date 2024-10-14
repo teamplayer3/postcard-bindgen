@@ -87,6 +87,6 @@ fn package_file_src(
     \"version\": \"{}\",
     \"main\": \"index.js\"{}
 }}",
-        package_name.as_ref(), package_version.to_string(), if ts_types_enabled { ",\n\t\"types\": \"index.d.ts\"" } else { "" }
+        package_name.as_ref(), package_version, if ts_types_enabled { ",\n\t\"types\": \"index.d.ts\"" } else { "" }
     )
 }
