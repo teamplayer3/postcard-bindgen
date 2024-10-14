@@ -1,10 +1,7 @@
 use genco::{prelude::js::Tokens, quote, tokens::quoted};
 
 use crate::{
-    code_gen::{
-        js::generateable::container::BindingTypeGenerateable,
-        utils::{colon_chain, divider_chain, line_break_chain},
-    },
+    code_gen::{js::generateable::container::BindingTypeGenerateable, utils::TokensIterExt},
     registry::BindingType,
 };
 
@@ -54,22 +51,20 @@ fn gen_extra_types_decls() -> Tokens {
 }
 
 fn gen_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    let type_cases = divider_chain(
-        bindings
-            .as_ref()
-            .iter()
-            .map(|b| quote!($(quoted(b.inner_name())))),
-    );
+    let type_cases = bindings
+        .as_ref()
+        .iter()
+        .map(|b| quote!($(quoted(b.inner_name()))))
+        .join_with_vertical_line();
     quote!(export type Type = $type_cases)
 }
 
 fn gen_value_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    let if_cases = colon_chain(
-        bindings
-            .as_ref()
-            .iter()
-            .map(|b| quote!(T extends $(quoted(b.inner_name())) ? $(b.inner_name()))),
-    );
+    let if_cases = bindings
+        .as_ref()
+        .iter()
+        .map(|b| quote!(T extends $(quoted(b.inner_name())) ? $(b.inner_name())))
+        .join_with_colon();
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
 
@@ -81,7 +76,11 @@ fn gen_ser_des_decls() -> Tokens {
 }
 
 fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    line_break_chain(bindings.as_ref().iter().map(gen_binding_type))
+    bindings
+        .as_ref()
+        .iter()
+        .map(gen_binding_type)
+        .join_with_line_breaks()
 }
 
 fn gen_binding_type(binding: &BindingType) -> Tokens {

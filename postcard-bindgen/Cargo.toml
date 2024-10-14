@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 
 [features]
-default = ["generating", "js"]
+default = ["generating"]
 
 generating = [
     "postcard-bindgen-core/generating",
@@ -20,10 +20,7 @@ generating = [
 
 std = ["postcard-bindgen-core/std"]
 alloc = ["postcard-bindgen-core/alloc"]
-heapless = ["postcard-bindgen-core/heapless"]#
-
-js = ["postcard-bindgen-core/js"]
-python = ["postcard-bindgen-core/python"]
+heapless = ["postcard-bindgen-core/heapless"]
 
 [dependencies.postcard-bindgen-core]
 version = "0.3.5"

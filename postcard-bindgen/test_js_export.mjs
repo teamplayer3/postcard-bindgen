@@ -1,4 +1,4 @@
-// Before running this with `$node .\test_js_export.mj` run the rust example with 
+// Before running this with `$node .\test_js_export.mjs` run the rust example with 
 // `$cargo run --example generate_bindings --features std,generating`.
 
 import fs from "fs";

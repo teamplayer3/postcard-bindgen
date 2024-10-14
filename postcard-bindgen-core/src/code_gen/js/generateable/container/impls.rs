@@ -2,7 +2,7 @@ use genco::quote;
 
 use crate::{
     code_gen::{
-        js::JS_OBJECT_VARIABLE,
+        js::{Tokens, JS_OBJECT_VARIABLE},
         utils::{wrapped_brackets, wrapped_curly_brackets},
         variable_path::VariablePath,
     },
@@ -12,7 +12,7 @@ use crate::{
 use super::{des, ser, ts, ty_check, BindingTypeGenerateable};
 
 impl BindingTypeGenerateable for BindingType {
-    fn gen_ser_body(&self) -> genco::prelude::js::Tokens {
+    fn gen_ser_body(&self) -> Tokens {
         match self {
             Self::Struct(struct_type) => struct_type.gen_ser_body(),
             Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ser_body(),
@@ -21,7 +21,7 @@ impl BindingTypeGenerateable for BindingType {
         }
     }
 
-    fn gen_des_body(&self) -> genco::prelude::js::Tokens {
+    fn gen_des_body(&self) -> Tokens {
         match self {
             Self::Struct(struct_type) => wrapped_brackets(struct_type.gen_des_body()),
             Self::UnitStruct(unit_struct_type) => wrapped_brackets(unit_struct_type.gen_des_body()),
@@ -32,7 +32,7 @@ impl BindingTypeGenerateable for BindingType {
         }
     }
 
-    fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
+    fn gen_ty_check_body(&self) -> Tokens {
         match self {
             Self::Struct(struct_type) => struct_type.gen_ty_check_body(),
             Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ty_check_body(),
@@ -41,67 +41,13 @@ impl BindingTypeGenerateable for BindingType {
         }
     }
 
-    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
+    fn gen_ts_typings_body(&self) -> Tokens {
         match self {
             Self::Struct(struct_type) => struct_type.gen_ts_typings_body(),
             Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ts_typings_body(),
             Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ts_typings_body(),
             Self::Enum(enum_type) => enum_type.gen_ts_typings_body(),
         }
-    }
-}
-
-impl BindingTypeGenerateable for StructType {
-    fn gen_ser_body(&self) -> genco::prelude::js::Tokens {
-        ser::gen_accessors_fields(&self.fields, VariablePath::default())
-    }
-
-    fn gen_des_body(&self) -> genco::prelude::js::Tokens {
-        des::gen_accessors_fields(&self.fields)
-    }
-
-    fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
-        ty_check::gen_object_checks(&self.fields, VariablePath::default())
-    }
-
-    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
-        ts::gen_typings_fields(&self.fields)
-    }
-}
-
-impl BindingTypeGenerateable for TupleStructType {
-    fn gen_ser_body(&self) -> genco::prelude::js::Tokens {
-        ser::gen_accessors_indexed(&self.fields, VariablePath::default())
-    }
-
-    fn gen_des_body(&self) -> genco::prelude::js::Tokens {
-        des::gen_accessors_indexed(&self.fields)
-    }
-
-    fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
-        ty_check::gen_array_checks(&self.fields, VariablePath::default())
-    }
-
-    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
-        ts::gen_typings_indexed(&self.fields)
-    }
-}
-
-impl BindingTypeGenerateable for UnitStructType {
-    fn gen_ser_body(&self) -> genco::prelude::js::Tokens {
-        ser::gen_accessors_fields([], VariablePath::default())
-    }
-
-    fn gen_des_body(&self) -> genco::prelude::js::Tokens {
-        des::gen_accessors_fields([])
-    }
-
-    fn gen_ty_check_body(&self) -> genco::prelude::js::Tokens {
-        quote!(typeof $JS_OBJECT_VARIABLE === "object" && Object.keys($JS_OBJECT_VARIABLE).length === 0)
-    }
-
-    fn gen_ts_typings_body(&self) -> genco::prelude::js::Tokens {
-        ts::gen_typings_fields([])
     }
 }
 

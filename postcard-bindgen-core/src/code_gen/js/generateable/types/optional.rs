@@ -1,14 +1,11 @@
 use genco::{prelude::js::Tokens, quote};
 
 use crate::{
-    code_gen::js::{FieldAccessor, VariablePath},
+    code_gen::js::{AvailableCheck, FieldAccessor, VariablePath},
     type_info::OptionalMeta,
 };
 
-use super::{
-    ty_check::{self, AvailableCheck},
-    JsTypeGenerateable,
-};
+use super::JsTypeGenerateable;
 
 impl JsTypeGenerateable for OptionalMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
@@ -22,8 +19,7 @@ impl JsTypeGenerateable for OptionalMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        let available_check =
-            ty_check::AvailableCheck::from_variable_path(variable_path.to_owned());
+        let available_check = AvailableCheck::from_variable_path(variable_path.to_owned());
         let inner_type_check = self.inner.gen_ty_check(variable_path.to_owned());
         match &available_check {
             AvailableCheck::Object(_, _) => {

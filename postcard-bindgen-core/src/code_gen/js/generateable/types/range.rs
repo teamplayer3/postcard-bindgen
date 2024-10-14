@@ -3,7 +3,7 @@ use genco::{prelude::js::Tokens, quote};
 use crate::{
     code_gen::{
         js::{FieldAccessor, VariableAccess, VariablePath},
-        utils::semicolon_chain,
+        utils::TokensIterExt,
     },
     type_info::RangeMeta,
 };
@@ -20,7 +20,9 @@ impl JsTypeGenerateable for RangeMeta {
         let start_accessor = self.bounds_type.gen_ser_accessor(start_path);
         let stop_accessor = self.bounds_type.gen_ser_accessor(stop_path);
 
-        semicolon_chain([start_accessor, stop_accessor])
+        [start_accessor, stop_accessor]
+            .into_iter()
+            .join_with_semicolon()
     }
 
     fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {

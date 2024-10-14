@@ -1,10 +1,14 @@
+use core::borrow::Borrow;
 use std::{
     fs::File,
     io::{self, Write},
     path::Path,
 };
 
-use crate::ExportStrings;
+use postcard_bindgen_core::{
+    code_gen::js::{generate, GenerationSettings},
+    registry::BindingType,
+};
 
 use super::{PackageInfo, Version};
 
@@ -12,7 +16,7 @@ use super::{PackageInfo, Version};
 ///
 /// # Example
 /// ```
-/// # use postcard_bindgen::{build_package, PackageInfo, PostcardBindings, generate_bindings};
+/// # use postcard_bindgen::{javascript::build_package, PackageInfo, PostcardBindings, generate_bindings};
 /// # use serde::Serialize;
 /// #[derive(Serialize, PostcardBindings)]
 /// struct Test {
@@ -32,42 +36,57 @@ use super::{PackageInfo, Version};
 pub fn build_npm_package(
     parent_dir: &Path,
     package_info: PackageInfo,
-    bindings: ExportStrings,
+    gen_settings: impl Borrow<GenerationSettings>,
+    bindings: impl AsRef<[BindingType]>,
 ) -> io::Result<()> {
     let mut dir = parent_dir.to_path_buf();
     dir.push(package_info.name.as_str());
 
     std::fs::create_dir_all(&dir)?;
 
-    let package_json = package_file_src(package_info.name.as_str(), &package_info.version);
+    let exports = generate(bindings, gen_settings);
+
+    let package_json = package_file_src(
+        package_info.name.as_str(),
+        &package_info.version,
+        exports.file("ts").is_some(),
+    );
 
     let mut package_json_path = dir.to_owned();
     package_json_path.push("package.json");
     File::create(package_json_path.as_path())?.write_all(package_json.as_bytes())?;
 
-    let mut js_export_path = dir.to_owned();
-    js_export_path.push("index.js");
-    File::create(js_export_path.as_path())?.write_all(bindings.bindings.as_bytes())?;
+    let js_export_path = dir.join("index.js");
+    File::create(js_export_path.as_path())?.write_all(
+        exports
+            .file("js")
+            .unwrap()
+            .to_file_string()
+            .unwrap()
+            .as_bytes(),
+    )?;
 
-    let mut js_export_path = dir;
-    js_export_path.push("index.d.ts");
-    File::create(js_export_path.as_path())?.write_all(bindings.types.as_bytes())?;
+    if let Some(file) = exports.file("ts") {
+        let ts_export_path = dir.join("index.d.ts");
+        File::create(ts_export_path.as_path())?
+            .write_all(file.to_file_string().unwrap().as_bytes())?;
+    }
 
     Ok(())
 }
 
-fn package_file_src(package_name: impl AsRef<str>, package_version: &Version) -> String {
-    format!(
-        "{{\
-            \"name\": \"{}\",\
-            \"description\": \"Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.\",\
-            \"version\": \"{}\",\
-            \"main\": \"index.js\",\
-            \"types\": \"index.d.ts\"\
-        }}
-    ",
-        package_name.as_ref(), package_version.to_string()
+fn package_file_src(
+    package_name: impl AsRef<str>,
+    package_version: &Version,
+    ts_types_enabled: bool,
+) -> String {
+    format!("\
+{{
+    \"name\": \"{}\",
+    \"description\": \"Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.\",
+    \"version\": \"{}\",
+    \"main\": \"index.js\"{}
+}}",
+        package_name.as_ref(), package_version.to_string(), if ts_types_enabled { ",\n\t\"types\": \"index.d.ts\"" } else { "" }
     )
 }
-
-

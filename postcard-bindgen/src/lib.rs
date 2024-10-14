@@ -65,20 +65,25 @@
 
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-mod export;
-#[cfg(feature = "generating")]
-#[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
 mod package;
 
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-pub use export::export_bindings;
+pub mod javascript {
+    pub use super::package::npm_package::build_npm_package as build_package;
+    pub use postcard_bindgen_core::code_gen::js::GenerationSettings;
+}
+
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-pub use package::{build_package, PackageInfo, Version, VersionFromStrError};
+pub mod python {
+    pub use super::package::pip_module::build_pip_module as build_package;
+    pub use postcard_bindgen_core::code_gen::python::GenerationSettings;
+}
+
 #[cfg(feature = "generating")]
 #[cfg_attr(docsrs, doc(cfg(feature = "generating")))]
-pub use postcard_bindgen_core::ExportStrings;
+pub use package::{PackageInfo, Version, VersionFromStrError};
 
 /// Macro to annotate structs or enums for which bindings should be generated.
 ///
@@ -99,9 +104,8 @@ pub use postcard_bindgen_derive::PostcardBindings;
 #[doc(hidden)]
 pub mod __private {
     pub use postcard_bindgen_core::{
-        generate_typings, generate,
         registry::*,
-        type_info::{GenJsBinding, ValueType, ObjectMeta},
+        type_info::{GenJsBinding, ObjectMeta, ValueType},
     };
 }
 
@@ -133,11 +137,7 @@ macro_rules! generate_bindings {
             $(
                 <$x as postcard_bindgen::__private::JsBindings>::create_bindings(&mut reg);
             )*
-            let bindings = reg.into_entries();
-            postcard_bindgen::ExportStrings {
-                bindings: postcard_bindgen::__private::generate(&bindings).to_file_string().unwrap(),
-                types: postcard_bindgen::__private::generate_typings(bindings).to_file_string().unwrap()
-            }
+            reg.into_entries()
         }
     };
 }

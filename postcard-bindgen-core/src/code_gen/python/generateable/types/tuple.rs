@@ -1,16 +1,17 @@
-use genco::{lang::js::Tokens, quote};
+use genco::quote;
 
 use crate::{
     code_gen::{
-        js::{FieldAccessor, VariableAccess, VariablePath},
+        import_registry::ImportItem,
+        python::{FieldAccessor, ImportRegistry, Tokens, VariableAccess, VariablePath},
         utils::TokensIterExt,
     },
     type_info::TupleMeta,
 };
 
-use super::JsTypeGenerateable;
+use super::PythonTypeGenerateable;
 
-impl JsTypeGenerateable for TupleMeta {
+impl PythonTypeGenerateable for TupleMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         self.items_types
             .iter()
@@ -18,11 +19,11 @@ impl JsTypeGenerateable for TupleMeta {
             .map(|(i, v)| {
                 v.gen_ser_accessor(
                     variable_path
-                        .clone()
+                        .to_owned()
                         .modify_push(VariableAccess::Indexed(i)),
                 )
             })
-            .join_with_semicolon()
+            .join_with_line_breaks()
     }
 
     fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
@@ -31,7 +32,7 @@ impl JsTypeGenerateable for TupleMeta {
             .iter()
             .map(|v| v.gen_des_accessor(FieldAccessor::None))
             .join_with_comma();
-        quote!($field_accessor[$inner_type_accessors])
+        quote!($field_accessor($inner_type_accessors))
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
@@ -42,20 +43,27 @@ impl JsTypeGenerateable for TupleMeta {
             .map(|(i, v)| {
                 v.gen_ty_check(
                     variable_path
-                        .clone()
+                        .to_owned()
                         .modify_push(VariableAccess::Indexed(i)),
                 )
             })
-            .join_with_comma();
-        quote!(Array.isArray($(variable_path.clone())) && $variable_path.length === $(self.items_types.len()) && $type_checks)
+            .join_with_line_breaks();
+        [
+            quote!(assert isinstance($(variable_path.to_owned()), tuple), "{} is not a tuple".format($(variable_path.to_owned()))),
+            quote!(assert len($(variable_path.to_owned())) == $(self.items_types.len()), "{} is not of length {}".format($variable_path, $(self.items_types.len()))),
+            type_checks,
+        ]
+        .into_iter()
+        .join_with_line_breaks()
     }
 
-    fn gen_ts_type(&self) -> Tokens {
+    fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {
         let type_checks = self
             .items_types
             .iter()
-            .map(|v| v.gen_ts_type())
+            .map(|v| v.gen_typings(import_registry))
             .join_with_comma();
-        quote!([$type_checks])
+        import_registry.push(quote!(typing), ImportItem::Single(quote!(Tuple)));
+        quote!(Tuple[$type_checks])
     }
 }

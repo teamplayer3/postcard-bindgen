@@ -1,15 +1,33 @@
+mod available_check;
 mod field_accessor;
+mod import_registry;
 mod utils;
 mod variable_path;
 
-#[cfg(feature = "js")]
-mod js;
+pub mod js;
+pub mod python;
 
-#[cfg(feature = "python")]
-mod python;
+use crate::type_info::NumberMeta;
 
-#[cfg(feature = "js")]
-pub use js::{generate_js as generate, type_checking::ts::gen_ts_typings as generate_typings};
+const U8_BYTES_CONST: &str = "U8_BYTES";
+const U16_BYTES_CONST: &str = "U16_BYTES";
+const U32_BYTES_CONST: &str = "U32_BYTES";
+const U64_BYTES_CONST: &str = "U64_BYTES";
+const U128_BYTES_CONST: &str = "U128_BYTES";
 
-#[cfg(feature = "python")]
-pub use python::{generate, type_checking::typing::generate_typings};
+impl NumberMeta {
+    pub(crate) fn as_byte_string(&self) -> &'static str {
+        let bytes = match self {
+            NumberMeta::Integer { bytes, .. } => bytes,
+            NumberMeta::FloatingPoint { bytes } => bytes,
+        };
+        match bytes {
+            1 => U8_BYTES_CONST,
+            2 => U16_BYTES_CONST,
+            4 => U32_BYTES_CONST,
+            8 => U64_BYTES_CONST,
+            16 => U128_BYTES_CONST,
+            _ => unreachable!(),
+        }
+    }
+}

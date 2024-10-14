@@ -3,7 +3,7 @@
 extern crate alloc;
 
 #[cfg(feature = "generating")]
-mod code_gen;
+pub mod code_gen;
 
 #[cfg(feature = "generating")]
 mod utils;
@@ -12,7 +12,7 @@ pub mod registry;
 pub mod type_info;
 
 #[cfg(feature = "generating")]
-pub use code_gen::{generate, generate_typings};
+pub use genco::lang;
 
 pub enum ArchPointerLen {
     U32,
@@ -31,7 +31,22 @@ impl ArchPointerLen {
 
 /// Helper struct to pass the generated language strings to an export function.
 #[cfg(feature = "generating")]
-pub struct ExportStrings {
-    pub bindings: String,
-    pub types: String,
+pub struct Exports<L: genco::lang::Lang> {
+    pub files: Vec<ExportFile<L>>,
+}
+
+#[cfg(feature = "generating")]
+impl<L: genco::lang::Lang> Exports<L> {
+    pub fn file<'a>(&'a self, content_type: impl AsRef<str>) -> Option<&'a genco::Tokens<L>> {
+        self.files
+            .iter()
+            .find(|f| f.content_type.as_str() == content_type.as_ref())
+            .map(|f| &f.content)
+    }
+}
+
+#[cfg(feature = "generating")]
+pub struct ExportFile<L: genco::lang::Lang> {
+    pub content_type: String,
+    pub content: genco::Tokens<L>,
 }

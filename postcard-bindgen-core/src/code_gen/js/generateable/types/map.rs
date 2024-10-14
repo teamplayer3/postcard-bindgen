@@ -5,7 +5,7 @@ use genco::{prelude::js::Tokens, quote};
 use crate::{
     code_gen::{
         js::{FieldAccessor, VariablePath},
-        utils::and_chain,
+        utils::TokensIterExt,
     },
     type_info::{MapMeta, ValueType},
 };
@@ -51,10 +51,12 @@ impl JsTypeGenerateable for MapMeta {
             &ValueType::String(_) => {
                 let inner_type_check = self.value_type.gen_ty_check(VariablePath::new("v".into()));
                 let inner_type_checks = quote!(Object.values($(variable_path.to_owned())).map((v) => $inner_type_check).every((v) => v));
-                and_chain([
+                [
                     quote!(typeof $variable_path === "object"),
                     inner_type_checks,
-                ])
+                ]
+                .into_iter()
+                .join_logic_and()
             }
             _ => quote!($variable_path instanceof Map),
         }

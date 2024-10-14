@@ -1,4 +1,12 @@
-use genco::prelude::js::Tokens;
+mod enums;
+mod structs;
+mod tuple_structs;
+mod unit_struct_types;
+
+use crate::{
+    code_gen::python::{ImportRegistry, Tokens},
+    registry::BindingType,
+};
 
 pub trait BindingTypeGenerateable {
     fn gen_ser_body(&self) -> Tokens;
@@ -6,74 +14,48 @@ pub trait BindingTypeGenerateable {
     fn gen_des_body(&self) -> Tokens;
 
     fn gen_ty_check_body(&self) -> Tokens;
+
+    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens;
 }
 
-mod ser {
-    use genco::prelude::js::Tokens;
-
-    use crate::{
-        code_gen::python::{
-            generateable::{types::JsTypeGenerateable, VariableAccess, VariablePath},
-            utils::semicolon_chain,
-        },
-        registry::StructField,
-        type_info::ValueType,
-    };
-
-    pub fn gen_accessors_indexed(
-        fields: impl AsRef<[ValueType]>,
-        variable_path: VariablePath,
-    ) -> Tokens {
-        semicolon_chain(fields.as_ref().iter().enumerate().map(|(index, field)| {
-            let path = variable_path
-                .to_owned()
-                .modify_push(VariableAccess::Indexed(index));
-            field.gen_ser_accessor(path)
-        }))
+impl BindingTypeGenerateable for BindingType {
+    fn gen_ser_body(&self) -> Tokens {
+        match self {
+            Self::Struct(struct_type) => struct_type.gen_ser_body(),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ser_body(),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ser_body(),
+            Self::Enum(enum_type) => enum_type.gen_ser_body(),
+        }
     }
 
-    pub fn gen_accessors_fields(
-        fields: impl AsRef<[StructField]>,
-        variable_path: VariablePath,
-    ) -> Tokens {
-        semicolon_chain(fields.as_ref().iter().map(|field| {
-            let path = variable_path
-                .to_owned()
-                .modify_push(VariableAccess::Field(field.name.into()));
-            field.v_type.gen_ser_accessor(path)
-        }))
-    }
-}
-
-mod des {
-    use genco::{prelude::js::Tokens, quote};
-
-    use crate::{
-        code_gen::python::{
-            generateable::types::{self, JsTypeGenerateable},
-            utils::comma_chain,
-        },
-        registry::StructField,
-        type_info::ValueType,
-    };
-
-    pub fn gen_accessors_fields(fields: impl AsRef<[StructField]>) -> Tokens {
-        let body = comma_chain(fields.as_ref().iter().map(|field| {
-            field
-                .v_type
-                .gen_des_accessor(types::des::FieldAccessor::Object(field.name))
-        }));
-        quote!({ $body })
+    fn gen_des_body(&self) -> Tokens {
+        match self {
+            Self::Struct(struct_type) => struct_type.gen_des_body(),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_des_body(),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_des_body(),
+            Self::Enum(enum_type) => enum_type.gen_des_body(),
+        }
     }
 
-    pub fn gen_accessors_indexed(fields: impl AsRef<[ValueType]>) -> Tokens {
-        let body = comma_chain(
-            fields
-                .as_ref()
-                .iter()
-                .enumerate()
-                .map(|(_, v_type)| v_type.gen_des_accessor(types::des::FieldAccessor::Array)),
-        );
-        quote!([$body])
+    fn gen_ty_check_body(&self) -> Tokens {
+        match self {
+            Self::Struct(struct_type) => struct_type.gen_ty_check_body(),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ty_check_body(),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ty_check_body(),
+            Self::Enum(enum_type) => enum_type.gen_ty_check_body(),
+        }
+    }
+
+    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens {
+        match self {
+            Self::Struct(struct_type) => struct_type.gen_typings_body(import_registry),
+            Self::UnitStruct(unit_struct_type) => {
+                unit_struct_type.gen_typings_body(import_registry)
+            }
+            Self::TupleStruct(tuple_struct_type) => {
+                tuple_struct_type.gen_typings_body(import_registry)
+            }
+            Self::Enum(enum_type) => enum_type.gen_typings_body(import_registry),
+        }
     }
 }
