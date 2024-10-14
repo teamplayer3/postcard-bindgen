@@ -7,7 +7,12 @@
 
 `Postcard Bindgen` allows generating code for other languages to serialize to and deserialize from [postcard](https://github.com/jamesmunns/postcard) byte format. This helps to setup a communication between for example a microcontroller and a App using the `postcard crate` and its lightweight memory format.
 
-As main types structs and enums can be annotated with `PostcardBindings` to generate code for them. The generated code can be exported to a npm package to import it into a javascript project.
+As main types structs and enums can be annotated with `PostcardBindings` to generate code for them. The generated code can be exported as a npm package to import it into a JavaScript project or as a pip package for python.
+
+## Supported Languages
+
+* 🌐 <b>JavaScript</b>
+* 🐍 <b>Python</b>
 
 ## Usage
 
@@ -31,19 +36,20 @@ struct Test {
 }
 
 fn main() {
-    build_npm_package(
+    javascript::build_package(
         std::env::current_dir().unwrap().as_path(),
         PackageInfo {
             name: "generation-test".into(),
             version: "0.1.0".try_into().unwrap(),
         },
+        javascript::GenerationSettings::enable_all(),
         generate_bindings!(Test),
     )
     .unwrap();
 }
 ```
 
-The following code can now be used to serialize an object in Javascript.
+The following code can now be used to serialize an object in JavaScript.
 
 ```js
 import { serialize } from "generation-test";
@@ -56,10 +62,10 @@ const test = {
 const bytes = serialize("Test", test)
 ```
 
-## JavaScript Type mapping
+## Type mappings
 
 <table>
-<tr><td> Type Name </td> <td> Rust </td> <td> Js </td></tr>
+<tr><td> Type Name </td> <td> Rust </td> <td> Js </td><td> Python </td></tr>
 <tr><td>Unit Type</td><td>
 
 ```rust
@@ -70,18 +76,15 @@ struct UnitStruct;
 ```javascript
 {}
 ```
-</td><tr>
-<tr><td>New Type</td><td>
-
-```rust
-struct NewType(u8);
-```
 </td><td>
 
-```javascript
-[123]
+```python
+class UnitStruct:
+    pass
+
+t = UnitStruct()
 ```
-</td><tr>
+</td></tr>
 <tr><td>Tuple Struct</td><td>
 
 ```rust
@@ -92,7 +95,15 @@ struct TupleStruct(u8, u16, u32);
 ```javascript
 [123, 1234, 12345]
 ```
-</td><tr>
+</td><td>
+
+```python
+class TupleStruct(tuple[u8]):
+    ...
+
+t = TupleStruct(123, 1234, 12345)
+```
+</td></tr>
 <tr><td>Struct</td><td>
 
 ```rust
@@ -109,7 +120,17 @@ struct Struct {
     b: 1234
 }
 ```
-</td><tr>
+</td><td>
+
+```python
+@dataclass
+class Struct
+    a: u8
+    b: u16
+
+t = Struct(a = 123, b = 1234)
+```
+</td></tr>
 <tr><td>Enum</td><td>
 
 ```rust
@@ -138,7 +159,27 @@ enum Enum {
     }
 }
 ```
-</td><tr>
+</td><td>
+
+```python
+class Enum:
+    pass
+
+class Enum_A(Enum):
+    pass
+
+class Enum_B(Enum, tuple[u8]):
+    ...
+
+@dataclass
+class Enum_C(Enum)
+    a: u8
+
+a = Enum_A()
+b = Enum_B(23)
+c = Enum_C(a = 23)
+```
+</td></tr>
 <tr><td>Option</td><td>
 
 ```rust
@@ -167,7 +208,20 @@ struct OptionStruct {
     a: undefined
 }
 ```
-</td><tr>
+</td><td>
+
+```python
+# OptionTuple(Some(123))
+OptionTuple(123)
+# OptionTuple(None)
+OptionTuple(None)
+
+# OptionStruct { a: Some(123) }
+OptionStruct(a = 123)
+# OptionStruct { a: None }
+OptionStruct(a = None)
+```
+</td></tr>
 <tr><td>Map</td><td>
 
 ```rust
@@ -186,7 +240,20 @@ let map_any_key = HashMap::<u16, u8>::new();
 // map_any_key
 new Map()
 ```
-</td><tr>
+</td><td>
+
+```python
+# map_string_key
+: Dict[str, u8] = {
+    key: value
+}
+
+# map_any_key
+: Dict[u16, u8] = {
+    key: value
+}
+```
+</td></tr>
 </table>
 
 ### License

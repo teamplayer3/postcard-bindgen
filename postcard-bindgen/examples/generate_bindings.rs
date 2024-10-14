@@ -1,6 +1,6 @@
 use std::{collections::HashMap, io::Write, ops::Range};
 
-use postcard_bindgen::{build_npm_package, generate_bindings, PackageInfo, PostcardBindings};
+use postcard_bindgen::{generate_bindings, javascript, python, PackageInfo, PostcardBindings};
 use serde::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
@@ -36,12 +36,24 @@ struct D {
 }
 
 fn main() {
-    build_npm_package(
+    javascript::build_package(
         std::env::current_dir().unwrap().as_path(),
         PackageInfo {
-            name: "test-bindings".into(),
+            name: "js-test-bindings".into(),
             version: "0.1.0".try_into().unwrap(),
         },
+        javascript::GenerationSettings::enable_all().runtime_type_checks(false),
+        generate_bindings!(A, B, C, D),
+    )
+    .unwrap();
+
+    python::build_package(
+        std::env::current_dir().unwrap().as_path(),
+        PackageInfo {
+            name: "py-test-bindings".into(),
+            version: "0.1.0".try_into().unwrap(),
+        },
+        python::GenerationSettings::enable_all().runtime_type_checks(false),
         generate_bindings!(A, B, C, D),
     )
     .unwrap();

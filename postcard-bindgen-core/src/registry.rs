@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::type_info::{GenJsBinding, JsType};
+use crate::type_info::{GenJsBinding, ValueType};
 
 #[derive(Debug)]
 pub enum BindingType {
@@ -78,7 +78,7 @@ impl AsRef<EnumVariant> for EnumVariant {
 #[derive(Debug)]
 pub enum EnumVariantType {
     Empty,
-    Tuple(Vec<JsType>),
+    Tuple(Vec<ValueType>),
     // for unnamed structs create struct with custom name ( __EnumName_Struct1)
     NewType(Vec<StructField>),
 }
@@ -100,7 +100,7 @@ impl StructType {
     pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.fields.push(StructField {
             name,
-            js_type: T::get_type(),
+            v_type: T::get_type(),
         })
     }
 }
@@ -108,7 +108,7 @@ impl StructType {
 #[derive(Debug)]
 pub struct TupleStructType {
     pub name: &'static str,
-    pub fields: Vec<JsType>,
+    pub fields: Vec<ValueType>,
 }
 
 impl TupleStructType {
@@ -138,7 +138,7 @@ impl UnitStructType {
 #[derive(Debug)]
 pub struct StructField {
     pub name: &'static str,
-    pub js_type: JsType,
+    pub v_type: ValueType,
 }
 
 #[derive(Debug, Default)]
@@ -148,7 +148,7 @@ impl StructFields {
     pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
         self.0.push(StructField {
             name,
-            js_type: T::get_type(),
+            v_type: T::get_type(),
         })
     }
 
@@ -158,14 +158,14 @@ impl StructFields {
 }
 
 #[derive(Default)]
-pub struct TupleFields(Vec<JsType>);
+pub struct TupleFields(Vec<ValueType>);
 
 impl TupleFields {
     pub fn register_field<T: GenJsBinding>(&mut self) {
         self.0.push(T::get_type())
     }
 
-    fn into_inner(self) -> Vec<JsType> {
+    fn into_inner(self) -> Vec<ValueType> {
         self.0
     }
 }

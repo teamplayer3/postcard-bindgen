@@ -1,4 +1,4 @@
-use postcard_bindgen::{build_npm_package, generate_bindings, PackageInfo, PostcardBindings};
+use postcard_bindgen::{build_package, generate_bindings, PackageInfo, PostcardBindings};
 use serde::Serialize;
 
 #[derive(Serialize, PostcardBindings)]
@@ -17,7 +17,7 @@ fn main() {
         .unwrap()
     );
 
-    build_npm_package(
+    build_package(
         std::env::current_dir().unwrap().as_path(),
         PackageInfo {
             name: "test".into(),

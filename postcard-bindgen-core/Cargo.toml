@@ -12,9 +12,10 @@ readme = "../README.md"
 
 [features]
 default = ["generating"]
+
+std = ["alloc"]
 alloc = []
 heapless = ["dep:heapless"]
-std = ["alloc"]
 
 generating = ["std", "dep:genco", "dep:convert_case"]
 

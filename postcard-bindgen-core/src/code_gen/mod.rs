@@ -1,31 +1,33 @@
-use genco::{prelude::js::Tokens, quote};
-
-use crate::registry::BindingType;
-
-use self::{
-    ser_des::{
-        gen_deserialize_func, gen_ser_des_classes, gen_ser_des_functions, gen_serialize_func,
-    },
-    type_checking::gen_type_checkings,
-};
-
-mod generateable;
-pub mod ser_des;
-pub mod type_checking;
+mod available_check;
+mod field_accessor;
+mod import_registry;
 mod utils;
+mod variable_path;
 
-const JS_ENUM_VARIANT_KEY: &str = "tag";
-const JS_ENUM_VARIANT_VALUE: &str = "value";
-const JS_OBJECT_VARIABLE: &str = "v";
+pub mod js;
+pub mod python;
 
-pub fn generate_js(tys: impl AsRef<[BindingType]>) -> Tokens {
-    let ser_des_body = gen_ser_des_functions(&tys);
-    let type_checks = gen_type_checkings(&tys);
-    quote!(
-        $(gen_ser_des_classes())
-        $ser_des_body
-        $type_checks
-        $(gen_serialize_func(&tys))
-        $(gen_deserialize_func(tys))
-    )
+use crate::type_info::NumberMeta;
+
+const U8_BYTES_CONST: &str = "U8_BYTES";
+const U16_BYTES_CONST: &str = "U16_BYTES";
+const U32_BYTES_CONST: &str = "U32_BYTES";
+const U64_BYTES_CONST: &str = "U64_BYTES";
+const U128_BYTES_CONST: &str = "U128_BYTES";
+
+impl NumberMeta {
+    pub(crate) fn as_byte_string(&self) -> &'static str {
+        let bytes = match self {
+            NumberMeta::Integer { bytes, .. } => bytes,
+            NumberMeta::FloatingPoint { bytes } => bytes,
+        };
+        match bytes {
+            1 => U8_BYTES_CONST,
+            2 => U16_BYTES_CONST,
+            4 => U32_BYTES_CONST,
+            8 => U64_BYTES_CONST,
+            16 => U128_BYTES_CONST,
+            _ => unreachable!(),
+        }
+    }
 }
