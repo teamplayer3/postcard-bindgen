@@ -16,6 +16,7 @@ impl PythonTypeGenerateable for ValueType {
             Self::Range(range_meta) => range_meta.gen_ser_accessor(variable_path),
             Self::Map(map_meta) => map_meta.gen_ser_accessor(variable_path),
             Self::Tuple(tuple_meta) => tuple_meta.gen_ser_accessor(variable_path),
+            Self::Bool(bool_meta) => bool_meta.gen_ser_accessor(variable_path),
         }
     }
 
@@ -29,6 +30,7 @@ impl PythonTypeGenerateable for ValueType {
             Self::Range(range_meta) => range_meta.gen_des_accessor(field_accessor),
             Self::Map(map_meta) => map_meta.gen_des_accessor(field_accessor),
             Self::Tuple(tuple_meta) => tuple_meta.gen_des_accessor(field_accessor),
+            Self::Bool(bool_meta) => bool_meta.gen_des_accessor(field_accessor),
         }
     }
 
@@ -42,6 +44,7 @@ impl PythonTypeGenerateable for ValueType {
             Self::Range(range_meta) => range_meta.gen_ty_check(variable_path),
             Self::Map(map_meta) => map_meta.gen_ty_check(variable_path),
             Self::Tuple(tuple_meta) => tuple_meta.gen_ty_check(variable_path),
+            Self::Bool(bool_meta) => bool_meta.gen_ty_check(variable_path),
         }
     }
 
@@ -55,6 +58,7 @@ impl PythonTypeGenerateable for ValueType {
             Self::Range(range_meta) => range_meta.gen_typings(import_registry),
             Self::Map(map_meta) => map_meta.gen_typings(import_registry),
             Self::Tuple(tuple_meta) => tuple_meta.gen_typings(import_registry),
+            Self::Bool(bool_meta) => bool_meta.gen_typings(import_registry),
         }
     }
 }
