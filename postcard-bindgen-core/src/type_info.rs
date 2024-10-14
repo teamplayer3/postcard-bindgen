@@ -10,6 +10,7 @@ pub enum ValueType {
     Range(RangeMeta),
     Map(MapMeta),
     Tuple(TupleMeta),
+    Bool(BoolMeta),
 }
 
 impl AsRef<ValueType> for ValueType {
@@ -59,6 +60,9 @@ pub struct ObjectMeta {
 pub struct TupleMeta {
     pub(crate) items_types: Vec<ValueType>,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoolMeta;
 
 pub trait GenJsBinding {
     fn get_type() -> ValueType;
@@ -198,6 +202,12 @@ tuple_impls! {
     T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12,
     T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13,
     T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14
+}
+
+impl GenJsBinding for bool {
+    fn get_type() -> ValueType {
+        ValueType::Bool(BoolMeta)
+    }
 }
 
 #[cfg(feature = "alloc")]

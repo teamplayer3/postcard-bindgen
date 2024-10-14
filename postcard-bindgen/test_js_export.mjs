@@ -10,7 +10,8 @@ const d = {
         tag: "D",
         value: {
             a: [234, 224],
-            b: [123, [123, 431, 1232], "Hello", new Map([[12, 32]])]
+            b: [123, [123, 431, 1232], "Hello", new Map([[12, 32]])],
+            c: false
         }
     },
     c: {},
@@ -28,6 +29,7 @@ const d = {
     j: new Map([[12, 32]]),
     k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     m: [25, "hello", [34, 34, 22]],
+    n: true
 }
 
 const bytes = serialize("D", d)
