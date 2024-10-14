@@ -1,4 +1,3 @@
-js_export.js
+.env/
 serialized.bytes
-test-bindings
-test-package
+*-test-bindings/
