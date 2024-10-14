@@ -1,7 +1,7 @@
 mod enums;
 mod structs;
 mod tuple_structs;
-mod unit_struct_types;
+mod unit_structs;
 
 use crate::{
     code_gen::python::{ImportRegistry, Tokens},
