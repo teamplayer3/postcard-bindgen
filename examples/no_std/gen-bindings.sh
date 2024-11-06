@@ -1,2 +1,4 @@
 #!/bin/bash
-cargo run -p gen-bindings --target $(rustc -vV | sed -n 's|host: ||p')
+
+# nightly is required for Python bindings
+cargo +nightly run -p gen-bindings --target $(rustc -vV | sed -n 's|host: ||p')
