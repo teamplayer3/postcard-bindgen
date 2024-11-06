@@ -6,7 +6,7 @@ use crate::{
         utils::{TokensBranchedIterExt, TokensIterExt},
     },
     registry::BindingType,
-    utils::StrExt,
+    // utils::StrExt,
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -73,8 +73,10 @@ pub fn gen_ser_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
 }
 
 fn gen_ser_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
+    // let obj_name = binding_type.inner_name().to_obj_identifier();
+    let obj_name = String::from(binding_type.inner_name());
     let ser_body = binding_type.gen_ser_body();
+    // println!("-> {:?}", ser_body);
     quote! {
         def serialize_$(&obj_name)(s, $PYTHON_OBJECT_VARIABLE):
             $ser_body
@@ -125,7 +127,8 @@ pub fn gen_serialize_func(tys: impl AsRef<[BindingType]>, runtime_type_checks: b
 
 fn gen_ser_case(define: &BindingType, runtime_type_checks: bool) -> (Tokens, Tokens) {
     let name = define.inner_name();
-    let type_name = name.to_obj_identifier();
+    // let type_name = name.to_obj_identifier();
+    let type_name = String::from(name);
 
     let case_body = {
         let mut tokens = Tokens::new();

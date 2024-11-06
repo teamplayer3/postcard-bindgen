@@ -6,7 +6,7 @@ use crate::{
         utils::TokensIterExt,
     },
     registry::BindingType,
-    utils::StrExt,
+    // utils::StrExt,
 };
 
 use super::Tokens;
@@ -20,7 +20,8 @@ pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
 }
 
 fn gen_type_check(binding_type: &BindingType) -> Tokens {
-    let type_name = binding_type.inner_name().to_obj_identifier();
+    // let type_name = binding_type.inner_name().to_obj_identifier();
+    let type_name = String::from(binding_type.inner_name());
     let body = binding_type.gen_ty_check_body();
     quote! {
         def assert_$type_name($PYTHON_OBJECT_VARIABLE):

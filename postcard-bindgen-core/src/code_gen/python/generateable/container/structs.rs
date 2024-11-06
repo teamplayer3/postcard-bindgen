@@ -19,6 +19,7 @@ impl BindingTypeGenerateable for StructType {
         self.fields
             .iter()
             .map(|field| {
+                // println!("-> {:?}", field.v_type);
                 field.v_type.gen_ser_accessor(
                     VariablePath::default().modify_push(VariableAccess::Field(field.name.into())),
                 )
