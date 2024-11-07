@@ -19,6 +19,15 @@ impl BindingType {
             Self::UnitStruct(UnitStructType { name }) => name,
         }
     }
+
+    pub fn inner_path(&self) -> &'static str {
+        match self {
+            Self::Struct(StructType { path, .. }) => path,
+            Self::TupleStruct(_) => "",
+            Self::Enum(_) => "",
+            Self::UnitStruct(_) => "",
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -86,13 +95,15 @@ pub enum EnumVariantType {
 #[derive(Debug)]
 pub struct StructType {
     pub name: &'static str,
+    pub path: &'static str,
     pub fields: Vec<StructField>,
 }
 
 impl StructType {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str, path: &'static str) -> Self {
         Self {
             name,
+            path,
             fields: Default::default(),
         }
     }
@@ -217,7 +228,7 @@ mod test {
 
         impl JsBindings for Test {
             fn create_bindings(registry: &mut BindingsRegistry) {
-                let mut ty = StructType::new("Test".into());
+                let mut ty = StructType::new("Test".into(), "");
 
                 ty.register_field::<u8>("a".into());
                 ty.register_field::<u16>("b".into());

@@ -54,6 +54,7 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
+    pub path: &'static str,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

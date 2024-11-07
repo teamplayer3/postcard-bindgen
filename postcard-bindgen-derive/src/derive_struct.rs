@@ -50,7 +50,7 @@ fn derive_struct_type<'a>(name: String, fields: impl AsRef<[Field<'a>]>) -> Toke
         quote!(ty.register_field::<#ty>(#ident_str.into()))
     });
     quote!(
-        let mut ty = _pb::__private::StructType::new(#name.into());
+        let mut ty = _pb::__private::StructType::new(#name.into(), module_path!());
         #(#body);*;
         reg.register_struct_binding(ty);
     )

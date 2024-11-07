@@ -170,7 +170,10 @@ mod test {
 
     #[test]
     fn test_js_type_without_number_typings() {
-        let ty = ValueType::Object(ObjectMeta { name: "A" });
+        let ty = ValueType::Object(ObjectMeta {
+            name: "A",
+            path: "",
+        });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
         let ty = ValueType::String(StringMeta {});
@@ -181,6 +184,7 @@ mod test {
     fn test_struct_structure_typings() {
         let tokens = StructType {
             name: "A",
+            path: "",
             fields: vec![
                 StructField {
                     name: "a",
@@ -191,7 +195,10 @@ mod test {
                 },
                 StructField {
                     name: "b",
-                    v_type: ValueType::Object(ObjectMeta { name: "B" }),
+                    v_type: ValueType::Object(ObjectMeta {
+                        name: "B",
+                        path: "",
+                    }),
                 },
                 StructField {
                     name: "c",
@@ -230,6 +237,7 @@ mod test {
     fn test_struct_typings() {
         let test_binding = gen_binding_type(&BindingType::Struct(StructType {
             name: "A",
+            path: "",
             fields: vec![StructField {
                 name: "a",
                 v_type: ValueType::Number(NumberMeta::Integer {
