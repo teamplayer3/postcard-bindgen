@@ -13,9 +13,9 @@ pub enum BindingType {
 impl BindingType {
     pub fn inner_name(&self) -> &'static str {
         match self {
-            Self::Struct(StructType { name, fields: _ }) => name,
-            Self::TupleStruct(TupleStructType { name, fields: _ }) => name,
-            Self::Enum(EnumType { name, variants: _ }) => name,
+            Self::Struct(StructType { name, .. }) => name,
+            Self::TupleStruct(TupleStructType { name, .. }) => name,
+            Self::Enum(EnumType { name, .. }) => name,
             Self::UnitStruct(UnitStructType { name }) => name,
         }
     }
