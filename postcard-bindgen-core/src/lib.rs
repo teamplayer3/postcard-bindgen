@@ -7,9 +7,6 @@ pub mod code_gen;
 
 pub mod utils;
 
-#[cfg(feature = "generating")]
-mod utils;
-
 pub mod registry;
 pub mod type_info;
 
