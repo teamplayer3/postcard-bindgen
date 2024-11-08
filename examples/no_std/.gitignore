@@ -1,2 +1,3 @@
 target/
 no_std_bindings/
+no_std_bindings_py/
