@@ -1,8 +1,18 @@
 use alloc::vec::Vec;
 
-use crate::type_info::{GenJsBinding, ValueType};
+use crate::{
+    type_info::{GenJsBinding, ValueType},
+    utils::ContainerPath,
+};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub struct Container {
+    pub path: ContainerPath<'static>,
+    pub name: &'static str,
+    pub r#type: BindingType,
+}
+
+#[derive(Debug, Clone)]
 pub enum BindingType {
     Struct(StructType),
     TupleStruct(TupleStructType),
@@ -10,37 +20,15 @@ pub enum BindingType {
     Enum(EnumType),
 }
 
-impl BindingType {
-    pub fn inner_name(&self) -> &'static str {
-        match self {
-            Self::Struct(StructType { name, .. }) => name,
-            Self::TupleStruct(TupleStructType { name, .. }) => name,
-            Self::Enum(EnumType { name, .. }) => name,
-            Self::UnitStruct(UnitStructType { name }) => name,
-        }
-    }
-
-    pub fn inner_path(&self) -> &'static str {
-        match self {
-            Self::Struct(StructType { path, .. }) => path,
-            Self::TupleStruct(_) => "",
-            Self::Enum(_) => "",
-            Self::UnitStruct(_) => "",
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 // encoded into | variant index | (inner)
 pub struct EnumType {
-    pub name: &'static str,
     pub variants: Vec<EnumVariant>,
 }
 
 impl EnumType {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new() -> Self {
         Self {
-            name,
             variants: Default::default(),
         }
     }
@@ -71,7 +59,7 @@ impl EnumType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnumVariant {
     pub index: usize,
     pub name: &'static str,
@@ -84,7 +72,7 @@ impl AsRef<EnumVariant> for EnumVariant {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EnumVariantType {
     Empty,
     Tuple(Vec<ValueType>),
@@ -92,18 +80,14 @@ pub enum EnumVariantType {
     NewType(Vec<StructField>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StructType {
-    pub name: &'static str,
-    pub path: &'static str,
     pub fields: Vec<StructField>,
 }
 
 impl StructType {
-    pub fn new(name: &'static str, path: &'static str) -> Self {
+    pub fn new() -> Self {
         Self {
-            name,
-            path,
             fields: Default::default(),
         }
     }
@@ -116,16 +100,14 @@ impl StructType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TupleStructType {
-    pub name: &'static str,
     pub fields: Vec<ValueType>,
 }
 
 impl TupleStructType {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new() -> Self {
         Self {
-            name,
             fields: Default::default(),
         }
     }
@@ -135,18 +117,16 @@ impl TupleStructType {
     }
 }
 
-#[derive(Debug)]
-pub struct UnitStructType {
-    pub name: &'static str,
-}
+#[derive(Debug, Clone)]
+pub struct UnitStructType;
 
 impl UnitStructType {
-    pub fn new(name: &'static str) -> Self {
-        Self { name }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StructField {
     pub name: &'static str,
     pub v_type: ValueType,
@@ -182,26 +162,62 @@ impl TupleFields {
 }
 
 #[derive(Debug, Default)]
-pub struct BindingsRegistry(Vec<BindingType>);
+pub struct BindingsRegistry(Vec<Container>);
 
 impl BindingsRegistry {
-    pub fn register_struct_binding(&mut self, value: StructType) {
-        self.0.push(BindingType::Struct(value));
+    pub fn register_struct_binding(
+        &mut self,
+        name: &'static str,
+        path: ContainerPath<'static>,
+        value: StructType,
+    ) {
+        self.0.push(Container {
+            path,
+            name,
+            r#type: BindingType::Struct(value),
+        });
     }
 
-    pub fn register_tuple_struct_binding(&mut self, value: TupleStructType) {
-        self.0.push(BindingType::TupleStruct(value));
+    pub fn register_tuple_struct_binding(
+        &mut self,
+        name: &'static str,
+        path: ContainerPath<'static>,
+        value: TupleStructType,
+    ) {
+        self.0.push(Container {
+            path,
+            name,
+            r#type: BindingType::TupleStruct(value),
+        });
     }
 
-    pub fn register_unit_struct_binding(&mut self, value: UnitStructType) {
-        self.0.push(BindingType::UnitStruct(value));
+    pub fn register_unit_struct_binding(
+        &mut self,
+        name: &'static str,
+        path: ContainerPath<'static>,
+        value: UnitStructType,
+    ) {
+        self.0.push(Container {
+            path,
+            name,
+            r#type: BindingType::UnitStruct(value),
+        });
     }
 
-    pub fn register_enum_binding(&mut self, value: EnumType) {
-        self.0.push(BindingType::Enum(value));
+    pub fn register_enum_binding(
+        &mut self,
+        name: &'static str,
+        path: ContainerPath<'static>,
+        value: EnumType,
+    ) {
+        self.0.push(Container {
+            path,
+            name,
+            r#type: BindingType::Enum(value),
+        });
     }
 
-    pub fn into_entries(self) -> Vec<BindingType> {
+    pub fn into_entries(self) -> Vec<Container> {
         self.0
     }
 }
@@ -228,13 +244,13 @@ mod test {
 
         impl JsBindings for Test {
             fn create_bindings(registry: &mut BindingsRegistry) {
-                let mut ty = StructType::new("Test".into(), "");
+                let mut ty = StructType::new();
 
                 ty.register_field::<u8>("a".into());
                 ty.register_field::<u16>("b".into());
                 ty.register_field::<&str>("c".into());
 
-                registry.register_struct_binding(ty);
+                registry.register_struct_binding("Test", "".into(), ty);
             }
         }
 
@@ -249,13 +265,13 @@ mod test {
 
         impl JsBindings for Test {
             fn create_bindings(registry: &mut BindingsRegistry) {
-                let mut ty = TupleStructType::new("Test".into());
+                let mut ty = TupleStructType::new();
 
                 ty.register_field::<u8>();
                 ty.register_field::<&str>();
                 ty.register_field::<&[u8]>();
 
-                registry.register_tuple_struct_binding(ty);
+                registry.register_tuple_struct_binding("Test", "".into(), ty);
             }
         }
 
@@ -274,7 +290,7 @@ mod test {
 
         impl JsBindings for Test {
             fn create_bindings(registry: &mut BindingsRegistry) {
-                let mut ty = EnumType::new("Test".into());
+                let mut ty = EnumType::new();
 
                 ty.register_variant("A".into());
 
@@ -287,7 +303,7 @@ mod test {
                 fields.register_field::<u16>("b".into());
                 ty.register_unnamed_struct("C".into(), fields);
 
-                registry.register_enum_binding(ty);
+                registry.register_enum_binding("Test", "".into(), ty);
             }
         }
 
