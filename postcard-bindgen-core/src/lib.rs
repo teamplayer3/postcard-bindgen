@@ -5,6 +5,8 @@ extern crate alloc;
 #[cfg(feature = "generating")]
 pub mod code_gen;
 
+pub mod utils;
+
 #[cfg(feature = "generating")]
 mod utils;
 
