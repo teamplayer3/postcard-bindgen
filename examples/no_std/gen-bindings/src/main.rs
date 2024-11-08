@@ -24,7 +24,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         python::GenerationSettings::enable_all(),
-        generate_bindings!(no_std::Protocol, no_std::Packet, no_std::A1Meta),
+        generate_bindings!(no_std::A1Meta, no_std::Packet, no_std::Protocol),
     )
     .unwrap();
 }
