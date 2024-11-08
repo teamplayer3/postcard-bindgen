@@ -68,6 +68,6 @@ fn gen_ser_case(define: &BindingType, runtime_type_checks: bool) -> Tokens {
     if runtime_type_checks {
         quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
     } else {
-        quote!(case $case_str: serialize_$(type_name)(s, value))
+        quote!(case $case_str: serialize_$(type_name)(s, value); break)
     }
 }
