@@ -14,7 +14,7 @@ use crate::{
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for TupleStructType {
-    fn gen_ser_body(&self) -> Tokens {
+    fn gen_ser_body(&self, _name: impl AsRef<str>) -> Tokens {
         self.fields
             .iter()
             .enumerate()
@@ -26,17 +26,17 @@ impl BindingTypeGenerateable for TupleStructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body(&self) -> Tokens {
+    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens {
         let body = self
             .fields
             .iter()
             .map(|v_type| v_type.gen_des_accessor(FieldAccessor::None))
             .join_with_comma();
         // <struct_name>(#0, #1, ...)
-        quote!(return $(self.name)($body))
+        quote!(return $(name.as_ref())($body))
     }
 
-    fn gen_ty_check_body(&self) -> Tokens {
+    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens {
         let type_checks = self
             .fields
             .iter()
@@ -50,15 +50,19 @@ impl BindingTypeGenerateable for TupleStructType {
             })
             .join_with_line_breaks();
         [
-            quote!(assert isinstance($PYTHON_OBJECT_VARIABLE, tuple), "{} is not a tuple".format($(self.name))),
-            quote!(assert len($PYTHON_OBJECT_VARIABLE) == $(self.fields.len()), "{} is not of length {}".format($(self.name), $(self.fields.len()))),
+            quote!(assert isinstance($PYTHON_OBJECT_VARIABLE, tuple), "{} is not a tuple".format($(name.as_ref()))),
+            quote!(assert len($PYTHON_OBJECT_VARIABLE) == $(self.fields.len()), "{} is not of length {}".format($(name.as_ref()), $(self.fields.len()))),
             type_checks
         ]
         .into_iter()
         .join_with_line_breaks()
     }
 
-    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens {
+    fn gen_typings_body(
+        &self,
+        name: impl AsRef<str>,
+        import_registry: &mut ImportRegistry,
+    ) -> Tokens {
         let types = self
             .fields
             .iter()
@@ -78,7 +82,7 @@ impl BindingTypeGenerateable for TupleStructType {
             .map(|(i, _)| quote!(_$i))
             .join_with_comma_min_one();
 
-        let class_name = self.name;
+        let class_name = name.as_ref();
 
         quote! {
             class $class_name(tuple[$types_comma_chained]):

@@ -45,7 +45,7 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
                     fn get_type() -> _pb::__private::ValueType {
                         _pb::__private::ValueType::Object(_pb::__private::ObjectMeta {
                             name: #container_name.into(),
-                            path: module_path!(),
+                            path: _pb::__private::ContainerPath::new(module_path!()),
                         })
                     }
                 }

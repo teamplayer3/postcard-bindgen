@@ -3,10 +3,9 @@ use genco::{prelude::python::Tokens, quote};
 use crate::{
     code_gen::{
         python::generateable::container::BindingTypeGenerateable,
-        utils::{TokensBranchedIterExt, TokensIterExt},
+        utils::{StrExt, TokensBranchedIterExt, TokensIterExt},
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 pub fn gen_deserializer_code() -> Tokens {
@@ -82,7 +81,7 @@ pub fn gen_deserializer_code() -> Tokens {
     }
 }
 
-pub fn gen_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_des_functions(bindings: impl AsRef<[Container]>) -> Tokens {
     bindings
         .as_ref()
         .iter()
@@ -90,20 +89,20 @@ pub fn gen_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
         .join_with_empty_line()
 }
 
-fn gen_des_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
-    let des_body = binding_type.gen_des_body();
+fn gen_des_function_for_type(container: &Container) -> Tokens {
+    let obj_name = container.name.to_obj_identifier();
+    let des_body = container.r#type.gen_des_body(container.name);
     quote! {
         def deserialize_$(&obj_name)(d) -> $obj_name:
             $des_body
     }
 }
 
-pub fn gen_deserialize_func(tys: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_deserialize_func(tys: impl AsRef<[Container]>) -> Tokens {
     let all_bindings = tys
         .as_ref()
         .iter()
-        .map(|d| quote!($(d.inner_name())))
+        .map(|d| quote!($(d.name)))
         .collect::<Vec<_>>();
 
     let mut obj_type_types = all_bindings.iter().map(|d| quote!($d));
@@ -134,8 +133,8 @@ pub fn gen_deserialize_func(tys: impl AsRef<[BindingType]>) -> Tokens {
     }
 }
 
-fn gen_des_case(define: &BindingType) -> (Tokens, Tokens) {
-    let name = define.inner_name();
+fn gen_des_case(container: &Container) -> (Tokens, Tokens) {
+    let name = container.name;
     let type_name = name.to_obj_identifier();
     (
         quote!(obj_type is $(&type_name)),

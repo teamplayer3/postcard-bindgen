@@ -1,5 +1,7 @@
 use alloc::{boxed::Box, vec, vec::Vec};
 
+use crate::utils::ContainerPath;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueType {
     Number(NumberMeta),
@@ -54,7 +56,7 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
-    pub path: &'static str,
+    pub path: ContainerPath<'static>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

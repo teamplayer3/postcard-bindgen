@@ -9,9 +9,9 @@ pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -
         derive_variant_style(&variant.style, variant_name, &variant.fields)
     });
     quote!(
-        let mut ty = _pb::__private::EnumType::new(#enum_name.into());
+        let mut ty = _pb::__private::EnumType::new();
         #(#body);*;
-        reg.register_enum_binding(ty);
+        reg.register_enum_binding(#enum_name.into(), _pb::__private::ContainerPath::new(module_path!()), ty);
     )
 }
 

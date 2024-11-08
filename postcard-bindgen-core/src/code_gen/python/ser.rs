@@ -3,10 +3,9 @@ use genco::{prelude::python::Tokens, quote, quote_in};
 use crate::{
     code_gen::{
         python::{generateable::container::BindingTypeGenerateable, PYTHON_OBJECT_VARIABLE},
-        utils::{TokensBranchedIterExt, TokensIterExt},
+        utils::{StrExt, TokensBranchedIterExt, TokensIterExt},
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -64,7 +63,7 @@ pub fn gen_serializer_code() -> Tokens {
     }
 }
 
-pub fn gen_ser_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_ser_functions(bindings: impl AsRef<[Container]>) -> Tokens {
     bindings
         .as_ref()
         .iter()
@@ -72,20 +71,20 @@ pub fn gen_ser_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
         .join_with_empty_line()
 }
 
-fn gen_ser_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
-    let ser_body = binding_type.gen_ser_body();
+fn gen_ser_function_for_type(container: &Container) -> Tokens {
+    let obj_name = container.name.to_obj_identifier();
+    let ser_body = container.r#type.gen_ser_body(container.name);
     quote! {
         def serialize_$(&obj_name)(s, $PYTHON_OBJECT_VARIABLE):
             $ser_body
     }
 }
 
-pub fn gen_serialize_func(tys: impl AsRef<[BindingType]>, runtime_type_checks: bool) -> Tokens {
+pub fn gen_serialize_func(tys: impl AsRef<[Container]>, runtime_type_checks: bool) -> Tokens {
     let all_bindings = tys
         .as_ref()
         .iter()
-        .map(|d| quote!($(d.inner_name())))
+        .map(|d| quote!($(d.name)))
         .collect::<Vec<_>>();
 
     let type_check = if all_bindings.len() == 1 {
@@ -123,8 +122,8 @@ pub fn gen_serialize_func(tys: impl AsRef<[BindingType]>, runtime_type_checks: b
     tokens
 }
 
-fn gen_ser_case(define: &BindingType, runtime_type_checks: bool) -> (Tokens, Tokens) {
-    let name = define.inner_name();
+fn gen_ser_case(container: &Container, runtime_type_checks: bool) -> (Tokens, Tokens) {
+    let name = container.name;
     let type_name = name.to_obj_identifier();
 
     let case_body = {

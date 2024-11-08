@@ -4,9 +4,12 @@ pub mod types;
 use container::BindingTypeGenerateable;
 use genco::{quote, tokens::quoted};
 
-use crate::{code_gen::js::Tokens, code_gen::utils::TokensIterExt, registry::BindingType};
+use crate::{
+    code_gen::{js::Tokens, utils::TokensIterExt},
+    registry::Container,
+};
 
-pub fn gen_ts_typings(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_ts_typings(bindings: impl AsRef<[Container]>) -> Tokens {
     quote!(
         $(gen_number_decls())
 
@@ -51,20 +54,20 @@ fn gen_extra_types_decls() -> Tokens {
     )
 }
 
-fn gen_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
+fn gen_type_decl(bindings: impl AsRef<[Container]>) -> Tokens {
     let type_cases = bindings
         .as_ref()
         .iter()
-        .map(|b| quote!($(quoted(b.inner_name()))))
+        .map(|b| quote!($(quoted(b.name))))
         .join_with_vertical_line();
     quote!(export type Type = $type_cases)
 }
 
-fn gen_value_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
+fn gen_value_type_decl(bindings: impl AsRef<[Container]>) -> Tokens {
     let if_cases = bindings
         .as_ref()
         .iter()
-        .map(|b| quote!(T extends $(quoted(b.inner_name())) ? $(b.inner_name())))
+        .map(|b| quote!(T extends $(quoted(b.name)) ? $(b.name)))
         .join_with_colon();
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
@@ -76,7 +79,7 @@ fn gen_ser_des_decls() -> Tokens {
     )
 }
 
-fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
+fn gen_bindings_types(bindings: impl AsRef<[Container]>) -> Tokens {
     bindings
         .as_ref()
         .iter()
@@ -84,9 +87,9 @@ fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
         .join_with_line_breaks()
 }
 
-fn gen_binding_type(binding: &BindingType) -> Tokens {
-    let name = binding.inner_name();
-    let body = binding.gen_ts_typings_body();
+fn gen_binding_type(binding: &Container) -> Tokens {
+    let name = binding.name;
+    let body = binding.r#type.gen_ts_typings_body();
     quote!(export type $name = $body)
 }
 
@@ -95,12 +98,15 @@ mod test {
     use genco::quote;
 
     use crate::{
-        code_gen::js::generateable::{
-            container::BindingTypeGenerateable, types::JsTypeGenerateable,
+        code_gen::{
+            js::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
+            utils::assert_tokens,
         },
-        registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
+        registry::{
+            BindingType, Container, EnumType, EnumVariant, EnumVariantType, StructField, StructType,
+        },
         type_info::{ArrayMeta, NumberMeta, ObjectMeta, OptionalMeta, StringMeta, ValueType},
-        utils::assert_tokens,
+        utils::ContainerPath,
     };
 
     use super::gen_binding_type;
@@ -172,7 +178,7 @@ mod test {
     fn test_js_type_without_number_typings() {
         let ty = ValueType::Object(ObjectMeta {
             name: "A",
-            path: "",
+            path: "".into(),
         });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
@@ -183,8 +189,6 @@ mod test {
     #[test]
     fn test_struct_structure_typings() {
         let tokens = StructType {
-            name: "A",
-            path: "",
             fields: vec![
                 StructField {
                     name: "a",
@@ -197,7 +201,7 @@ mod test {
                     name: "b",
                     v_type: ValueType::Object(ObjectMeta {
                         name: "B",
-                        path: "",
+                        path: ContainerPath::new(""),
                     }),
                 },
                 StructField {
@@ -235,43 +239,48 @@ mod test {
 
     #[test]
     fn test_struct_typings() {
-        let test_binding = gen_binding_type(&BindingType::Struct(StructType {
+        let test_binding = gen_binding_type(&Container {
             name: "A",
-            path: "",
-            fields: vec![StructField {
-                name: "a",
-                v_type: ValueType::Number(NumberMeta::Integer {
-                    bytes: 1,
-                    signed: false,
-                }),
-            }],
-        }));
+            path: "".into(),
+            r#type: BindingType::Struct(StructType {
+                fields: vec![StructField {
+                    name: "a",
+                    v_type: ValueType::Number(NumberMeta::Integer {
+                        bytes: 1,
+                        signed: false,
+                    }),
+                }],
+            }),
+        });
 
         assert_tokens(test_binding, quote!(export type A = { a: u8 }))
     }
 
     #[test]
     fn test_enum_typings() {
-        let test_binding = gen_binding_type(&BindingType::Enum(EnumType {
+        let test_binding = gen_binding_type(&Container {
             name: "A",
-            variants: vec![
-                EnumVariant {
-                    name: "A",
-                    index: 0,
-                    inner_type: EnumVariantType::Empty,
-                },
-                EnumVariant {
-                    name: "B",
-                    index: 1,
-                    inner_type: EnumVariantType::Tuple(vec![ValueType::Number(
-                        NumberMeta::Integer {
-                            bytes: 1,
-                            signed: false,
-                        },
-                    )]),
-                },
-            ],
-        }));
+            path: "".into(),
+            r#type: BindingType::Enum(EnumType {
+                variants: vec![
+                    EnumVariant {
+                        name: "A",
+                        index: 0,
+                        inner_type: EnumVariantType::Empty,
+                    },
+                    EnumVariant {
+                        name: "B",
+                        index: 1,
+                        inner_type: EnumVariantType::Tuple(vec![ValueType::Number(
+                            NumberMeta::Integer {
+                                bytes: 1,
+                                signed: false,
+                            },
+                        )]),
+                    },
+                ],
+            }),
+        });
 
         assert_tokens(
             test_binding,

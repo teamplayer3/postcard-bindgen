@@ -1,15 +1,15 @@
-import { readFileSync } from "fs";
-import { deserialize, serialize } from "js-test-bindings";
+// import { readFileSync } from "fs";
+// import { deserialize, serialize } from "js-test-bindings";
 
+import { serialize } from "js-test-bindings"
 
-const map = new Map()
-map.set(234, 21)
-const bytes = serialize("B", [234, [234], "Hello", map])
+console.log("neeee")
+const bytes = serialize("a.FooBar", { a: 123, b: "hello" })
 console.log(bytes)
-const b = deserialize("B", bytes)
-console.log(b)
+// const b = deserialize("a.FooBar", bytes)
+// console.log(b)
 
-const bytes_file = `${process.cwd()}/../serialized.bytes`
-const loaded_bytes = readFileSync(bytes_file)
-const rust_des = deserialize("D", [...loaded_bytes]);
-console.log(rust_des)
+// const bytes_file = `${process.cwd()}/../serialized.bytes`
+// const loaded_bytes = readFileSync(bytes_file)
+// const rust_des = deserialize("Message", [...loaded_bytes]);
+// console.log(rust_des)

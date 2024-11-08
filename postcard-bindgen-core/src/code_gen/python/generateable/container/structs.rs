@@ -15,7 +15,7 @@ use crate::{
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for StructType {
-    fn gen_ser_body(&self) -> Tokens {
+    fn gen_ser_body(&self, _name: impl AsRef<str>) -> Tokens {
         self.fields
             .iter()
             .map(|field| {
@@ -26,7 +26,7 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body(&self) -> Tokens {
+    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens {
         let body = self
             .fields
             .iter()
@@ -36,10 +36,10 @@ impl BindingTypeGenerateable for StructType {
                     .gen_des_accessor(FieldAccessor::Object(field.name))
             })
             .join_with_comma();
-        quote!(return $(self.name)($body))
+        quote!(return $(name.as_ref())($body))
     }
 
-    fn gen_ty_check_body(&self) -> Tokens {
+    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens {
         let variable_path = VariablePath::default();
 
         let field_checks = self
@@ -55,14 +55,18 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks();
 
         [
-            quote!(assert isinstance($(variable_path.to_owned()), $(self.name)), "{} is not of type {}".format($variable_path, $(self.name))),
+            quote!(assert isinstance($(variable_path.to_owned()), $(name.as_ref())), "{} is not of type {}".format($variable_path, $(name.as_ref()))),
             field_checks
         ]
         .into_iter()
         .join_with_line_breaks()
     }
 
-    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens {
+    fn gen_typings_body(
+        &self,
+        name: impl AsRef<str>,
+        import_registry: &mut ImportRegistry,
+    ) -> Tokens {
         let body = self
             .fields
             .iter()
@@ -71,7 +75,7 @@ impl BindingTypeGenerateable for StructType {
         import_registry.push(quote!(dataclasses), ImportItem::Single(quote!(dataclass)));
         quote! {
             @dataclass
-            class $(self.name):
+            class $(name.as_ref()):
                 $body
         }
     }

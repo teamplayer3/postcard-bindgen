@@ -1,4 +1,17 @@
+use convert_case::{Case, Casing};
 use genco::{lang::Lang, quote, tokens::FormatInto, Tokens};
+
+use crate::utils::ContainerPath;
+
+pub trait StrExt {
+    fn to_obj_identifier(&self) -> String;
+}
+
+impl<'a> StrExt for &'a str {
+    fn to_obj_identifier(&self) -> String {
+        self.to_case(Case::Snake).to_uppercase()
+    }
+}
 
 pub fn wrapped_brackets<L: Lang>(inner: Tokens<L>) -> Tokens<L> {
     quote!(($inner))
@@ -123,4 +136,37 @@ where
 
         tokens
     }
+}
+
+pub struct ContainerIdentifierBuilder<'a> {
+    path: &'a ContainerPath<'a>,
+    name: &'a str,
+}
+
+impl<'a> ContainerIdentifierBuilder<'a> {
+    pub fn new(path: &'a ContainerPath<'a>, name: &'a str) -> Self {
+        Self { path, name }
+    }
+
+    pub fn build(&self) -> String {
+        // We will skip the first part of the path, as it is the crate name.
+        let path_parts: Vec<String> = self
+            .path
+            .parts()
+            .skip(1)
+            .map(|part| part.to_obj_identifier())
+            .collect();
+
+        if path_parts.is_empty() {
+            self.name.to_obj_identifier()
+        } else {
+            let initial = path_parts.join("_");
+            format!("{}__{}", initial, self.name.to_obj_identifier())
+        }
+    }
+}
+
+#[cfg(test)]
+pub fn assert_tokens(generated: genco::lang::js::Tokens, compare: genco::lang::js::Tokens) {
+    assert_eq!(generated.to_file_string(), compare.to_file_string())
 }

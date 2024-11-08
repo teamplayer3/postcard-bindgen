@@ -1,9 +1,11 @@
 use genco::quote;
 
 use crate::{
-    code_gen::python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+    code_gen::{
+        python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+        utils::StrExt,
+    },
     type_info::ObjectMeta,
-    utils::StrExt,
 };
 
 use super::PythonTypeGenerateable;

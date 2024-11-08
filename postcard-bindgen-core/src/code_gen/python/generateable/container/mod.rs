@@ -9,53 +9,61 @@ use crate::{
 };
 
 pub trait BindingTypeGenerateable {
-    fn gen_ser_body(&self) -> Tokens;
+    fn gen_ser_body(&self, name: impl AsRef<str>) -> Tokens;
 
-    fn gen_des_body(&self) -> Tokens;
+    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens;
 
-    fn gen_ty_check_body(&self) -> Tokens;
+    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens;
 
-    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens;
+    fn gen_typings_body(
+        &self,
+        name: impl AsRef<str>,
+        import_registry: &mut ImportRegistry,
+    ) -> Tokens;
 }
 
 impl BindingTypeGenerateable for BindingType {
-    fn gen_ser_body(&self) -> Tokens {
+    fn gen_ser_body(&self, name: impl AsRef<str>) -> Tokens {
         match self {
-            Self::Struct(struct_type) => struct_type.gen_ser_body(),
-            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ser_body(),
-            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ser_body(),
-            Self::Enum(enum_type) => enum_type.gen_ser_body(),
+            Self::Struct(struct_type) => struct_type.gen_ser_body(name),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ser_body(name),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ser_body(name),
+            Self::Enum(enum_type) => enum_type.gen_ser_body(name),
         }
     }
 
-    fn gen_des_body(&self) -> Tokens {
+    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens {
         match self {
-            Self::Struct(struct_type) => struct_type.gen_des_body(),
-            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_des_body(),
-            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_des_body(),
-            Self::Enum(enum_type) => enum_type.gen_des_body(),
+            Self::Struct(struct_type) => struct_type.gen_des_body(name),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_des_body(name),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_des_body(name),
+            Self::Enum(enum_type) => enum_type.gen_des_body(name),
         }
     }
 
-    fn gen_ty_check_body(&self) -> Tokens {
+    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens {
         match self {
-            Self::Struct(struct_type) => struct_type.gen_ty_check_body(),
-            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ty_check_body(),
-            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ty_check_body(),
-            Self::Enum(enum_type) => enum_type.gen_ty_check_body(),
+            Self::Struct(struct_type) => struct_type.gen_ty_check_body(name),
+            Self::UnitStruct(unit_struct_type) => unit_struct_type.gen_ty_check_body(name),
+            Self::TupleStruct(tuple_struct_type) => tuple_struct_type.gen_ty_check_body(name),
+            Self::Enum(enum_type) => enum_type.gen_ty_check_body(name),
         }
     }
 
-    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens {
+    fn gen_typings_body(
+        &self,
+        name: impl AsRef<str>,
+        import_registry: &mut ImportRegistry,
+    ) -> Tokens {
         match self {
-            Self::Struct(struct_type) => struct_type.gen_typings_body(import_registry),
+            Self::Struct(struct_type) => struct_type.gen_typings_body(name, import_registry),
             Self::UnitStruct(unit_struct_type) => {
-                unit_struct_type.gen_typings_body(import_registry)
+                unit_struct_type.gen_typings_body(name, import_registry)
             }
             Self::TupleStruct(tuple_struct_type) => {
-                tuple_struct_type.gen_typings_body(import_registry)
+                tuple_struct_type.gen_typings_body(name, import_registry)
             }
-            Self::Enum(enum_type) => enum_type.gen_typings_body(import_registry),
+            Self::Enum(enum_type) => enum_type.gen_typings_body(name, import_registry),
         }
     }
 }

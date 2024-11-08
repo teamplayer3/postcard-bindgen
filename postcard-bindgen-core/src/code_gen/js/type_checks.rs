@@ -1,10 +1,13 @@
 use genco::{lang::js::Tokens, quote};
 
-use crate::{code_gen::utils::TokensIterExt, registry::BindingType, utils::StrExt};
+use crate::{
+    code_gen::utils::{ContainerIdentifierBuilder, TokensIterExt},
+    registry::Container,
+};
 
 use super::{generateable::container::BindingTypeGenerateable, JS_OBJECT_VARIABLE};
 
-pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_type_checkings(bindings: impl AsRef<[Container]>) -> Tokens {
     let body = bindings
         .as_ref()
         .iter()
@@ -17,8 +20,8 @@ pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
     }
 }
 
-pub fn gen_type_check(binding_type: &BindingType) -> Tokens {
-    let type_name = binding_type.inner_name().to_obj_identifier();
-    let body = binding_type.gen_ty_check_body();
-    quote!(const is_$type_name = ($JS_OBJECT_VARIABLE) => ($body))
+pub fn gen_type_check(container: &Container) -> Tokens {
+    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let body = container.r#type.gen_ty_check_body();
+    quote!(const is_$container_ident = ($JS_OBJECT_VARIABLE) => ($body))
 }

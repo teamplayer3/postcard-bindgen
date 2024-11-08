@@ -7,7 +7,7 @@ use std::{
 
 use postcard_bindgen_core::{
     code_gen::python::{generate, GenerationSettings},
-    registry::BindingType,
+    registry::Container,
 };
 
 use super::{PackageInfo, Version};
@@ -16,7 +16,7 @@ pub fn build_pip_module(
     parent_dir: &Path,
     package_info: PackageInfo,
     gen_settings: impl Borrow<GenerationSettings>,
-    bindings: impl AsRef<[BindingType]>,
+    bindings: impl AsRef<[Container]>,
 ) -> io::Result<()> {
     let mut dir = parent_dir.to_path_buf();
     dir.push(package_info.name.as_str());

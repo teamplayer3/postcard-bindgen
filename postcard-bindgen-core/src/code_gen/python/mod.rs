@@ -13,7 +13,7 @@ use generateable::gen_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
 use type_checks::gen_type_checkings;
 
-use crate::{code_gen::import_registry::ImportMode, registry::BindingType, ExportFile, Exports};
+use crate::{code_gen::import_registry::ImportMode, registry::Container, ExportFile, Exports};
 
 use super::{
     import_registry::ImportItem,
@@ -90,7 +90,7 @@ impl Default for GenerationSettings {
 }
 
 pub fn generate(
-    tys: impl AsRef<[BindingType]>,
+    tys: impl AsRef<[Container]>,
     gen_settings: impl Borrow<GenerationSettings>,
 ) -> Exports<Python> {
     let gen_settings = gen_settings.borrow();

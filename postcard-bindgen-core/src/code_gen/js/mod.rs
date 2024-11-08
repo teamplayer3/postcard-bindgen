@@ -3,6 +3,7 @@ mod general;
 mod generateable;
 mod ser;
 mod type_checks;
+mod utils;
 
 use core::borrow::Borrow;
 
@@ -17,7 +18,7 @@ use generateable::gen_ts_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
 use type_checks::gen_type_checkings;
 
-use crate::{registry::BindingType, ExportFile, Exports};
+use crate::{registry::Container, ExportFile, Exports};
 
 use super::utils::TokensIterExt;
 
@@ -105,7 +106,7 @@ impl Default for GenerationSettings {
 }
 
 pub fn generate(
-    tys: impl AsRef<[BindingType]>,
+    tys: impl AsRef<[Container]>,
     gen_settings: impl Borrow<GenerationSettings>,
 ) -> Exports<JavaScript> {
     let gen_settings = gen_settings.borrow();

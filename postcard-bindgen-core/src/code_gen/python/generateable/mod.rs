@@ -3,7 +3,7 @@ use genco::quote;
 
 use crate::{
     code_gen::{python::ImportRegistry, utils::TokensIterExt},
-    registry::BindingType,
+    registry::Container,
 };
 
 use super::Tokens;
@@ -11,12 +11,12 @@ use super::Tokens;
 pub mod container;
 pub mod types;
 
-pub fn gen_typings(binding_type: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_typings(binding_type: impl AsRef<[Container]>) -> Tokens {
     let mut import_registry = ImportRegistry::new();
     let typings = binding_type
         .as_ref()
         .iter()
-        .map(|t| t.gen_typings_body(&mut import_registry))
+        .map(|t| t.r#type.gen_typings_body(t.name, &mut import_registry))
         .join_with_line_breaks();
 
     quote! {

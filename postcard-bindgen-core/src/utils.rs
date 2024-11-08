@@ -1,16 +1,21 @@
-use convert_case::{Case, Casing};
-
-pub trait StrExt {
-    fn to_obj_identifier(&self) -> String;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContainerPath<'a> {
+    path: &'a str,
 }
 
-impl<'a> StrExt for &'a str {
-    fn to_obj_identifier(&self) -> String {
-        self.to_case(Case::Snake).to_uppercase()
+impl<'a> ContainerPath<'a> {
+    pub fn new(path: &'a str) -> Self {
+        Self { path }
+    }
+
+    /// Will return an iterator over the parts of the path.
+    pub fn parts(&self) -> impl Iterator<Item = &'a str> {
+        self.path.split("::")
     }
 }
 
-#[cfg(test)]
-pub fn assert_tokens(generated: genco::lang::js::Tokens, compare: genco::lang::js::Tokens) {
-    assert_eq!(generated.to_file_string(), compare.to_file_string())
+impl<'a> From<&'a str> for ContainerPath<'a> {
+    fn from(path: &'a str) -> Self {
+        Self::new(path)
+    }
 }

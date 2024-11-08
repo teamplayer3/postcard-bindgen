@@ -1,12 +1,14 @@
-use genco::{quote, tokens::quoted};
+use genco::quote;
 
 use crate::{
     code_gen::{
-        js::{generateable::container::BindingTypeGenerateable, Tokens},
-        utils::TokensIterExt,
+        js::{
+            generateable::container::BindingTypeGenerateable, utils::ContainerCaseTypeBuilder,
+            Tokens,
+        },
+        utils::{ContainerIdentifierBuilder, TokensIterExt},
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 pub fn gen_deserializer_code() -> Tokens {
@@ -28,7 +30,7 @@ pub fn gen_deserializer_code() -> Tokens {
     }
 }
 
-pub fn gen_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_des_functions(bindings: impl AsRef<[Container]>) -> Tokens {
     bindings
         .as_ref()
         .iter()
@@ -36,15 +38,15 @@ pub fn gen_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
         .join_with_line_breaks()
 }
 
-fn gen_des_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
-    let des_body = binding_type.gen_des_body();
+fn gen_des_function_for_type(container: &Container) -> Tokens {
+    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let des_body = container.r#type.gen_des_body();
     quote! {
-        const deserialize_$obj_name = (d) => $des_body
+        const deserialize_$container_ident = (d) => $des_body
     }
 }
 
-pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_deserialize_func(defines: impl AsRef<[Container]>) -> Tokens {
     let body = defines
         .as_ref()
         .iter()
@@ -61,9 +63,8 @@ pub fn gen_deserialize_func(defines: impl AsRef<[BindingType]>) -> Tokens {
     )
 }
 
-fn gen_des_case(define: &BindingType) -> Tokens {
-    let name = define.inner_name();
-    let case_str = quoted(name);
-    let type_name = name.to_obj_identifier();
-    quote!(case $case_str: return deserialize_$type_name(d))
+fn gen_des_case(container: &Container) -> Tokens {
+    let case_str = ContainerCaseTypeBuilder::new(&container.path, container.name).build();
+    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    quote!(case $case_str: return deserialize_$container_ident(d))
 }

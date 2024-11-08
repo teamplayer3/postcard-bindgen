@@ -107,6 +107,7 @@ pub mod __private {
     pub use postcard_bindgen_core::{
         registry::*,
         type_info::{GenJsBinding, ObjectMeta, ValueType},
+        utils::ContainerPath,
     };
 }
 

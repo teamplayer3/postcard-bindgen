@@ -37,7 +37,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         javascript::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(a::FooBar, b::FooBar),
+        generate_bindings!(a::FooBar, b::FooBar, Message),
     )
     .unwrap();
 
