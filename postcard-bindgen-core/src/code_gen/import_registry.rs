@@ -32,7 +32,11 @@ impl<L: Lang> ImportRegistry<L> {
                 ImportItem::All => *e = ImportMode::All,
                 ImportItem::Single(item) => match e {
                     ImportMode::All => (),
-                    ImportMode::Single(imports) => imports.push(item.to_owned()),
+                    ImportMode::Single(imports) => {
+                        if !imports.contains(item) {
+                            imports.push(item.to_owned());
+                        }
+                    },
                 },
             })
             .or_insert_with(|| match item {
