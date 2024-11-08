@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { deserialize, serialize } from "test-postcard-bindings";
+import { deserialize, serialize } from "js-test-bindings";
 
 
 const map = new Map()
