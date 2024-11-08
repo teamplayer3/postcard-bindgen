@@ -6,7 +6,6 @@ use crate::{
         utils::{TokensBranchedIterExt, TokensIterExt},
     },
     registry::BindingType,
-    // utils::StrExt,
 };
 
 pub fn gen_deserializer_code() -> Tokens {
@@ -91,11 +90,10 @@ pub fn gen_des_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
 }
 
 fn gen_des_function_for_type(binding_type: &BindingType) -> Tokens {
-    // let obj_name = binding_type.inner_name().to_obj_identifier();
-    let obj_name = String::from(binding_type.inner_name());
+    let type_name = binding_type.inner_name().to_owned();
     let des_body = binding_type.gen_des_body();
     quote! {
-        def deserialize_$(&obj_name)(d) -> $obj_name:
+        def deserialize_$(&type_name)(d) -> $type_name:
             $des_body
     }
 }
@@ -136,9 +134,7 @@ pub fn gen_deserialize_func(tys: impl AsRef<[BindingType]>) -> Tokens {
 }
 
 fn gen_des_case(define: &BindingType) -> (Tokens, Tokens) {
-    let name = define.inner_name();
-    // let type_name = name.to_obj_identifier();
-    let type_name = String::from(name);
+    let type_name = define.inner_name().to_owned();
     (
         quote!(obj_type is $(&type_name)),
         quote!(return cast(T, deserialize_$type_name(d))),
