@@ -189,7 +189,7 @@ fn container_and_modules_per_mod<'a>(
     tree: &'a Tree<NodeId, NodeType>,
     node_id: &NodeId,
 ) -> (Vec<Container>, Vec<Module<'a>>) {
-    let node = tree.get_node_by_id(&node_id).unwrap();
+    let node = tree.get_node_by_id(node_id).unwrap();
 
     node.sort_children(|a, b| {
         let a_height = tree.get_node_height(a).unwrap();
