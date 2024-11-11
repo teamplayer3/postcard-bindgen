@@ -9,6 +9,13 @@ struct A;
 #[derive(Serialize, PostcardBindings)]
 struct B(u8, Vec<u16>, String, HashMap<u16, u8>);
 
+mod b {
+    use super::*;
+
+    #[derive(Serialize, PostcardBindings)]
+    pub struct B(pub u8);
+}
+
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
 enum C {
@@ -31,6 +38,7 @@ struct D {
     i: HashMap<String, u16>,
     j: HashMap<u16, u8>,
     k: [u8; 10],
+    l: b::B,
     m: (u8, String, Vec<u8>),
     n: bool,
 }
@@ -43,20 +51,20 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         javascript::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, C, D),
+        generate_bindings!(A, B, b::B, C, D),
     )
     .unwrap();
 
-    python::build_package(
-        std::env::current_dir().unwrap().as_path(),
-        PackageInfo {
-            name: "py-test-bindings".into(),
-            version: "0.1.0".try_into().unwrap(),
-        },
-        python::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, C, D),
-    )
-    .unwrap();
+    // python::build_package(
+    //     std::env::current_dir().unwrap().as_path(),
+    //     PackageInfo {
+    //         name: "py-test-bindings".into(),
+    //         version: "0.1.0".try_into().unwrap(),
+    //     },
+    //     python::GenerationSettings::enable_all().runtime_type_checks(false),
+    //     generate_bindings!(A, B, b::B, C, D),
+    // )
+    // .unwrap();
 
     let d = D {
         a: 123,
@@ -88,6 +96,7 @@ fn main() {
             map
         },
         k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        l: b::B(123),
         m: (123, "hello".into(), vec![1, 2, 3]),
         n: true,
     };
