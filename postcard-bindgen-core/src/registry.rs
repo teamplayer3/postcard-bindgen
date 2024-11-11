@@ -156,37 +156,38 @@ impl TupleFields {
     }
 }
 
-pub struct ContainerCollection(Tree<&'static str, Container>);
+pub struct ContainerCollection(Tree<NodeId, NodeType>);
 
 impl ContainerCollection {
     pub fn all_containers(&self) -> impl Iterator<Item = Container> + '_ {
         self.0
             .get_nodes()
             .iter()
-            .filter_map(|node| node.get_value())
+            .filter_map(|node| node.get_value().unwrap().get_container().cloned())
     }
 
     pub fn containers_per_module(&self) -> (Vec<Container>, Vec<Module<'_>>) {
         let root_node = self.0.get_root_node().unwrap().get_node_id();
-        container_and_modules_per_mod(&self.0, root_node)
+        container_and_modules_per_mod(&self.0, &root_node)
     }
 }
 
-pub struct Module<'a>(&'a Tree<&'static str, Container>, &'static str);
+#[derive(Debug)]
+pub struct Module<'a>(&'a Tree<NodeId, NodeType>, NodeId, &'static str);
 
 impl<'a> Module<'a> {
     pub fn name(&self) -> &'static str {
-        self.1
+        self.2
     }
 
     pub fn entries(&self) -> (Vec<Container>, Vec<Module<'a>>) {
-        container_and_modules_per_mod(self.0, self.1)
+        container_and_modules_per_mod(self.0, &self.1)
     }
 }
 
 fn container_and_modules_per_mod<'a>(
-    tree: &'a Tree<&'static str, Container>,
-    node_id: &'static str,
+    tree: &'a Tree<NodeId, NodeType>,
+    node_id: &NodeId,
 ) -> (Vec<Container>, Vec<Module<'a>>) {
     let node = tree.get_node_by_id(&node_id).unwrap();
 
@@ -205,23 +206,39 @@ fn container_and_modules_per_mod<'a>(
         .iter()
         .map(|id| (id, tree.get_node_by_id(id).unwrap()))
     {
-        if let Some(container) = child.get_value() {
-            containers.push(container.clone());
-        } else {
-            mods.push(Module(tree, id));
+        match child.get_value().unwrap() {
+            NodeType::Module(name) => mods.push(Module(tree, *id, name)),
+            NodeType::Container(container) => containers.push(container.clone()),
         }
     }
 
     (containers, mods)
 }
 
+type NodeId = u128;
+
 enum PathExists {
-    Full(&'static str),
-    Partly(&'static str, &'static str),
+    Full(NodeId),
+    Partly(NodeId, &'static str),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum NodeType {
+    Container(Container),
+    Module(&'static str),
+}
+
+impl NodeType {
+    fn get_container(&self) -> Option<&Container> {
+        match self {
+            NodeType::Container(c) => Some(c),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug)]
-pub struct BindingsRegistry(Tree<&'static str, Container>);
+pub struct BindingsRegistry(Tree<NodeId, NodeType>);
 
 impl BindingsRegistry {
     pub fn register_struct_binding(
@@ -289,11 +306,14 @@ impl BindingsRegistry {
 
             if let Some(part) = part {
                 let node_ids = node.get_children_ids();
-                let child = node_ids.iter().find(|child| **child == part);
+                let child = node_ids.iter().find(|child| {
+                    let node = self.0.get_node_by_id(child).unwrap();
+                    matches!(node.get_value(), Some(NodeType::Module(p)) if p == part)
+                });
 
                 if let Some(child) = child {
                     if is_last {
-                        break PathExists::Full(child);
+                        break PathExists::Full(*child);
                     }
 
                     node = self.0.get_node_by_id(child).unwrap();
@@ -310,11 +330,20 @@ impl BindingsRegistry {
             PathExists::Partly(node_id, part) => {
                 let mut node = self
                     .0
-                    .add_node(Node::new(part, None), Some(&node_id))
+                    .add_node(
+                        Node::new_with_auto_id(Some(NodeType::Module(part))),
+                        Some(&node_id),
+                    )
                     .unwrap();
 
                 for part in parts {
-                    node = self.0.add_node(Node::new(part, None), Some(&node)).unwrap();
+                    node = self
+                        .0
+                        .add_node(
+                            Node::new_with_auto_id(Some(NodeType::Module(part))),
+                            Some(&node),
+                        )
+                        .unwrap();
                 }
 
                 node
@@ -322,15 +351,19 @@ impl BindingsRegistry {
         };
 
         self.0
-            .add_node(Node::new(container.name, Some(container)), Some(&node_id))
+            .add_node(
+                Node::new_with_auto_id(Some(NodeType::Container(container))),
+                Some(&node_id),
+            )
             .unwrap();
     }
 }
 
 impl Default for BindingsRegistry {
     fn default() -> Self {
-        let mut tree: Tree<&'static str, Container> = Tree::new(None);
-        tree.add_node(Node::new("::", None), None).unwrap();
+        let mut tree: Tree<NodeId, NodeType> = Tree::new(None);
+        tree.add_node(Node::new_with_auto_id(Some(NodeType::Module("::"))), None)
+            .unwrap();
         Self(tree)
     }
 }
