@@ -17,7 +17,7 @@ std = ["alloc"]
 alloc = []
 heapless = ["dep:heapless"]
 
-generating = ["std", "dep:genco", "dep:convert_case"]
+generating = ["std", "dep:genco", "dep:convert_case", "dep:tree-ds"]
 
 [dependencies.genco]
 version = "0.17.8"
@@ -30,3 +30,9 @@ optional = true
 [dependencies.heapless]
 version = "0.8.0"
 optional = true
+
+[dependencies.tree-ds]
+version = "0.1.5"
+optional = true
+git = "https://github.com/teamplayer3/tree-ds"
+branch = "add-sorting-of-children"
