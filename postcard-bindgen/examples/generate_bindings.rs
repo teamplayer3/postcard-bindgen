@@ -55,16 +55,16 @@ fn main() {
     )
     .unwrap();
 
-    // python::build_package(
-    //     std::env::current_dir().unwrap().as_path(),
-    //     PackageInfo {
-    //         name: "py-test-bindings".into(),
-    //         version: "0.1.0".try_into().unwrap(),
-    //     },
-    //     python::GenerationSettings::enable_all().runtime_type_checks(false),
-    //     generate_bindings!(A, B, b::B, C, D),
-    // )
-    // .unwrap();
+    python::build_package(
+        std::env::current_dir().unwrap().as_path(),
+        PackageInfo {
+            name: "py-test-bindings".into(),
+            version: "0.1.0".try_into().unwrap(),
+        },
+        python::GenerationSettings::enable_all().runtime_type_checks(false),
+        generate_bindings!(A, B, b::B, C, D),
+    )
+    .unwrap();
 
     let d = D {
         a: 123,
