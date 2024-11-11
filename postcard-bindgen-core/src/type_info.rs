@@ -127,7 +127,7 @@ impl<T: GenJsBinding> GenJsBinding for Option<T> {
     }
 }
 
-impl<'a, T: GenJsBinding> GenJsBinding for &'a [T] {
+impl<T: GenJsBinding> GenJsBinding for &[T] {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
@@ -154,7 +154,7 @@ impl<T: GenJsBinding, const S: usize> GenJsBinding for [T; S] {
     }
 }
 
-impl<'a> GenJsBinding for &'a str {
+impl GenJsBinding for &str {
     fn get_type() -> ValueType {
         ValueType::String(StringMeta {})
     }

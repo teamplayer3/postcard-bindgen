@@ -18,7 +18,7 @@ use generateable::gen_ts_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
 use type_checks::gen_type_checkings;
 
-use crate::{registry::Container, ExportFile, Exports};
+use crate::{registry::ContainerCollection, ExportFile, Exports};
 
 use super::utils::TokensIterExt;
 
@@ -106,7 +106,7 @@ impl Default for GenerationSettings {
 }
 
 pub fn generate(
-    tys: impl AsRef<[Container]>,
+    containers: &ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
 ) -> Exports<JavaScript> {
     let gen_settings = gen_settings.borrow();
@@ -127,27 +127,30 @@ pub fn generate(
     }
 
     if gen_settings.ser {
-        js_tokens.append(gen_ser_functions(&tys));
+        js_tokens.append(gen_ser_functions(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_des_functions(&tys));
+        js_tokens.append(gen_des_functions(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.runtime_type_checks {
-        js_tokens.append(gen_type_checkings(&tys));
+        js_tokens.append(gen_type_checkings(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.ser {
-        js_tokens.append(gen_serialize_func(&tys, gen_settings.runtime_type_checks));
+        js_tokens.append(gen_serialize_func(
+            containers.all_containers(),
+            gen_settings.runtime_type_checks,
+        ));
         js_tokens.line();
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_deserialize_func(&tys));
+        js_tokens.append(gen_deserialize_func(containers.all_containers()));
         js_tokens.line();
     }
 
@@ -157,7 +160,7 @@ pub fn generate(
     }];
 
     if gen_settings.type_script_types {
-        let ts = gen_ts_typings(tys);
+        let ts = gen_ts_typings(containers);
         export_files.push(ExportFile {
             content_type: "ts".to_owned(),
             content: ts,

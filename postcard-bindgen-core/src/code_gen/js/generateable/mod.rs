@@ -2,23 +2,26 @@ pub mod container;
 pub mod types;
 
 use container::BindingTypeGenerateable;
-use genco::{quote, tokens::quoted};
+use genco::{quote, quote_in, tokens::quoted};
 
 use crate::{
-    code_gen::{js::Tokens, utils::TokensIterExt},
-    registry::Container,
+    code_gen::{
+        js::{utils::ContainerFullQualifiedTypeBuilder, Tokens},
+        utils::TokensIterExt,
+    },
+    registry::{Container, ContainerCollection, Module},
 };
 
-pub fn gen_ts_typings(bindings: impl AsRef<[Container]>) -> Tokens {
+pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
     quote!(
         $(gen_number_decls())
 
         $(gen_extra_types_decls())
 
-        $(gen_bindings_types(&bindings))
+        $(gen_bindings_types(&containers))
 
-        $(gen_type_decl(&bindings))
-        $(gen_value_type_decl(bindings))
+        $(gen_type_decl(containers.all_containers()))
+        $(gen_value_type_decl(containers.all_containers()))
 
         $(gen_ser_des_decls())
     )
@@ -54,20 +57,19 @@ fn gen_extra_types_decls() -> Tokens {
     )
 }
 
-fn gen_type_decl(bindings: impl AsRef<[Container]>) -> Tokens {
+fn gen_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let type_cases = bindings
-        .as_ref()
-        .iter()
-        .map(|b| quote!($(quoted(b.name))))
+        .map(|b| quote!($(quoted(ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build()))))
         .join_with_vertical_line();
     quote!(export type Type = $type_cases)
 }
 
-fn gen_value_type_decl(bindings: impl AsRef<[Container]>) -> Tokens {
+fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let if_cases = bindings
-        .as_ref()
-        .iter()
-        .map(|b| quote!(T extends $(quoted(b.name)) ? $(b.name)))
+        .map(|b| {
+            let fully_qualified = ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build();
+            quote!(T extends $(quoted(&fully_qualified)) ? $(fully_qualified))
+        })
         .join_with_colon();
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
@@ -79,12 +81,50 @@ fn gen_ser_des_decls() -> Tokens {
     )
 }
 
-fn gen_bindings_types(bindings: impl AsRef<[Container]>) -> Tokens {
-    bindings
-        .as_ref()
+fn gen_bindings_types(containers: &ContainerCollection) -> Tokens {
+    let (containers, mods) = containers.containers_per_module();
+
+    let mut root_level = Tokens::new();
+
+    for r#mod in mods {
+        create_namespace(&mut root_level, r#mod);
+    }
+
+    let containers = containers
         .iter()
         .map(gen_binding_type)
-        .join_with_line_breaks()
+        .join_with_line_breaks();
+
+    root_level.append(containers);
+
+    root_level
+}
+
+fn create_namespace(tokens: &mut Tokens, r#mod: Module<'_>) {
+    let (containers, mods) = r#mod.entries();
+
+    quote_in! {*tokens=>
+        export namespace $(r#mod.name()) $("{")
+    };
+
+    tokens.push();
+    tokens.indent();
+
+    for r#mod in mods {
+        create_namespace(tokens, r#mod);
+    }
+
+    let containers = containers
+        .iter()
+        .map(gen_binding_type)
+        .join_with_line_breaks();
+
+    tokens.append(containers);
+
+    tokens.push();
+    tokens.unindent();
+    tokens.append("}");
+    tokens.push();
 }
 
 fn gen_binding_type(binding: &Container) -> Tokens {

@@ -2,7 +2,7 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::{
-        js::{FieldAccessor, VariablePath},
+        js::{utils::ContainerFullQualifiedTypeBuilder, FieldAccessor, VariablePath},
         utils::ContainerIdentifierBuilder,
     },
     type_info::ObjectMeta,
@@ -27,6 +27,7 @@ impl JsTypeGenerateable for ObjectMeta {
     }
 
     fn gen_ts_type(&self) -> Tokens {
-        quote!($(self.name))
+        let full_qualified = ContainerFullQualifiedTypeBuilder::new(&self.path, self.name).build();
+        quote!($full_qualified)
     }
 }

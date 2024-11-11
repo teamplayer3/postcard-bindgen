@@ -1,17 +1,20 @@
-use genco::{quote, tokens::quoted};
+use genco::quote;
 
 use crate::utils::ContainerPath;
 
 use super::Tokens;
 
-pub struct ContainerCaseTypeBuilder<'a> {
+pub struct ContainerFullQualifiedTypeBuilder<'a> {
     path: &'a ContainerPath<'a>,
     name: &'a str,
 }
 
-impl ContainerCaseTypeBuilder<'_> {
-    pub fn new<'a>(path: &'a ContainerPath<'a>, name: &'a str) -> ContainerCaseTypeBuilder<'a> {
-        ContainerCaseTypeBuilder { path, name }
+impl ContainerFullQualifiedTypeBuilder<'_> {
+    pub fn new<'a>(
+        path: &'a ContainerPath<'a>,
+        name: &'a str,
+    ) -> ContainerFullQualifiedTypeBuilder<'a> {
+        ContainerFullQualifiedTypeBuilder { path, name }
     }
 
     pub fn build(&self) -> Tokens {
@@ -22,6 +25,6 @@ impl ContainerCaseTypeBuilder<'_> {
             .chain(std::iter::once(self.name))
             .collect();
         let joined = chained_parts.join(".");
-        quote!($(quoted(joined)))
+        quote!($joined)
     }
 }

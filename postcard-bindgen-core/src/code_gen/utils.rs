@@ -7,7 +7,7 @@ pub trait StrExt {
     fn to_obj_identifier(&self) -> String;
 }
 
-impl<'a> StrExt for &'a str {
+impl StrExt for &str {
     fn to_obj_identifier(&self) -> String {
         self.to_case(Case::Snake).to_uppercase()
     }

@@ -1,4 +1,4 @@
-use genco::quote;
+use genco::{quote, tokens::quoted};
 
 use crate::{
     code_gen::{
@@ -8,7 +8,7 @@ use crate::{
     registry::Container,
 };
 
-use super::utils::ContainerCaseTypeBuilder;
+use super::utils::ContainerFullQualifiedTypeBuilder;
 
 pub fn gen_serializer_code() -> Tokens {
     quote! {
@@ -28,15 +28,13 @@ pub fn gen_serializer_code() -> Tokens {
     }
 }
 
-pub fn gen_ser_functions(bindings: impl AsRef<[Container]>) -> Tokens {
+pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
-        .as_ref()
-        .iter()
         .map(gen_ser_function_for_type)
         .join_with_line_breaks()
 }
 
-fn gen_ser_function_for_type(container: &Container) -> Tokens {
+fn gen_ser_function_for_type(container: Container) -> Tokens {
     let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
     let ser_body = container.r#type.gen_ser_body();
     quote! {
@@ -44,10 +42,11 @@ fn gen_ser_function_for_type(container: &Container) -> Tokens {
     }
 }
 
-pub fn gen_serialize_func(defines: impl AsRef<[Container]>, runtime_type_checks: bool) -> Tokens {
+pub fn gen_serialize_func(
+    defines: impl Iterator<Item = Container>,
+    runtime_type_checks: bool,
+) -> Tokens {
     let body = defines
-        .as_ref()
-        .iter()
         .map(|d| gen_ser_case(d, runtime_type_checks))
         .join_with_semicolon();
     quote!(
@@ -62,12 +61,12 @@ pub fn gen_serialize_func(defines: impl AsRef<[Container]>, runtime_type_checks:
     )
 }
 
-fn gen_ser_case(container: &Container, runtime_type_checks: bool) -> Tokens {
-    let case_str = ContainerCaseTypeBuilder::new(&container.path, container.name).build();
+fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Tokens {
+    let case_str = ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
     let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
     if runtime_type_checks {
-        quote!(case $case_str: if (is_$(container_ident.as_str())(value)) { serialize_$(container_ident)(s, value) } else throw "value has wrong format"; break)
+        quote!(case $(quoted(case_str)): if (is_$(container_ident.as_str())(value)) { serialize_$(container_ident)(s, value) } else throw "value has wrong format"; break)
     } else {
-        quote!(case $case_str: serialize_$(container_ident)(s, value); break)
+        quote!(case $(quoted(case_str)): serialize_$(container_ident)(s, value); break)
     }
 }

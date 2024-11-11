@@ -1,18 +1,37 @@
+use core::fmt::Display;
+
 use alloc::vec::Vec;
+use tree_ds::prelude::{Node, Tree};
 
 use crate::{
     type_info::{GenJsBinding, ValueType},
     utils::ContainerPath,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Container {
     pub path: ContainerPath<'static>,
     pub name: &'static str,
     pub r#type: BindingType,
 }
 
-#[derive(Debug, Clone)]
+impl Default for Container {
+    fn default() -> Self {
+        Self {
+            name: "",
+            path: "".into(),
+            r#type: BindingType::Struct(StructType::new()),
+        }
+    }
+}
+
+impl Display for Container {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:?}::{}", self.path, self.name)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BindingType {
     Struct(StructType),
     TupleStruct(TupleStructType),
@@ -20,7 +39,7 @@ pub enum BindingType {
     Enum(EnumType),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 // encoded into | variant index | (inner)
 pub struct EnumType {
     pub variants: Vec<EnumVariant>,
@@ -59,7 +78,7 @@ impl EnumType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumVariant {
     pub index: usize,
     pub name: &'static str,
@@ -72,7 +91,7 @@ impl AsRef<EnumVariant> for EnumVariant {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EnumVariantType {
     Empty,
     Tuple(Vec<ValueType>),
@@ -80,7 +99,7 @@ pub enum EnumVariantType {
     NewType(Vec<StructField>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructType {
     pub fields: Vec<StructField>,
 }
@@ -100,7 +119,7 @@ impl StructType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TupleStructType {
     pub fields: Vec<ValueType>,
 }
@@ -117,7 +136,7 @@ impl TupleStructType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnitStructType;
 
 impl UnitStructType {
@@ -126,7 +145,7 @@ impl UnitStructType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructField {
     pub name: &'static str,
     pub v_type: ValueType,
@@ -161,8 +180,72 @@ impl TupleFields {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct BindingsRegistry(Vec<Container>);
+pub struct ContainerCollection(Tree<&'static str, Container>);
+
+impl ContainerCollection {
+    pub fn all_containers<'a>(&'a self) -> impl Iterator<Item = Container> + 'a {
+        self.0
+            .get_nodes()
+            .iter()
+            .filter_map(|node| node.get_value())
+    }
+
+    pub fn containers_per_module<'a>(&'a self) -> (Vec<Container>, Vec<Module<'a>>) {
+        let root_node = self.0.get_root_node().unwrap().get_node_id();
+        container_and_modules_per_mod(&self.0, root_node)
+    }
+}
+
+pub struct Module<'a>(&'a Tree<&'static str, Container>, &'static str);
+
+impl<'a> Module<'a> {
+    pub fn name(&self) -> &'static str {
+        self.1
+    }
+
+    pub fn entries(&self) -> (Vec<Container>, Vec<Module<'a>>) {
+        container_and_modules_per_mod(&self.0, self.1)
+    }
+}
+
+fn container_and_modules_per_mod<'a>(
+    tree: &'a Tree<&'static str, Container>,
+    node_id: &'static str,
+) -> (Vec<Container>, Vec<Module<'a>>) {
+    let node = tree.get_node_by_id(&node_id).unwrap();
+
+    node.sort_children(|a, b| {
+        let a_height = tree.get_node_height(a).unwrap();
+        let b_height = tree.get_node_height(b).unwrap();
+
+        a_height.cmp(&b_height).reverse()
+    });
+
+    let mut mods = Vec::new();
+    let mut containers = Vec::new();
+
+    for (id, child) in node
+        .get_children_ids()
+        .iter()
+        .map(|id| (id, tree.get_node_by_id(id).unwrap()))
+    {
+        if let Some(container) = child.get_value() {
+            containers.push(container.clone());
+        } else {
+            mods.push(Module(tree, id));
+        }
+    }
+
+    (containers, mods)
+}
+
+enum PathExists {
+    Full(&'static str),
+    Partly(&'static str, &'static str),
+}
+
+#[derive(Debug)]
+pub struct BindingsRegistry(Tree<&'static str, Container>);
 
 impl BindingsRegistry {
     pub fn register_struct_binding(
@@ -171,7 +254,7 @@ impl BindingsRegistry {
         path: ContainerPath<'static>,
         value: StructType,
     ) {
-        self.0.push(Container {
+        self.insert_container(Container {
             path,
             name,
             r#type: BindingType::Struct(value),
@@ -184,7 +267,7 @@ impl BindingsRegistry {
         path: ContainerPath<'static>,
         value: TupleStructType,
     ) {
-        self.0.push(Container {
+        self.insert_container(Container {
             path,
             name,
             r#type: BindingType::TupleStruct(value),
@@ -197,7 +280,7 @@ impl BindingsRegistry {
         path: ContainerPath<'static>,
         value: UnitStructType,
     ) {
-        self.0.push(Container {
+        self.insert_container(Container {
             path,
             name,
             r#type: BindingType::UnitStruct(value),
@@ -210,15 +293,69 @@ impl BindingsRegistry {
         path: ContainerPath<'static>,
         value: EnumType,
     ) {
-        self.0.push(Container {
+        self.insert_container(Container {
             path,
             name,
             r#type: BindingType::Enum(value),
         });
     }
 
-    pub fn into_entries(self) -> Vec<Container> {
+    pub fn into_entries(self) -> ContainerCollection {
+        ContainerCollection(self.0)
+    }
+
+    fn insert_container(&mut self, container: Container) {
+        let mut node = self.0.get_root_node().unwrap();
+        let mut parts = container.path.parts().skip(1).peekable();
+        let path_exists = loop {
+            let part = parts.next();
+            let is_last = parts.peek().is_none();
+
+            if let Some(part) = part {
+                let node_ids = node.get_children_ids();
+                let child = node_ids.iter().find(|child| **child == part);
+
+                if let Some(child) = child {
+                    if is_last {
+                        break PathExists::Full(child);
+                    }
+
+                    node = self.0.get_node_by_id(child).unwrap();
+                } else {
+                    break PathExists::Partly(node.get_node_id(), part);
+                }
+            } else {
+                break PathExists::Full(node.get_node_id());
+            }
+        };
+
+        let node_id = match path_exists {
+            PathExists::Full(node_id) => node_id,
+            PathExists::Partly(node_id, part) => {
+                let mut node = self
+                    .0
+                    .add_node(Node::new(part, None), Some(&node_id))
+                    .unwrap();
+
+                for part in parts {
+                    node = self.0.add_node(Node::new(part, None), Some(&node)).unwrap();
+                }
+
+                node
+            }
+        };
+
         self.0
+            .add_node(Node::new(container.name, Some(container)), Some(&node_id))
+            .unwrap();
+    }
+}
+
+impl Default for BindingsRegistry {
+    fn default() -> Self {
+        let mut tree: Tree<&'static str, Container> = Tree::new(None);
+        tree.add_node(Node::new("::", None), None).unwrap();
+        Self(tree)
     }
 }
 
