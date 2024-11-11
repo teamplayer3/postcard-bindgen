@@ -36,7 +36,7 @@ impl<L: Lang> ImportRegistry<L> {
                         if !imports.contains(item) {
                             imports.push(item.to_owned());
                         }
-                    },
+                    }
                 },
             })
             .or_insert_with(|| match item {
