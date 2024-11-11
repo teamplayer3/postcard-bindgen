@@ -7,7 +7,7 @@ use std::{
 
 use postcard_bindgen_core::{
     code_gen::python::{generate, GenerationSettings},
-    registry::Container,
+    registry::ContainerCollection,
 };
 
 use super::{PackageInfo, Version};
@@ -16,7 +16,7 @@ pub fn build_pip_module(
     parent_dir: &Path,
     package_info: PackageInfo,
     gen_settings: impl Borrow<GenerationSettings>,
-    bindings: impl AsRef<[Container]>,
+    bindings: ContainerCollection,
 ) -> io::Result<()> {
     let mut dir = parent_dir.to_path_buf();
     dir.push(package_info.name.as_str());
@@ -35,6 +35,7 @@ pub fn build_pip_module(
 
     std::fs::create_dir_all(&dir)?;
 
+    let bindings = bindings.all_containers().collect::<Vec<_>>();
     let exports = generate(bindings, gen_settings);
 
     let bindings_export_path = dir.to_owned();

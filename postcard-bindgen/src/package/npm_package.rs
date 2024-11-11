@@ -7,7 +7,7 @@ use std::{
 
 use postcard_bindgen_core::{
     code_gen::js::{generate, GenerationSettings},
-    registry::Container,
+    registry::ContainerCollection,
 };
 
 use super::{PackageInfo, Version};
@@ -37,14 +37,14 @@ pub fn build_npm_package(
     parent_dir: &Path,
     package_info: PackageInfo,
     gen_settings: impl Borrow<GenerationSettings>,
-    bindings: impl AsRef<[Container]>,
+    bindings: ContainerCollection,
 ) -> io::Result<()> {
     let mut dir = parent_dir.to_path_buf();
     dir.push(package_info.name.as_str());
 
     std::fs::create_dir_all(&dir)?;
 
-    let exports = generate(bindings, gen_settings);
+    let exports = generate(&bindings, gen_settings);
 
     let package_json = package_file_src(
         package_info.name.as_str(),
