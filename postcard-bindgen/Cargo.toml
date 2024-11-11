@@ -42,10 +42,6 @@ required-features = ["std", "generating"]
 name = "small"
 required-features = ["std", "generating"]
 
-[[example]]
-name = "serde_attributes"
-required-features = ["std", "generating"]
-
 [package.metadata.docs.rs]
 features = ["generating", "std", "heapless"]
 rustdoc-args = ["--cfg", "docsrs"]
