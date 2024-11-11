@@ -225,7 +225,7 @@ where
     type Template = BranchedTemplate;
 }
 
-impl<'a> FormatInto<Python> for FieldAccessor<'a> {
+impl FormatInto<Python> for FieldAccessor<'_> {
     fn format_into(self, tokens: &mut Tokens) {
         quote_in! { *tokens =>
             $(match self {

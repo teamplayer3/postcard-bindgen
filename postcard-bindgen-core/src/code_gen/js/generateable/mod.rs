@@ -18,7 +18,7 @@ pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
 
         $(gen_extra_types_decls())
 
-        $(gen_bindings_types(&containers))
+        $(gen_bindings_types(containers))
 
         $(gen_type_decl(containers.all_containers()))
         $(gen_value_type_decl(containers.all_containers()))

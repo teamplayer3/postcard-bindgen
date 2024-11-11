@@ -180,7 +180,7 @@ where
     const LOGICAL_OR: &'static str = JS_LOGIC_OR;
 }
 
-impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
+impl FormatInto<JavaScript> for FieldAccessor<'_> {
     fn format_into(self, tokens: &mut Tokens) {
         quote_in! { *tokens =>
             $(match self {

@@ -1,5 +1,3 @@
-use core::fmt::Display;
-
 use alloc::vec::Vec;
 use tree_ds::prelude::{Node, Tree};
 
@@ -15,22 +13,6 @@ pub struct Container {
     pub r#type: BindingType,
 }
 
-impl Default for Container {
-    fn default() -> Self {
-        Self {
-            name: "",
-            path: "".into(),
-            r#type: BindingType::Struct(StructType::new()),
-        }
-    }
-}
-
-impl Display for Container {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{:?}::{}", self.path, self.name)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BindingType {
     Struct(StructType),
@@ -39,7 +21,7 @@ pub enum BindingType {
     Enum(EnumType),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 // encoded into | variant index | (inner)
 pub struct EnumType {
     pub variants: Vec<EnumVariant>,
@@ -47,9 +29,7 @@ pub struct EnumType {
 
 impl EnumType {
     pub fn new() -> Self {
-        Self {
-            variants: Default::default(),
-        }
+        Self::default()
     }
 
     // index is set based on order of variant registration
@@ -99,16 +79,14 @@ pub enum EnumVariantType {
     NewType(Vec<StructField>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct StructType {
     pub fields: Vec<StructField>,
 }
 
 impl StructType {
     pub fn new() -> Self {
-        Self {
-            fields: Default::default(),
-        }
+        Self::default()
     }
 
     pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
@@ -119,16 +97,14 @@ impl StructType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TupleStructType {
     pub fields: Vec<ValueType>,
 }
 
 impl TupleStructType {
     pub fn new() -> Self {
-        Self {
-            fields: Default::default(),
-        }
+        Self::default()
     }
 
     pub fn register_field<T: GenJsBinding>(&mut self) {
@@ -136,7 +112,7 @@ impl TupleStructType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnitStructType;
 
 impl UnitStructType {
@@ -183,14 +159,14 @@ impl TupleFields {
 pub struct ContainerCollection(Tree<&'static str, Container>);
 
 impl ContainerCollection {
-    pub fn all_containers<'a>(&'a self) -> impl Iterator<Item = Container> + 'a {
+    pub fn all_containers(&self) -> impl Iterator<Item = Container> + '_ {
         self.0
             .get_nodes()
             .iter()
             .filter_map(|node| node.get_value())
     }
 
-    pub fn containers_per_module<'a>(&'a self) -> (Vec<Container>, Vec<Module<'a>>) {
+    pub fn containers_per_module(&self) -> (Vec<Container>, Vec<Module<'_>>) {
         let root_node = self.0.get_root_node().unwrap().get_node_id();
         container_and_modules_per_mod(&self.0, root_node)
     }
@@ -204,7 +180,7 @@ impl<'a> Module<'a> {
     }
 
     pub fn entries(&self) -> (Vec<Container>, Vec<Module<'a>>) {
-        container_and_modules_per_mod(&self.0, self.1)
+        container_and_modules_per_mod(self.0, self.1)
     }
 }
 
