@@ -1,2 +1,2 @@
 target/
-no_std_bindings/
+*_no_std_bindings/
