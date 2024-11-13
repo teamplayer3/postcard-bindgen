@@ -6,8 +6,8 @@ use genco::{quote, quote_in, tokens::quoted};
 
 use crate::{
     code_gen::{
-        js::{utils::ContainerFullQualifiedTypeBuilder, Tokens},
-        utils::TokensIterExt,
+        js::Tokens,
+        utils::{ContainerFullQualifiedTypeBuilder, TokensIterExt},
     },
     registry::{Container, ContainerCollection, Module},
 };
@@ -67,8 +67,8 @@ fn gen_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
 fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let if_cases = bindings
         .map(|b| {
-            let fully_qualified = ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build();
-            quote!(T extends $(quoted(&fully_qualified)) ? $(fully_qualified))
+            let full_qualified = ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build();
+            quote!(T extends $(quoted(&full_qualified)) ? $(full_qualified))
         })
         .join_with_colon();
     quote!(declare type ValueType<T extends Type> = $if_cases : void)

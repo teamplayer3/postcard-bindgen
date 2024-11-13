@@ -3,7 +3,6 @@ mod general;
 mod generateable;
 mod ser;
 mod type_checks;
-mod utils;
 
 use core::borrow::Borrow;
 

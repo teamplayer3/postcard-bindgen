@@ -2,11 +2,8 @@ use genco::{quote, tokens::quoted};
 
 use crate::{
     code_gen::{
-        js::{
-            generateable::container::BindingTypeGenerateable,
-            utils::ContainerFullQualifiedTypeBuilder, Tokens,
-        },
-        utils::{ContainerIdentifierBuilder, TokensIterExt},
+        js::{generateable::container::BindingTypeGenerateable, Tokens},
+        utils::{ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensIterExt},
     },
     registry::Container,
 };
@@ -58,7 +55,8 @@ pub fn gen_deserialize_func(defines: impl Iterator<Item = Container>) -> Tokens 
 }
 
 fn gen_des_case(container: Container) -> Tokens {
-    let case_str = ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
+    let fully_qualified =
+        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
     let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
-    quote!(case $(quoted(case_str)): return deserialize_$container_ident(d))
+    quote!(case $(quoted(fully_qualified)): return deserialize_$container_ident(d))
 }

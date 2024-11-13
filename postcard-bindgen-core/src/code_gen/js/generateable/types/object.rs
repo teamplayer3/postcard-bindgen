@@ -2,8 +2,8 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::{
-        js::{utils::ContainerFullQualifiedTypeBuilder, FieldAccessor, VariablePath},
-        utils::ContainerIdentifierBuilder,
+        js::{FieldAccessor, VariablePath},
+        utils::{ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder},
     },
     type_info::ObjectMeta,
 };
