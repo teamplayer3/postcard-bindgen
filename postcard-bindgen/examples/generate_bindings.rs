@@ -13,7 +13,14 @@ mod b {
     use super::*;
 
     #[derive(Serialize, PostcardBindings)]
-    pub struct B(pub u8);
+    pub struct B(pub u8, pub c::B);
+
+    pub mod c {
+        use super::*;
+
+        #[derive(Serialize, PostcardBindings)]
+        pub struct B(pub u8);
+    }
 }
 
 #[derive(Serialize, PostcardBindings)]
@@ -51,7 +58,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         javascript::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, b::B, C, D),
+        generate_bindings!(A, B, b::B, C, D, b::c::B),
     )
     .unwrap();
 
@@ -62,7 +69,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         python::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, b::B, C, D),
+        generate_bindings!(A, B, b::B, C, D, b::c::B),
     )
     .unwrap();
 
@@ -96,7 +103,7 @@ fn main() {
             map
         },
         k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        l: b::B(123),
+        l: b::B(123, b::c::B(234)),
         m: (123, "hello".into(), vec![1, 2, 3]),
         n: true,
     };
