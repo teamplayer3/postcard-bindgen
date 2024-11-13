@@ -10,7 +10,7 @@ pub enum ImportItem {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Ord)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Import {
     pub name: Cow<'static, str>,
     pub alias: Option<Cow<'static, str>>,
@@ -31,7 +31,13 @@ impl Import {
 
 impl PartialOrd for Import {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.name.partial_cmp(&other.name)
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Import {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.name.cmp(&other.name)
     }
 }
 
@@ -41,28 +47,34 @@ pub enum ImportMode {
     Single(Vec<Import>),
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone, Ord)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Package {
     Extern(Cow<'static, str>),
-    Package(Cow<'static, str>),
+    Intern(Cow<'static, str>),
     Relative(Cow<'static, str>),
 }
 
 impl PartialOrd for Package {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Package {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
             Self::Extern(name) => match other {
-                Self::Extern(other_name) => name.partial_cmp(other_name),
-                _ => Some(std::cmp::Ordering::Less),
+                Self::Extern(other_name) => name.cmp(other_name),
+                _ => std::cmp::Ordering::Less,
             },
-            Self::Package(name) => match other {
-                Self::Extern(_) => Some(std::cmp::Ordering::Greater),
-                Self::Package(other_name) => name.partial_cmp(other_name),
-                Self::Relative(_) => Some(std::cmp::Ordering::Less),
+            Self::Intern(name) => match other {
+                Self::Extern(_) => std::cmp::Ordering::Greater,
+                Self::Intern(other_name) => name.cmp(other_name),
+                Self::Relative(_) => std::cmp::Ordering::Less,
             },
             Self::Relative(name) => match other {
-                Self::Relative(other_name) => name.partial_cmp(other_name),
-                _ => Some(std::cmp::Ordering::Greater),
+                Self::Relative(other_name) => name.cmp(other_name),
+                _ => std::cmp::Ordering::Greater,
             },
         }
     }
@@ -89,9 +101,9 @@ impl ImportRegistry {
                 ImportItem::Single(item) => match e {
                     ImportMode::All => (),
                     ImportMode::Single(imports) => {
-                        let import = Import::new(item.to_owned());
+                        let import = Import::new(item.clone());
                         if !imports.contains(&import) {
-                            imports.push(Import::new(item.to_owned()));
+                            imports.push(import);
                             imports.sort();
                         }
                     }
@@ -99,9 +111,9 @@ impl ImportRegistry {
                 ImportItem::Aliased { item_name, alias } => match e {
                     ImportMode::All => (),
                     ImportMode::Single(imports) => {
-                        let import = Import::aliased(item_name.to_owned(), alias.to_owned());
+                        let import = Import::aliased(item_name.clone(), alias.clone());
                         if !imports.contains(&import) {
-                            imports.push(Import::aliased(item_name.to_owned(), alias.to_owned()));
+                            imports.push(import);
                             imports.sort();
                         }
                     }
@@ -145,7 +157,7 @@ mod test {
             ImportItem::Single("test".into()),
         );
 
-        registry.push(Package::Package("package".into()), ImportItem::All);
+        registry.push(Package::Intern("package".into()), ImportItem::All);
 
         let (base_path, items) = registry.into_items_sorted();
 
@@ -158,7 +170,7 @@ mod test {
                     Package::Extern("extern".into()),
                     ImportMode::Single(vec![Import::new("test".into())])
                 ),
-                (Package::Package("package".into()), ImportMode::All),
+                (Package::Intern("package".into()), ImportMode::All),
                 (
                     Package::Relative("rel".into()),
                     ImportMode::Single(vec![

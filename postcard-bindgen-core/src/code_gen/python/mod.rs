@@ -295,7 +295,7 @@ impl FormatInto<Python> for ImportRegistry {
             let package = match package {
                 Package::Relative(path) => format!(".{}", path).into(),
                 Package::Extern(path) => path,
-                Package::Package(path) => {
+                Package::Intern(path) => {
                     if !path.is_empty() {
                         format!("{}.{}", base_path.clone(), path).into()
                     } else {
@@ -345,7 +345,7 @@ mod test {
             },
         );
         import_registry.push(
-            Package::Package("des".into()),
+            Package::Intern("des".into()),
             ImportItem::Single("deserialize".into()),
         );
         import_registry.push(

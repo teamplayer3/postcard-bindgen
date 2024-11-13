@@ -196,19 +196,15 @@ impl<'a> Module<'a> {
         } else {
             let mut curr_node = self.tree.get_node_by_id(&self.node_id).unwrap();
             let mut path = Vec::new();
-            loop {
-                if let Some(id) = curr_node.get_parent_id() {
-                    let node = self.tree.get_node_by_id(&id).unwrap();
-                    if let NodeType::Module(name) = node.get_value().unwrap() {
-                        if name != "::" {
-                            path.push(name);
-                            curr_node = node;
-                        } else {
-                            break;
-                        }
+            while let Some(id) = curr_node.get_parent_id() {
+                let node = self.tree.get_node_by_id(&id).unwrap();
+                if let NodeType::Module(name) = node.get_value().unwrap() {
+                    if name != "::" {
+                        path.push(name);
+                        curr_node = node;
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
                 }
             }
 

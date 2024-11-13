@@ -42,7 +42,7 @@ impl PythonTypeGenerateable for ObjectMeta {
                 .join("_")
         );
         import_registry.push(
-            Package::Package(import_path.into()),
+            Package::Intern(import_path.into()),
             ImportItem::Aliased {
                 item_name: self.name.into(),
                 alias: type_alias.clone().into(),

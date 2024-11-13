@@ -64,7 +64,7 @@ impl PythonTypeGenerateable for NumberMeta {
             NumberMeta::Integer { bytes, signed } => {
                 let int_type = rust_int_to_python_type(*bytes, *signed);
                 import_registry.push(
-                    Package::Package("basic_types".into()),
+                    Package::Intern("basic_types".into()),
                     ImportItem::Single(int_type.clone().into()),
                 );
                 quote!($int_type)
