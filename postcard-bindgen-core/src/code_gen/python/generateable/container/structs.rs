@@ -2,20 +2,25 @@ use genco::quote;
 
 use crate::{
     code_gen::{
-        import_registry::ImportItem,
+        import_registry::{ImportItem, Package},
         python::{
             generateable::types::PythonTypeGenerateable, FieldAccessor, ImportRegistry, Tokens,
             VariableAccess, VariablePath,
         },
-        utils::TokensIterExt,
+        utils::{ContainerFullQualifiedTypeBuilder, TokensIterExt},
     },
     registry::StructType,
+    utils::ContainerPath,
 };
 
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for StructType {
-    fn gen_ser_body(&self, _name: impl AsRef<str>) -> Tokens {
+    fn gen_ser_body<'a>(
+        &self,
+        _name: impl AsRef<str>,
+        _path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
         self.fields
             .iter()
             .map(|field| {
@@ -26,7 +31,13 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens {
+    fn gen_des_body<'a>(
+        &self,
+        name: impl AsRef<str>,
+        path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
+        let fully_qualified =
+            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
         let body = self
             .fields
             .iter()
@@ -36,10 +47,16 @@ impl BindingTypeGenerateable for StructType {
                     .gen_des_accessor(FieldAccessor::Object(field.name))
             })
             .join_with_comma();
-        quote!(return $(name.as_ref())($body))
+        quote!(return $fully_qualified($body))
     }
 
-    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens {
+    fn gen_ty_check_body<'a>(
+        &self,
+        name: impl AsRef<str>,
+        path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
+        let fully_qualified =
+            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
         let variable_path = VariablePath::default();
 
         let field_checks = self
@@ -55,16 +72,17 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks();
 
         [
-            quote!(assert isinstance($(variable_path.to_owned()), $(name.as_ref())), "{} is not of type {}".format($variable_path, $(name.as_ref()))),
+            quote!(assert isinstance($(variable_path.to_owned()), $(&fully_qualified)), "{} is not of type {}".format($variable_path, $fully_qualified)),
             field_checks
         ]
         .into_iter()
         .join_with_line_breaks()
     }
 
-    fn gen_typings_body(
+    fn gen_typings_body<'a>(
         &self,
         name: impl AsRef<str>,
+        _path: impl AsRef<ContainerPath<'a>>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let body = self
@@ -72,7 +90,10 @@ impl BindingTypeGenerateable for StructType {
             .iter()
             .map(|field| quote!($(field.name): $(field.v_type.gen_typings(import_registry))))
             .join_with_line_breaks();
-        import_registry.push(quote!(dataclasses), ImportItem::Single(quote!(dataclass)));
+        import_registry.push(
+            Package::Extern("dataclasses".into()),
+            ImportItem::Single("dataclass".into()),
+        );
         quote! {
             @dataclass
             class $(name.as_ref()):

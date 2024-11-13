@@ -150,12 +150,7 @@ impl<'a> ContainerIdentifierBuilder<'a> {
 
     pub fn build(&self) -> String {
         // We will skip the first part of the path, as it is the crate name.
-        let path_parts: Vec<String> = self
-            .path
-            .parts()
-            .skip(1)
-            .map(|part| part.to_obj_identifier())
-            .collect();
+        let path_parts: Vec<&str> = self.path.parts().skip(1).collect();
 
         if path_parts.is_empty() {
             self.name.to_obj_identifier()
@@ -163,6 +158,30 @@ impl<'a> ContainerIdentifierBuilder<'a> {
             let initial = path_parts.join("_");
             format!("{}__{}", initial, self.name.to_obj_identifier())
         }
+    }
+}
+
+pub struct ContainerFullQualifiedTypeBuilder<'a> {
+    path: &'a ContainerPath<'a>,
+    name: &'a str,
+}
+
+impl ContainerFullQualifiedTypeBuilder<'_> {
+    pub fn new<'a>(
+        path: &'a ContainerPath<'a>,
+        name: &'a str,
+    ) -> ContainerFullQualifiedTypeBuilder<'a> {
+        ContainerFullQualifiedTypeBuilder { path, name }
+    }
+
+    pub fn build(&self) -> String {
+        let chained_parts: Vec<_> = self
+            .path
+            .parts()
+            .skip(1)
+            .chain(std::iter::once(self.name))
+            .collect();
+        chained_parts.join(".")
     }
 }
 

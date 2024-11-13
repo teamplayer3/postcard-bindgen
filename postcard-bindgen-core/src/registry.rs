@@ -159,7 +159,7 @@ impl TupleFields {
 pub struct ContainerCollection(Tree<NodeId, NodeType>);
 
 impl ContainerCollection {
-    pub fn all_containers(&self) -> impl Iterator<Item = Container> + '_ {
+    pub fn all_containers(&self) -> impl Iterator<Item = Container> + Clone + '_ {
         self.0
             .get_nodes()
             .iter()
@@ -172,16 +172,56 @@ impl ContainerCollection {
     }
 }
 
-#[derive(Debug)]
-pub struct Module<'a>(&'a Tree<NodeId, NodeType>, NodeId, &'static str);
+#[derive(Debug, Clone)]
+pub struct Module<'a> {
+    tree: &'a Tree<NodeId, NodeType>,
+    node_id: NodeId,
+    name: &'static str,
+    cached_path: Option<String>,
+}
 
 impl<'a> Module<'a> {
+    fn new(tree: &'a Tree<NodeId, NodeType>, node_id: NodeId, name: &'static str) -> Self {
+        Self {
+            tree,
+            node_id,
+            name,
+            cached_path: None,
+        }
+    }
+
+    pub fn path(&self) -> String {
+        if let Some(path) = &self.cached_path {
+            path.clone()
+        } else {
+            let mut curr_node = self.tree.get_node_by_id(&self.node_id).unwrap();
+            let mut path = Vec::new();
+            loop {
+                if let Some(id) = curr_node.get_parent_id() {
+                    let node = self.tree.get_node_by_id(&id).unwrap();
+                    if let NodeType::Module(name) = node.get_value().unwrap() {
+                        if name != "::" {
+                            path.push(name);
+                            curr_node = node;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            path.join("/")
+        }
+    }
+
     pub fn name(&self) -> &'static str {
-        self.2
+        self.name
     }
 
     pub fn entries(&self) -> (Vec<Container>, Vec<Module<'a>>) {
-        container_and_modules_per_mod(self.0, &self.1)
+        container_and_modules_per_mod(self.tree, &self.node_id)
     }
 }
 
@@ -207,7 +247,7 @@ fn container_and_modules_per_mod<'a>(
         .map(|id| (id, tree.get_node_by_id(id).unwrap()))
     {
         match child.get_value().unwrap() {
-            NodeType::Module(name) => mods.push(Module(tree, *id, name)),
+            NodeType::Module(name) => mods.push(Module::new(tree, *id, name)),
             NodeType::Container(container) => containers.push(container.clone()),
         }
     }

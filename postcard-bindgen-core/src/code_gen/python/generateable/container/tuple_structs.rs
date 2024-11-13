@@ -6,15 +6,20 @@ use crate::{
             generateable::types::PythonTypeGenerateable, FieldAccessor, ImportRegistry, Tokens,
             VariableAccess, VariablePath, PYTHON_OBJECT_VARIABLE,
         },
-        utils::TokensIterExt,
+        utils::{ContainerFullQualifiedTypeBuilder, TokensIterExt},
     },
     registry::TupleStructType,
+    utils::ContainerPath,
 };
 
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for TupleStructType {
-    fn gen_ser_body(&self, _name: impl AsRef<str>) -> Tokens {
+    fn gen_ser_body<'a>(
+        &self,
+        _name: impl AsRef<str>,
+        _path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
         self.fields
             .iter()
             .enumerate()
@@ -26,17 +31,29 @@ impl BindingTypeGenerateable for TupleStructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body(&self, name: impl AsRef<str>) -> Tokens {
+    fn gen_des_body<'a>(
+        &self,
+        name: impl AsRef<str>,
+        path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
+        let fully_qualified =
+            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
         let body = self
             .fields
             .iter()
             .map(|v_type| v_type.gen_des_accessor(FieldAccessor::None))
             .join_with_comma();
         // <struct_name>(#0, #1, ...)
-        quote!(return $(name.as_ref())($body))
+        quote!(return $fully_qualified($body))
     }
 
-    fn gen_ty_check_body(&self, name: impl AsRef<str>) -> Tokens {
+    fn gen_ty_check_body<'a>(
+        &self,
+        name: impl AsRef<str>,
+        path: impl AsRef<ContainerPath<'a>>,
+    ) -> Tokens {
+        let fully_qualified =
+            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
         let type_checks = self
             .fields
             .iter()
@@ -50,17 +67,18 @@ impl BindingTypeGenerateable for TupleStructType {
             })
             .join_with_line_breaks();
         [
-            quote!(assert isinstance($PYTHON_OBJECT_VARIABLE, tuple), "{} is not a tuple".format($(name.as_ref()))),
-            quote!(assert len($PYTHON_OBJECT_VARIABLE) == $(self.fields.len()), "{} is not of length {}".format($(name.as_ref()), $(self.fields.len()))),
+            quote!(assert isinstance($PYTHON_OBJECT_VARIABLE, tuple), "{} is not a tuple".format($(&fully_qualified))),
+            quote!(assert len($PYTHON_OBJECT_VARIABLE) == $(self.fields.len()), "{} is not of length {}".format($fully_qualified, $(self.fields.len()))),
             type_checks
         ]
         .into_iter()
         .join_with_line_breaks()
     }
 
-    fn gen_typings_body(
+    fn gen_typings_body<'a>(
         &self,
         name: impl AsRef<str>,
+        _path: impl AsRef<ContainerPath<'a>>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let types = self

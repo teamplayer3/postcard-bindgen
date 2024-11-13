@@ -46,6 +46,7 @@ impl<L: genco::lang::Lang> Exports<L> {
 }
 
 #[cfg(feature = "generating")]
+#[derive(Debug)]
 pub struct ExportFile<L: genco::lang::Lang> {
     pub content_type: String,
     pub content: genco::Tokens<L>,

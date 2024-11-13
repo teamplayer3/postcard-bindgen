@@ -19,3 +19,9 @@ impl<'a> From<&'a str> for ContainerPath<'a> {
         Self::new(path)
     }
 }
+
+impl<'a> AsRef<ContainerPath<'a>> for ContainerPath<'a> {
+    fn as_ref(&self) -> &ContainerPath<'a> {
+        self
+    }
+}

@@ -3,7 +3,10 @@ use genco::{prelude::python::Tokens, quote};
 use crate::{
     code_gen::{
         python::generateable::container::BindingTypeGenerateable,
-        utils::{StrExt, TokensBranchedIterExt, TokensIterExt},
+        utils::{
+            ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
+            TokensIterExt,
+        },
     },
     registry::Container,
 };
@@ -81,28 +84,29 @@ pub fn gen_deserializer_code() -> Tokens {
     }
 }
 
-pub fn gen_des_functions(bindings: impl AsRef<[Container]>) -> Tokens {
+pub fn gen_des_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
-        .as_ref()
-        .iter()
         .map(gen_des_function_for_type)
         .join_with_empty_line()
 }
 
-fn gen_des_function_for_type(container: &Container) -> Tokens {
-    let obj_name = container.name.to_obj_identifier();
-    let des_body = container.r#type.gen_des_body(container.name);
+fn gen_des_function_for_type(container: Container) -> Tokens {
+    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let fully_qualified =
+        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
+    let des_body = container
+        .r#type
+        .gen_des_body(container.name, container.path);
     quote! {
-        def deserialize_$(&obj_name)(d) -> $obj_name:
+        def deserialize_$(&container_ident)(d) -> $fully_qualified:
             $des_body
     }
 }
 
-pub fn gen_deserialize_func(tys: impl AsRef<[Container]>) -> Tokens {
-    let all_bindings = tys
-        .as_ref()
-        .iter()
-        .map(|d| quote!($(d.name)))
+pub fn gen_deserialize_func(containers: impl Iterator<Item = Container> + Clone) -> Tokens {
+    let all_bindings = containers
+        .clone()
+        .map(|d| ContainerFullQualifiedTypeBuilder::new(&d.path, d.name).build())
         .collect::<Vec<_>>();
 
     let mut obj_type_types = all_bindings.iter().map(|d| quote!($d));
@@ -113,9 +117,7 @@ pub fn gen_deserialize_func(tys: impl AsRef<[Container]>) -> Tokens {
         quote!(T = TypeVar("T", $(obj_type_types.join_with_comma())))
     };
 
-    let des_switch = tys
-        .as_ref()
-        .iter()
+    let des_switch = containers
         .map(gen_des_case)
         .map(|(condition, body)| (Some(condition), body))
         .chain([(
@@ -133,11 +135,12 @@ pub fn gen_deserialize_func(tys: impl AsRef<[Container]>) -> Tokens {
     }
 }
 
-fn gen_des_case(container: &Container) -> (Tokens, Tokens) {
-    let name = container.name;
-    let type_name = name.to_obj_identifier();
+fn gen_des_case(container: Container) -> (Tokens, Tokens) {
+    let fully_qualified =
+        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
+    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
     (
-        quote!(obj_type is $(&type_name)),
-        quote!(return cast(T, deserialize_$type_name(d))),
+        quote!(obj_type is $fully_qualified),
+        quote!(return cast(T, deserialize_$container_ident(d))),
     )
 }

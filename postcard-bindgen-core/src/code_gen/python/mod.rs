@@ -6,17 +6,18 @@ mod type_checks;
 
 use core::borrow::Borrow;
 
+use convert_case::{Case, Casing};
 use des::{gen_des_functions, gen_deserialize_func, gen_deserializer_code};
 use genco::{lang::python::Python, quote, quote_in, tokens::FormatInto};
 use general::gen_util;
-use generateable::gen_typings;
+use generateable::{gen_basic_typings, gen_typings};
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
-use type_checks::gen_type_checkings;
+use type_checks::gen_type_checks;
 
-use crate::{code_gen::import_registry::ImportMode, registry::Container, ExportFile, Exports};
+use crate::{code_gen::import_registry::ImportMode, registry::ContainerCollection, Exports};
 
 use super::{
-    import_registry::ImportItem,
+    import_registry::{ImportItem, Package},
     utils::{IfBranchedTemplate, TokensBranchedIterExt, TokensIterExt},
 };
 
@@ -30,7 +31,8 @@ type VariablePath = super::variable_path::VariablePath<Python>;
 type VariableAccess = super::variable_path::VariableAccess;
 type FieldAccessor<'a> = super::field_accessor::FieldAccessor<'a>;
 type AvailableCheck = super::available_check::AvailableCheck<Python>;
-type ImportRegistry = super::import_registry::ImportRegistry<Python>;
+type ImportRegistry = super::import_registry::ImportRegistry;
+type ExportFile = crate::ExportFile<Python>;
 
 /// Settings for bindings generation.
 ///
@@ -90,9 +92,11 @@ impl Default for GenerationSettings {
 }
 
 pub fn generate(
-    tys: impl AsRef<[Container]>,
+    containers: &ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
+    generate_package_name: String,
 ) -> Exports<Python> {
+    let generate_package_name = generate_package_name.to_case(Case::Snake);
     let gen_settings = gen_settings.borrow();
     let mut files = Vec::new();
 
@@ -102,12 +106,14 @@ pub fn generate(
     });
 
     files.push(ExportFile {
-        content_type: "types".to_owned(),
-        content: gen_typings(&tys),
+        content_type: "basic_types".to_owned(),
+        content: gen_basic_typings(),
     });
 
+    files.extend(gen_typings(containers, generate_package_name.clone()));
+
     if gen_settings.runtime_type_checks {
-        let type_checks = gen_type_checkings(&tys);
+        let type_checks = gen_type_checks(containers.all_containers());
 
         let type_checks = quote! {
             from .util import *
@@ -131,9 +137,9 @@ pub fn generate(
             from .util import *
             from .serializer import Serializer
 
-            $(gen_ser_functions(&tys))
+            $(gen_ser_functions(containers.all_containers()))
 
-            $(gen_serialize_func(&tys, gen_settings.runtime_type_checks))
+            $(gen_serialize_func(containers.all_containers(), gen_settings.runtime_type_checks))
         };
 
         files.push(ExportFile {
@@ -156,9 +162,9 @@ pub fn generate(
             from .util import *
             from .deserializer import Deserializer
 
-            $(gen_des_functions(&tys))
+            $(gen_des_functions(containers.all_containers()))
 
-            $(gen_deserialize_func(&tys))
+            $(gen_deserialize_func(containers.all_containers()))
         };
 
         files.push(ExportFile {
@@ -172,15 +178,22 @@ pub fn generate(
         });
     }
 
-    let mut import_registry = ImportRegistry::new();
-    import_registry.push(quote!(.types), ImportItem::All);
+    let mut import_registry = ImportRegistry::new(generate_package_name);
+    import_registry.push(Package::Relative("types".into()), ImportItem::All);
+    import_registry.push(Package::Relative("basic_types".into()), ImportItem::All);
 
     if gen_settings.des {
-        import_registry.push(quote!(.des), ImportItem::Single(quote!(deserialize)));
+        import_registry.push(
+            Package::Relative("des".into()),
+            ImportItem::Single("deserialize".into()),
+        );
     }
 
     if gen_settings.ser {
-        import_registry.push(quote!(.ser), ImportItem::Single(quote!(serialize)));
+        import_registry.push(
+            Package::Relative("ser".into()),
+            ImportItem::Single("serialize".into()),
+        );
     }
 
     files.push(ExportFile {
@@ -277,18 +290,82 @@ impl FormatInto<Python> for AvailableCheck {
 
 impl FormatInto<Python> for ImportRegistry {
     fn format_into(self, tokens: &mut Tokens) {
-        for (package, imports) in self.into_items_sorted() {
-            quote_in!(*tokens=> from $package import);
+        let (base_path, items) = self.into_items_sorted();
+        for (package, imports) in items {
+            let package = match package {
+                Package::Relative(path) => format!(".{}", path).into(),
+                Package::Extern(path) => path,
+                Package::Package(path) => {
+                    if !path.is_empty() {
+                        format!("{}.{}", base_path.clone(), path).into()
+                    } else {
+                        base_path.clone().into()
+                    }
+                }
+            };
+
+            quote_in!(*tokens=> from $(package) import);
             tokens.space();
 
             match imports {
                 ImportMode::All => quote_in!(*tokens=> *),
                 ImportMode::Single(items) => {
+                    let items = items.iter().map(|i| {
+                        if let Some(alias) = &i.alias {
+                            quote!($(&i.name) as $alias)
+                        } else {
+                            quote!($(&i.name))
+                        }
+                    });
                     quote_in!(*tokens=> $(for part in items join (, ) => $part))
                 }
             }
 
             tokens.push();
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use genco::tokens::FormatInto;
+
+    use super::Tokens;
+
+    #[test]
+    fn test_import_registry_format() {
+        use super::{ImportItem, ImportRegistry, Package};
+
+        let mut import_registry = ImportRegistry::new("package".to_owned());
+        import_registry.push(
+            Package::Relative("basic_types".into()),
+            ImportItem::Aliased {
+                item_name: "A".into(),
+                alias: "A__A".into(),
+            },
+        );
+        import_registry.push(
+            Package::Package("des".into()),
+            ImportItem::Single("deserialize".into()),
+        );
+        import_registry.push(
+            Package::Extern("ser".into()),
+            ImportItem::Single("serialize".into()),
+        );
+        import_registry.push(Package::Relative("types".into()), ImportItem::All);
+
+        let mut tokens = Tokens::new();
+        import_registry.format_into(&mut tokens);
+
+        assert_eq!(
+            tokens.to_file_string().unwrap(),
+            format!(
+                r#"from ser import serialize
+from package.des import deserialize
+from .basic_types import A as A__A
+from .types import *
+"#
+            )
+        );
     }
 }
