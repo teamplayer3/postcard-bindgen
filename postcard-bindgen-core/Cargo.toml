@@ -22,6 +22,8 @@ generating = ["std", "dep:genco", "dep:convert_case", "dep:tree-ds"]
 [dependencies.genco]
 version = "0.17.8"
 optional = true
+git = "https://github.com/teamplayer3/genco"
+branch = "format-into-for-cow"
 
 [dependencies.convert_case]
 version = "0.6.0"
