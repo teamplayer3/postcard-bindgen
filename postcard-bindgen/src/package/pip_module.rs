@@ -35,7 +35,7 @@ pub fn build_pip_module(
 
     std::fs::create_dir_all(&dir)?;
 
-    let exports = generate(&containers, gen_settings, package_info.name);
+    let exports = generate(containers, gen_settings, package_info.name);
 
     let bindings_export_path = dir.to_owned();
 

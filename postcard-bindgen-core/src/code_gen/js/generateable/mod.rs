@@ -59,15 +59,15 @@ fn gen_extra_types_decls() -> Tokens {
 
 fn gen_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let type_cases = bindings
-        .map(|b| quote!($(quoted(ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build()))))
+        .map(|container| quote!($(quoted(ContainerFullQualifiedTypeBuilder::from(&container).build()))))
         .join_with_vertical_line();
     quote!(export type Type = $type_cases)
 }
 
 fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let if_cases = bindings
-        .map(|b| {
-            let full_qualified = ContainerFullQualifiedTypeBuilder::new(&b.path, b.name).build();
+        .map(|container| {
+            let full_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
             quote!(T extends $(quoted(&full_qualified)) ? $(full_qualified))
         })
         .join_with_colon();
@@ -142,11 +142,11 @@ mod test {
             js::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
             utils::assert_tokens,
         },
+        path::Path,
         registry::{
             BindingType, Container, EnumType, EnumVariant, EnumVariantType, StructField, StructType,
         },
         type_info::{ArrayMeta, NumberMeta, ObjectMeta, OptionalMeta, StringMeta, ValueType},
-        utils::ContainerPath,
     };
 
     use super::gen_binding_type;
@@ -218,7 +218,7 @@ mod test {
     fn test_js_type_without_number_typings() {
         let ty = ValueType::Object(ObjectMeta {
             name: "A",
-            path: "".into(),
+            path: Path::new("", "::"),
         });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
@@ -241,7 +241,7 @@ mod test {
                     name: "b",
                     v_type: ValueType::Object(ObjectMeta {
                         name: "B",
-                        path: ContainerPath::new(""),
+                        path: Path::new("", "::"),
                     }),
                 },
                 StructField {
@@ -281,7 +281,7 @@ mod test {
     fn test_struct_typings() {
         let test_binding = gen_binding_type(&Container {
             name: "A",
-            path: "".into(),
+            path: Path::new("", "::"),
             r#type: BindingType::Struct(StructType {
                 fields: vec![StructField {
                     name: "a",
@@ -300,7 +300,7 @@ mod test {
     fn test_enum_typings() {
         let test_binding = gen_binding_type(&Container {
             name: "A",
-            path: "".into(),
+            path: Path::new("", "::"),
             r#type: BindingType::Enum(EnumType {
                 variants: vec![
                     EnumVariant {

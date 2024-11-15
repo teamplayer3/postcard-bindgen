@@ -11,21 +11,16 @@ use crate::{
         variable_path::{VariableAccess, VariablePath},
     },
     registry::{EnumType, EnumVariant, EnumVariantType},
-    utils::ContainerPath,
 };
 
-use super::BindingTypeGenerateable;
+use super::{BindingTypeGenerateable, ContainerInfo};
 
 impl BindingTypeGenerateable for EnumType {
-    fn gen_ser_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
+    fn gen_ser_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
         self.variants
             .iter()
             .map(|v| {
-                let variant_name = quote!($(name.as_ref())_$(v.name));
+                let variant_name = quote!($(container_info.name.as_str())_$(v.name));
 
                 let ser_fields = [quote!(s.serialize_number(U32_BYTES, False, $(v.index)))]
                     .into_iter()
@@ -64,13 +59,8 @@ impl BindingTypeGenerateable for EnumType {
             .join_if_branched()
     }
 
-    fn gen_des_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_des_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let switch = self
             .variants
             .iter()
@@ -101,13 +91,8 @@ impl BindingTypeGenerateable for EnumType {
         }
     }
 
-    fn gen_ty_check_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_ty_check_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let assert_funcs = self
             .variants
             .iter()
@@ -166,18 +151,17 @@ impl BindingTypeGenerateable for EnumType {
 
     fn gen_typings_body<'a>(
         &self,
-        name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
+        container_info: ContainerInfo<'a>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let variants = self
             .variants
             .iter()
-            .map(|v| gen_variant_typings(&name, v, import_registry))
+            .map(|v| gen_variant_typings(container_info.name.as_str(), v, import_registry))
             .join_with_empty_line();
 
         quote! {
-            class $(name.as_ref()):
+            class $(container_info.name):
                 pass
 
             $variants

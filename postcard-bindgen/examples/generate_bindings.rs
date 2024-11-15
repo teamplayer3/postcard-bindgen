@@ -9,20 +9,6 @@ struct A;
 #[derive(Serialize, PostcardBindings)]
 struct B(u8, Vec<u16>, String, HashMap<u16, u8>);
 
-mod b {
-    use super::*;
-
-    #[derive(Serialize, PostcardBindings)]
-    pub struct B(pub u8, pub c::B);
-
-    pub mod c {
-        use super::*;
-
-        #[derive(Serialize, PostcardBindings)]
-        pub struct B(pub u8);
-    }
-}
-
 #[derive(Serialize, PostcardBindings)]
 #[allow(dead_code)]
 enum C {
@@ -45,9 +31,23 @@ struct D {
     i: HashMap<String, u16>,
     j: HashMap<u16, u8>,
     k: [u8; 10],
-    l: b::B,
+    l: e::E,
     m: (u8, String, Vec<u8>),
     n: bool,
+}
+
+mod e {
+    use super::*;
+
+    #[derive(Serialize, PostcardBindings)]
+    pub struct E(pub u8, pub f::F);
+
+    pub mod f {
+        use super::*;
+
+        #[derive(Serialize, PostcardBindings)]
+        pub struct F(pub u8);
+    }
 }
 
 fn main() {
@@ -57,8 +57,10 @@ fn main() {
             name: "js-test-bindings".into(),
             version: "0.1.0".try_into().unwrap(),
         },
-        javascript::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, b::B, C, D, b::c::B),
+        javascript::GenerationSettings::enable_all()
+            .runtime_type_checks(false)
+            .module_structure(true),
+        generate_bindings!(A, B, e::E, C, D, e::f::F),
     )
     .unwrap();
 
@@ -68,8 +70,10 @@ fn main() {
             name: "py-test-bindings".into(),
             version: "0.1.0".try_into().unwrap(),
         },
-        python::GenerationSettings::enable_all().runtime_type_checks(false),
-        generate_bindings!(A, B, b::B, C, D, b::c::B),
+        python::GenerationSettings::enable_all()
+            .runtime_type_checks(false)
+            .module_structure(true),
+        generate_bindings!(A, B, e::E, C, D, e::f::F),
     )
     .unwrap();
 
@@ -103,7 +107,7 @@ fn main() {
             map
         },
         k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        l: b::B(123, b::c::B(234)),
+        l: e::E(123, e::f::F(234)),
         m: (123, "hello".into(), vec![1, 2, 3]),
         n: true,
     };

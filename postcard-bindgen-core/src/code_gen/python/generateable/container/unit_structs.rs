@@ -6,45 +6,29 @@ use crate::{
         python::{ImportRegistry, Tokens, PYTHON_OBJECT_VARIABLE},
         utils::ContainerFullQualifiedTypeBuilder,
     },
-    registry::UnitStructType,
-    utils::ContainerPath,
+    registry::{ContainerInfo, UnitStructType},
 };
 
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for UnitStructType {
-    fn gen_ser_body<'a>(
-        &self,
-        _name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
+    fn gen_ser_body<'a>(&self, _container_info: ContainerInfo<'a>) -> Tokens {
         quote!(pass)
     }
 
-    fn gen_des_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_des_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         quote!(return $fully_qualified())
     }
 
-    fn gen_ty_check_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_ty_check_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         quote!(assert isinstance($PYTHON_OBJECT_VARIABLE, $fully_qualified))
     }
 
     fn gen_typings_body<'a>(
         &self,
-        name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
+        container_info: ContainerInfo<'a>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         import_registry.push(
@@ -53,7 +37,7 @@ impl BindingTypeGenerateable for UnitStructType {
         );
         quote! {
             @dataclass
-            class $(name.as_ref()):
+            class $(container_info.name):
                 pass
         }
     }

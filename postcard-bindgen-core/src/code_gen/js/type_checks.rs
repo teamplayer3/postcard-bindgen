@@ -17,7 +17,7 @@ pub fn gen_type_checkings(bindings: impl Iterator<Item = Container>) -> Tokens {
 }
 
 pub fn gen_type_check(container: Container) -> Tokens {
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     let body = container.r#type.gen_ty_check_body();
     quote!(const is_$container_ident = ($JS_OBJECT_VARIABLE) => ($body))
 }

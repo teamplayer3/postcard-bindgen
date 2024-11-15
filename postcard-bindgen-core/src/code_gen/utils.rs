@@ -1,7 +1,11 @@
 use convert_case::{Case, Casing};
 use genco::{lang::Lang, quote, tokens::FormatInto, Tokens};
 
-use crate::utils::ContainerPath;
+use crate::{
+    path::PathBuf,
+    registry::{Container, ContainerInfo},
+    type_info::ObjectMeta,
+};
 
 pub trait StrExt {
     fn to_obj_identifier(&self) -> String;
@@ -139,49 +143,70 @@ where
 }
 
 pub struct ContainerIdentifierBuilder<'a> {
-    path: &'a ContainerPath<'a>,
+    path: PathBuf<'a>,
     name: &'a str,
 }
 
 impl<'a> ContainerIdentifierBuilder<'a> {
-    pub fn new(path: &'a ContainerPath<'a>, name: &'a str) -> Self {
+    pub fn new(path: PathBuf<'a>, name: &'a str) -> Self {
         Self { path, name }
     }
 
-    pub fn build(&self) -> String {
+    pub fn build(mut self) -> String {
         // We will skip the first part of the path, as it is the crate name.
-        let path_parts: Vec<&str> = self.path.parts().skip(1).collect();
+        self.path.pop_front();
+        self.path.push(self.name.to_obj_identifier());
 
-        if path_parts.is_empty() {
-            self.name.to_obj_identifier()
-        } else {
-            let initial = path_parts.join("_");
-            format!("{}__{}", initial, self.name.to_obj_identifier())
-        }
+        self.path.into_path("_").to_string()
+    }
+}
+
+impl From<&Container> for ContainerIdentifierBuilder<'_> {
+    fn from(container: &Container) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name.as_str())
+    }
+}
+
+impl From<&ObjectMeta> for ContainerIdentifierBuilder<'_> {
+    fn from(meta: &ObjectMeta) -> Self {
+        Self::new(meta.path.clone().into_buf(), meta.name.as_str())
     }
 }
 
 pub struct ContainerFullQualifiedTypeBuilder<'a> {
-    path: &'a ContainerPath<'a>,
+    path: PathBuf<'a>,
     name: &'a str,
 }
 
 impl ContainerFullQualifiedTypeBuilder<'_> {
-    pub fn new<'a>(
-        path: &'a ContainerPath<'a>,
-        name: &'a str,
-    ) -> ContainerFullQualifiedTypeBuilder<'a> {
+    pub fn new<'a>(path: PathBuf<'a>, name: &'a str) -> ContainerFullQualifiedTypeBuilder<'a> {
         ContainerFullQualifiedTypeBuilder { path, name }
     }
 
-    pub fn build(&self) -> String {
-        let chained_parts: Vec<_> = self
-            .path
-            .parts()
-            .skip(1)
-            .chain(std::iter::once(self.name))
-            .collect();
-        chained_parts.join(".")
+    pub fn build(mut self) -> String {
+        // We will skip the first part of the path, as it is the crate name.
+        self.path.pop_front();
+        self.path.push(self.name.to_obj_identifier());
+
+        self.path.into_path(".").to_string()
+    }
+}
+
+impl<'a> From<&'a ContainerInfo<'a>> for ContainerFullQualifiedTypeBuilder<'a> {
+    fn from(container: &'a ContainerInfo<'a>) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name.as_str())
+    }
+}
+
+impl From<&Container> for ContainerFullQualifiedTypeBuilder<'_> {
+    fn from(container: &Container) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name.as_str())
+    }
+}
+
+impl From<&ObjectMeta> for ContainerFullQualifiedTypeBuilder<'_> {
+    fn from(meta: &ObjectMeta) -> Self {
+        Self::new(meta.path.clone().into_buf(), meta.name.as_str())
     }
 }
 

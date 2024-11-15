@@ -34,7 +34,7 @@ pub fn gen_des_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
 }
 
 fn gen_des_function_for_type(container: Container) -> Tokens {
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     let des_body = container.r#type.gen_des_body();
     quote! {
         const deserialize_$container_ident = (d) => $des_body
@@ -55,8 +55,7 @@ pub fn gen_deserialize_func(defines: impl Iterator<Item = Container>) -> Tokens 
 }
 
 fn gen_des_case(container: Container) -> Tokens {
-    let fully_qualified =
-        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     quote!(case $(quoted(fully_qualified)): return deserialize_$container_ident(d))
 }

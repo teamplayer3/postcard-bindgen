@@ -91,12 +91,12 @@ pub fn gen_des_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
 }
 
 fn gen_des_function_for_type(container: Container) -> Tokens {
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let container_ident =
+        ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
     let fully_qualified =
-        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
-    let des_body = container
-        .r#type
-        .gen_des_body(container.name, container.path);
+        ContainerFullQualifiedTypeBuilder::new(container.path.clone().into_buf(), container.name)
+            .build();
+    let des_body = container.r#type.gen_des_body((&container).into());
     quote! {
         def deserialize_$(&container_ident)(d) -> $fully_qualified:
             $des_body
@@ -106,7 +106,7 @@ fn gen_des_function_for_type(container: Container) -> Tokens {
 pub fn gen_deserialize_func(containers: impl Iterator<Item = Container> + Clone) -> Tokens {
     let all_bindings = containers
         .clone()
-        .map(|d| ContainerFullQualifiedTypeBuilder::new(&d.path, d.name).build())
+        .map(|d| ContainerFullQualifiedTypeBuilder::new(d.path.clone().into_buf(), d.name).build())
         .collect::<Vec<_>>();
 
     let mut obj_type_types = all_bindings.iter().map(|d| quote!($d));
@@ -137,8 +137,10 @@ pub fn gen_deserialize_func(containers: impl Iterator<Item = Container> + Clone)
 
 fn gen_des_case(container: Container) -> (Tokens, Tokens) {
     let fully_qualified =
-        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+        ContainerFullQualifiedTypeBuilder::new(container.path.clone().into_buf(), container.name)
+            .build();
+    let container_ident =
+        ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
     (
         quote!(obj_type is $fully_qualified),
         quote!(return cast(T, deserialize_$container_ident(d))),

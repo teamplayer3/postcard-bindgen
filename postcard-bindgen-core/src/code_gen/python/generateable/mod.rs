@@ -4,7 +4,7 @@ use std::{
 };
 
 use container::BindingTypeGenerateable;
-use convert_case::Casing;
+use convert_case::{Case, Casing};
 use genco::{quote, quote_in, tokens::quoted};
 
 use crate::{
@@ -21,9 +21,9 @@ pub fn gen_typings(
     containers: &ContainerCollection,
     generate_package_name: String,
 ) -> Vec<ExportFile> {
-    let (containers, mods) = containers.containers_per_module();
-
     let mut files = Vec::new();
+
+    let (containers, mods) = containers.containers_per_module();
 
     generate_typings_for_mod(
         "",
@@ -54,7 +54,7 @@ fn generate_typings_for_mod<'a>(
         }
         l
     });
-    let mod_exports = mods.clone().map(|f| f.name());
+    let mod_exports = mods.clone().map(|f| f.name().to_owned());
 
     let all_exports = container_exports
         .clone()
@@ -93,14 +93,13 @@ fn generate_typings_for_mod<'a>(
 
     for container in containers {
         let mut import_registry = ImportRegistry::new(generate_package_name.clone());
-        let types =
-            container
-                .r#type
-                .gen_typings_body(container.name, container.path, &mut import_registry);
+        let types = container
+            .r#type
+            .gen_typings_body((&container).into(), &mut import_registry);
 
         files.push(ExportFile {
             content_type: path
-                .join(format!("_{}", container.name.to_lowercase()))
+                .join(format!("_{}", container.name.to_case(Case::Snake)))
                 .to_string_lossy()
                 .into_owned(),
             content: quote! {

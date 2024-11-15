@@ -73,10 +73,9 @@ pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
 }
 
 fn gen_ser_function_for_type(container: Container) -> Tokens {
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
-    let ser_body = container
-        .r#type
-        .gen_ser_body(container.name, container.path);
+    let container_ident =
+        ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
+    let ser_body = container.r#type.gen_ser_body((&container).into());
     quote! {
         def serialize_$(&container_ident)(s, $PYTHON_OBJECT_VARIABLE):
             $ser_body
@@ -95,7 +94,9 @@ pub fn gen_serialize_func(
     let type_check = if all_bindings.len() == 1 {
         quote!($(all_bindings.first().unwrap()))
     } else {
-        quote!(Union[$(all_bindings.into_iter().join_with_comma())])
+        quote!(Union[$(containers.clone().map(|container| 
+            quote!($(ContainerFullQualifiedTypeBuilder::from(&container)
+                .build()))).join_with_comma())])
     };
 
     let ser_switch = containers
@@ -126,8 +127,8 @@ pub fn gen_serialize_func(
 }
 
 fn gen_ser_case(container: Container, runtime_type_checks: bool) -> (Tokens, Tokens) {
-    let case_str = ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let case_str = ContainerFullQualifiedTypeBuilder::from(&container).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
 
     let case_body = {
         let mut tokens = Tokens::new();

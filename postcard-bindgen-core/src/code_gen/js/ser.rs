@@ -33,7 +33,7 @@ pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
 }
 
 fn gen_ser_function_for_type(container: Container) -> Tokens {
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     let ser_body = container.r#type.gen_ser_body();
     quote! {
         const serialize_$(&container_ident) = (s, $JS_OBJECT_VARIABLE) => { $ser_body }
@@ -60,9 +60,8 @@ pub fn gen_serialize_func(
 }
 
 fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Tokens {
-    let full_qualified =
-        ContainerFullQualifiedTypeBuilder::new(&container.path, container.name).build();
-    let container_ident = ContainerIdentifierBuilder::new(&container.path, container.name).build();
+    let full_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     if runtime_type_checks {
         quote!(case $(quoted(full_qualified)): if (is_$(container_ident.as_str())(value)) { serialize_$(container_ident)(s, value) } else throw "value has wrong format"; break)
     } else {

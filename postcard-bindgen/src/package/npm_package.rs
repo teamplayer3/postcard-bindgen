@@ -44,7 +44,7 @@ pub fn build_npm_package(
 
     std::fs::create_dir_all(&dir)?;
 
-    let exports = generate(&bindings, gen_settings);
+    let exports = generate(bindings, gen_settings);
 
     let package_json = package_file_src(
         package_info.name.as_str(),

@@ -49,6 +49,7 @@ pub struct GenerationSettings {
     des: bool,
     runtime_type_checks: bool,
     type_script_types: bool,
+    module_structure: bool,
 }
 
 impl GenerationSettings {
@@ -59,6 +60,7 @@ impl GenerationSettings {
             des: true,
             runtime_type_checks: true,
             type_script_types: true,
+            module_structure: true,
         }
     }
 
@@ -91,6 +93,19 @@ impl GenerationSettings {
         self.runtime_type_checks = enabled;
         self
     }
+
+    /// Enabling or disabling of module structure code generation.
+    ///
+    /// Enabling this will generate the types in typescript in the same module structure
+    /// as in rust. Root level types will be in the root of the generated
+    /// package. Types nested in modules will be in namespaces
+    /// (e.g. <mod_name>.<type_name>). This avoids name clashes.
+    ///
+    /// Disabling this will generate all types in the root module.
+    pub fn module_structure(mut self, enabled: bool) -> Self {
+        self.module_structure = enabled;
+        self
+    }
 }
 
 impl Default for GenerationSettings {
@@ -100,15 +115,20 @@ impl Default for GenerationSettings {
             des: true,
             runtime_type_checks: false,
             type_script_types: false,
+            module_structure: true,
         }
     }
 }
 
 pub fn generate(
-    containers: &ContainerCollection,
+    mut containers: ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
 ) -> Exports<JavaScript> {
     let gen_settings = gen_settings.borrow();
+
+    if !gen_settings.module_structure {
+        containers.flatten();
+    }
 
     let mut js_tokens = Tokens::new();
 
@@ -159,7 +179,7 @@ pub fn generate(
     }];
 
     if gen_settings.type_script_types {
-        let ts = gen_ts_typings(containers);
+        let ts = gen_ts_typings(&containers);
         export_files.push(ExportFile {
             content_type: "ts".to_owned(),
             content: ts,

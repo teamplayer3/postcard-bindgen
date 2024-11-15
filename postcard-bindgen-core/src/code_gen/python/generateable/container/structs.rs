@@ -9,18 +9,13 @@ use crate::{
         },
         utils::{ContainerFullQualifiedTypeBuilder, TokensIterExt},
     },
-    registry::StructType,
-    utils::ContainerPath,
+    registry::{ContainerInfo, StructType},
 };
 
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for StructType {
-    fn gen_ser_body<'a>(
-        &self,
-        _name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
+    fn gen_ser_body<'a>(&self, _container_info: ContainerInfo<'a>) -> Tokens {
         self.fields
             .iter()
             .map(|field| {
@@ -31,13 +26,8 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_des_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let body = self
             .fields
             .iter()
@@ -50,13 +40,8 @@ impl BindingTypeGenerateable for StructType {
         quote!(return $fully_qualified($body))
     }
 
-    fn gen_ty_check_body<'a>(
-        &self,
-        name: impl AsRef<str>,
-        path: impl AsRef<ContainerPath<'a>>,
-    ) -> Tokens {
-        let fully_qualified =
-            ContainerFullQualifiedTypeBuilder::new(path.as_ref(), name.as_ref()).build();
+    fn gen_ty_check_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let variable_path = VariablePath::default();
 
         let field_checks = self
@@ -81,8 +66,7 @@ impl BindingTypeGenerateable for StructType {
 
     fn gen_typings_body<'a>(
         &self,
-        name: impl AsRef<str>,
-        _path: impl AsRef<ContainerPath<'a>>,
+        container_info: ContainerInfo<'a>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let body = self
@@ -96,7 +80,7 @@ impl BindingTypeGenerateable for StructType {
         );
         quote! {
             @dataclass
-            class $(name.as_ref()):
+            class $(container_info.name.as_str()):
                 $body
         }
     }

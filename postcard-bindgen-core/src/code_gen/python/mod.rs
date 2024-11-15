@@ -14,7 +14,9 @@ use generateable::{gen_basic_typings, gen_typings};
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
 use type_checks::gen_type_checks;
 
-use crate::{code_gen::import_registry::ImportMode, registry::ContainerCollection, Exports};
+use crate::{
+    code_gen::import_registry::ImportMode, path::PathBuf, registry::ContainerCollection, Exports,
+};
 
 use super::{
     import_registry::{ImportItem, Package},
@@ -48,6 +50,7 @@ pub struct GenerationSettings {
     ser: bool,
     des: bool,
     runtime_type_checks: bool,
+    module_structure: bool,
 }
 
 impl GenerationSettings {
@@ -57,6 +60,7 @@ impl GenerationSettings {
             ser: true,
             des: true,
             runtime_type_checks: true,
+            module_structure: true,
         }
     }
 
@@ -79,6 +83,19 @@ impl GenerationSettings {
         self.runtime_type_checks = enabled;
         self
     }
+
+    /// Enabling or disabling of module structure code generation.
+    ///
+    /// Enabling this will generate the types in the same module structure
+    /// as in rust. Root level types will be in the root of the generated
+    /// module (subpackage types). Types nested in modules will be in subpackages
+    /// (e.g. types.<mod_name>.<type_name>). This avoids name clashes.
+    ///
+    /// Disabling this will generate all types in the root module.
+    pub fn module_structure(mut self, enabled: bool) -> Self {
+        self.module_structure = enabled;
+        self
+    }
 }
 
 impl Default for GenerationSettings {
@@ -87,17 +104,23 @@ impl Default for GenerationSettings {
             ser: false,
             des: true,
             runtime_type_checks: false,
+            module_structure: true,
         }
     }
 }
 
 pub fn generate(
-    containers: &ContainerCollection,
+    mut containers: ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
     generate_package_name: String,
 ) -> Exports<Python> {
     let generate_package_name = generate_package_name.to_case(Case::Snake);
     let gen_settings = gen_settings.borrow();
+
+    if !gen_settings.module_structure {
+        containers.flatten();
+    }
+
     let mut files = Vec::new();
 
     files.push(ExportFile {
@@ -110,7 +133,7 @@ pub fn generate(
         content: gen_basic_typings(),
     });
 
-    files.extend(gen_typings(containers, generate_package_name.clone()));
+    files.extend(gen_typings(&containers, generate_package_name.clone()));
 
     if gen_settings.runtime_type_checks {
         let type_checks = gen_type_checks(containers.all_containers());
@@ -292,18 +315,18 @@ impl FormatInto<Python> for ImportRegistry {
     fn format_into(self, tokens: &mut Tokens) {
         let (base_path, items) = self.into_items_sorted();
         for (package, imports) in items {
-let joiner = ".";
+            let joiner = ".";
             let package = match package {
                 Package::Relative(path) => format!(".{}", path.into_path(joiner).to_string()),
                 Package::Extern(path) => path.into_path(joiner).to_string(),
                 Package::Intern(mut path) => {
                     if !path.is_empty() {
                         path.push_front(base_path.as_str());
-path.into_path(joiner).to_string()
+                        path.into_path(joiner).to_string()
                     } else {
-PathBuf::new()
+                        PathBuf::new()
                             .join(base_path.as_str())
-.into_path(joiner)
+                            .into_path(joiner)
                             .to_string()
                     }
                 }
