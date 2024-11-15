@@ -35,5 +35,5 @@ optional = true
 version = "0.1.5"
 optional = true
 git = "https://github.com/teamplayer3/tree-ds"
-branch = "add-sorting-of-children"
+branch = "postcard-bindgen-changes"
 features = ["auto_id"]
