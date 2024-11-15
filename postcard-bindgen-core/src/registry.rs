@@ -334,7 +334,7 @@ impl<'a> Module<'a> {
         }
     }
 
-    pub fn name<'b>(&'b self) -> &'b str {
+    pub fn name(&self) -> &str {
         self.name.as_ref()
     }
 
@@ -525,7 +525,7 @@ impl BindingsRegistry {
                     let mut node = self
                         .0
                         .add_node(
-                            Node::new_with_auto_id(Some(NodeType::Module(part.clone().into()))),
+                            Node::new_with_auto_id(Some(NodeType::Module(part.clone()))),
                             Some(&node_id),
                         )
                         .unwrap();
@@ -590,9 +590,9 @@ mod test {
             fn create_bindings(registry: &mut BindingsRegistry) {
                 let mut ty = StructType::new();
 
-                ty.register_field::<u8>("a".into());
-                ty.register_field::<u16>("b".into());
-                ty.register_field::<&str>("c".into());
+                ty.register_field::<u8>("a");
+                ty.register_field::<u16>("b");
+                ty.register_field::<&str>("c");
 
                 registry.register_struct_binding("Test", "", ty);
             }
@@ -636,16 +636,16 @@ mod test {
             fn create_bindings(registry: &mut BindingsRegistry) {
                 let mut ty = EnumType::new();
 
-                ty.register_variant("A".into());
+                ty.register_variant("A");
 
                 let mut fields = TupleFields::default();
                 fields.register_field::<u8>();
-                ty.register_variant_tuple("B".into(), fields);
+                ty.register_variant_tuple("B", fields);
 
                 let mut fields = StructFields::default();
-                fields.register_field::<&str>("a".into());
-                fields.register_field::<u16>("b".into());
-                ty.register_unnamed_struct("C".into(), fields);
+                fields.register_field::<&str>("a");
+                fields.register_field::<u16>("b");
+                ty.register_unnamed_struct("C", fields);
 
                 registry.register_enum_binding("Test", "", ty);
             }

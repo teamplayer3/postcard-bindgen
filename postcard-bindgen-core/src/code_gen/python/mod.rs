@@ -317,7 +317,7 @@ impl FormatInto<Python> for ImportRegistry {
         for (package, imports) in items {
             let joiner = ".";
             let package = match package {
-                Package::Relative(path) => format!(".{}", path.into_path(joiner).to_string()),
+                Package::Relative(path) => format!(".{}", path.into_path(joiner)),
                 Package::Extern(path) => path.into_path(joiner).to_string(),
                 Package::Intern(mut path) => {
                     if !path.is_empty() {

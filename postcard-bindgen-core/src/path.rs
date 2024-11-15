@@ -35,20 +35,16 @@ pub struct PathBuf<'a> {
     parts: Vec<Part<'a>>,
 }
 
+impl Default for PathBuf<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> PathBuf<'a> {
     /// Create a new empty path buffer.
     pub fn new() -> Self {
         PathBuf { parts: Vec::new() }
-    }
-
-    /// Create a path buffer from an iterator of items which can be converted into [Part].
-    pub fn from_iter<I>(iter: impl Iterator<Item = I>) -> Self
-    where
-        I: Into<Part<'a>>,
-    {
-        PathBuf {
-            parts: iter.map(|i| i.into()).collect(),
-        }
     }
 
     /// Join a part into the path buffer by consuming the [PathBuf].
@@ -101,7 +97,7 @@ impl<'a> PathBuf<'a> {
         let joiner = joiner.into();
         Path {
             path: Some(self.parts.join(joiner.as_ref()).into()),
-            joiner: joiner.into(),
+            joiner,
         }
     }
 
@@ -118,6 +114,17 @@ impl<'a> PathBuf<'a> {
                 .into_iter()
                 .map(|p| p.into_owned().into())
                 .collect(),
+        }
+    }
+}
+
+impl<'a> FromIterator<Part<'a>> for PathBuf<'a> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = Part<'a>>,
+    {
+        PathBuf {
+            parts: iter.into_iter().collect(),
         }
     }
 }
@@ -190,14 +197,6 @@ impl<'a, 'b> Path<'a, 'b> {
     /// Check if the path is empty.
     pub fn is_empty(&self) -> bool {
         self.path.as_ref().map(|p| p.is_empty()).unwrap_or(true)
-    }
-
-    /// Convert the path into a string.
-    pub fn to_string(&self) -> String {
-        self.path
-            .as_ref()
-            .map(|c| c.clone().into_owned())
-            .unwrap_or_default()
     }
 
     /// Convert the path into an owned path by consuming the path.

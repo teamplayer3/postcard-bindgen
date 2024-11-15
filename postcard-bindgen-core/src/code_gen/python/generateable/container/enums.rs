@@ -16,7 +16,7 @@ use crate::{
 use super::{BindingTypeGenerateable, ContainerInfo};
 
 impl BindingTypeGenerateable for EnumType {
-    fn gen_ser_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_ser_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         self.variants
             .iter()
             .map(|v| {
@@ -59,7 +59,7 @@ impl BindingTypeGenerateable for EnumType {
             .join_if_branched()
     }
 
-    fn gen_des_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_des_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let switch = self
             .variants
@@ -91,7 +91,7 @@ impl BindingTypeGenerateable for EnumType {
         }
     }
 
-    fn gen_ty_check_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_ty_check_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let assert_funcs = self
             .variants
@@ -149,9 +149,9 @@ impl BindingTypeGenerateable for EnumType {
         }
     }
 
-    fn gen_typings_body<'a>(
+    fn gen_typings_body(
         &self,
-        container_info: ContainerInfo<'a>,
+        container_info: ContainerInfo<'_>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let variants = self

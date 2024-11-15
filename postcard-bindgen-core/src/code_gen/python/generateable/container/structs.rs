@@ -15,7 +15,7 @@ use crate::{
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for StructType {
-    fn gen_ser_body<'a>(&self, _container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_ser_body(&self, _container_info: ContainerInfo<'_>) -> Tokens {
         self.fields
             .iter()
             .map(|field| {
@@ -26,7 +26,7 @@ impl BindingTypeGenerateable for StructType {
             .join_with_line_breaks()
     }
 
-    fn gen_des_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_des_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let body = self
             .fields
@@ -40,7 +40,7 @@ impl BindingTypeGenerateable for StructType {
         quote!(return $fully_qualified($body))
     }
 
-    fn gen_ty_check_body<'a>(&self, container_info: ContainerInfo<'a>) -> Tokens {
+    fn gen_ty_check_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let variable_path = VariablePath::default();
 
@@ -64,9 +64,9 @@ impl BindingTypeGenerateable for StructType {
         .join_with_line_breaks()
     }
 
-    fn gen_typings_body<'a>(
+    fn gen_typings_body(
         &self,
-        container_info: ContainerInfo<'a>,
+        container_info: ContainerInfo<'_>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
         let body = self
