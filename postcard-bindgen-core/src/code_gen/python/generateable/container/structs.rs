@@ -80,7 +80,7 @@ impl BindingTypeGenerateable for StructType {
         );
         quote! {
             @dataclass
-            class $(container_info.name.as_str()):
+            class $(container_info.name.as_ref()):
                 $body
         }
     }

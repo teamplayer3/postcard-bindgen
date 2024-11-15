@@ -20,7 +20,7 @@ impl BindingTypeGenerateable for EnumType {
         self.variants
             .iter()
             .map(|v| {
-                let variant_name = quote!($(container_info.name.as_str())_$(v.name));
+                let variant_name = quote!($(container_info.name.as_ref())_$(v.name));
 
                 let ser_fields = [quote!(s.serialize_number(U32_BYTES, False, $(v.index)))]
                     .into_iter()
@@ -157,7 +157,7 @@ impl BindingTypeGenerateable for EnumType {
         let variants = self
             .variants
             .iter()
-            .map(|v| gen_variant_typings(container_info.name.as_str(), v, import_registry))
+            .map(|v| gen_variant_typings(container_info.name.as_ref(), v, import_registry))
             .join_with_empty_line();
 
         quote! {

@@ -1,4 +1,3 @@
-#![feature(str_as_str)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;

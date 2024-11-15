@@ -84,7 +84,7 @@ impl BindingTypeGenerateable for TupleStructType {
             .map(|(i, _)| quote!(_$i))
             .join_with_comma_min_one();
 
-        let class_name = container_info.name.as_str();
+        let class_name = container_info.name.as_ref();
 
         quote! {
             class $class_name(tuple[$types_comma_chained]):

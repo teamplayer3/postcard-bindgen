@@ -163,13 +163,13 @@ impl<'a> ContainerIdentifierBuilder<'a> {
 
 impl From<&Container> for ContainerIdentifierBuilder<'_> {
     fn from(container: &Container) -> Self {
-        Self::new(container.path.clone().into_buf(), container.name.as_str())
+        Self::new(container.path.clone().into_buf(), container.name.as_ref())
     }
 }
 
 impl From<&ObjectMeta> for ContainerIdentifierBuilder<'_> {
     fn from(meta: &ObjectMeta) -> Self {
-        Self::new(meta.path.clone().into_buf(), meta.name.as_str())
+        Self::new(meta.path.clone().into_buf(), meta.name.as_ref())
     }
 }
 
@@ -194,19 +194,19 @@ impl ContainerFullQualifiedTypeBuilder<'_> {
 
 impl<'a> From<&'a ContainerInfo<'a>> for ContainerFullQualifiedTypeBuilder<'a> {
     fn from(container: &'a ContainerInfo<'a>) -> Self {
-        Self::new(container.path.clone().into_buf(), container.name.as_str())
+        Self::new(container.path.clone().into_buf(), container.name.as_ref())
     }
 }
 
 impl From<&Container> for ContainerFullQualifiedTypeBuilder<'_> {
     fn from(container: &Container) -> Self {
-        Self::new(container.path.clone().into_buf(), container.name.as_str())
+        Self::new(container.path.clone().into_buf(), container.name.as_ref())
     }
 }
 
 impl From<&ObjectMeta> for ContainerFullQualifiedTypeBuilder<'_> {
     fn from(meta: &ObjectMeta) -> Self {
-        Self::new(meta.path.clone().into_buf(), meta.name.as_str())
+        Self::new(meta.path.clone().into_buf(), meta.name.as_ref())
     }
 }
 

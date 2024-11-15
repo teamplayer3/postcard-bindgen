@@ -100,7 +100,7 @@ impl<'a> PathBuf<'a> {
     pub fn into_path<'b>(self, joiner: impl Into<Part<'b>>) -> Path<'a, 'b> {
         let joiner = joiner.into();
         Path {
-            path: Some(self.parts.join(joiner.as_str()).into()),
+            path: Some(self.parts.join(joiner.as_ref()).into()),
             joiner: joiner.into(),
         }
     }
@@ -163,7 +163,7 @@ impl<'a, 'b> Path<'a, 'b> {
     pub fn parts(&self) -> impl Iterator<Item = &str> {
         self.path
             .as_ref()
-            .map(|p| p.split(self.joiner.as_str()))
+            .map(|p| p.split(self.joiner.as_ref()))
             .into_iter()
             .flatten()
     }
@@ -179,7 +179,7 @@ impl<'a, 'b> Path<'a, 'b> {
             parts: self
                 .path
                 .map(|p| {
-                    p.split(self.joiner.as_str())
+                    p.split(self.joiner.as_ref())
                         .map(|p| p.to_owned().into())
                         .collect::<Vec<Part<'a>>>()
                 })
