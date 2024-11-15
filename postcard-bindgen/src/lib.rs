@@ -105,9 +105,9 @@ pub use postcard_bindgen_derive::PostcardBindings;
 #[doc(hidden)]
 pub mod __private {
     pub use postcard_bindgen_core::{
+        path::Path,
         registry::*,
         type_info::{GenJsBinding, ObjectMeta, ValueType},
-        utils::ContainerPath,
     };
 }
 

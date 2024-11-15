@@ -1,5 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use crate::path::PathBuf;
+
 #[derive(Debug, Clone)]
 pub enum ImportItem {
     All,
@@ -49,9 +51,9 @@ pub enum ImportMode {
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Package {
-    Extern(Cow<'static, str>),
-    Intern(Cow<'static, str>),
-    Relative(Cow<'static, str>),
+    Extern(PathBuf<'static>),
+    Intern(PathBuf<'static>),
+    Relative(PathBuf<'static>),
 }
 
 impl PartialOrd for Package {

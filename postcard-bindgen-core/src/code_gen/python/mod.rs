@@ -292,14 +292,19 @@ impl FormatInto<Python> for ImportRegistry {
     fn format_into(self, tokens: &mut Tokens) {
         let (base_path, items) = self.into_items_sorted();
         for (package, imports) in items {
+let joiner = ".";
             let package = match package {
-                Package::Relative(path) => format!(".{}", path).into(),
-                Package::Extern(path) => path,
-                Package::Intern(path) => {
+                Package::Relative(path) => format!(".{}", path.into_path(joiner).to_string()),
+                Package::Extern(path) => path.into_path(joiner).to_string(),
+                Package::Intern(mut path) => {
                     if !path.is_empty() {
-                        format!("{}.{}", base_path.clone(), path).into()
+                        path.push_front(base_path.as_str());
+path.into_path(joiner).to_string()
                     } else {
-                        base_path.clone().into()
+PathBuf::new()
+                            .join(base_path.as_str())
+.into_path(joiner)
+                            .to_string()
                     }
                 }
             };

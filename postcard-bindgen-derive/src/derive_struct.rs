@@ -27,7 +27,7 @@ fn derive_struct_style<'a>(
 fn derive_unit_struct_type(name: String) -> TokenStream {
     quote!(
         let mut ty = _pb::__private::UnitStructType::new();
-        reg.register_unit_struct_binding(#name.into(), _pb::__private::ContainerPath::new(module_path!()), ty);
+        reg.register_unit_struct_binding(#name.into(), module_path!(), ty);
     )
 }
 
@@ -39,7 +39,7 @@ fn derive_tuple_struct_type<'a>(name: String, fields: impl AsRef<[Field<'a>]>) -
     quote!(
         let mut ty = _pb::__private::TupleStructType::new();
         #(#body);*;
-        reg.register_tuple_struct_binding(#name.into(), _pb::__private::ContainerPath::new(module_path!()), ty);
+        reg.register_tuple_struct_binding(#name.into(), module_path!(), ty);
     )
 }
 
@@ -52,6 +52,6 @@ fn derive_struct_type<'a>(name: String, fields: impl AsRef<[Field<'a>]>) -> Toke
     quote!(
         let mut ty = _pb::__private::StructType::new();
         #(#body);*;
-        reg.register_struct_binding(#name.into(), _pb::__private::ContainerPath::new(module_path!()), ty);
+        reg.register_struct_binding(#name.into(), module_path!(), ty);
     )
 }

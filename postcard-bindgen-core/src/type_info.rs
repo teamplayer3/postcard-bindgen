@@ -1,6 +1,6 @@
 use alloc::{boxed::Box, vec, vec::Vec};
 
-use crate::utils::ContainerPath;
+use crate::path::Path;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueType {
@@ -13,6 +13,32 @@ pub enum ValueType {
     Map(MapMeta),
     Tuple(TupleMeta),
     Bool(BoolMeta),
+}
+
+impl ValueType {
+    pub fn flatten_paths(&mut self) {
+        match self {
+            ValueType::Object(meta) => {
+                meta.path.flatten();
+            }
+            ValueType::Array(meta) => {
+                meta.items_type.flatten_paths();
+            }
+            ValueType::Optional(meta) => {
+                meta.inner.flatten_paths();
+            }
+            ValueType::Map(meta) => {
+                meta.key_type.flatten_paths();
+                meta.value_type.flatten_paths();
+            }
+            ValueType::Tuple(meta) => {
+                for item in meta.items_types.iter_mut() {
+                    item.flatten_paths();
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 impl AsRef<ValueType> for ValueType {
@@ -56,7 +82,7 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
-    pub path: ContainerPath<'static>,
+    pub path: Path<'static, 'static>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,14 +1,15 @@
+#![feature(str_as_str)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 
 #[cfg(feature = "generating")]
 pub mod code_gen;
-
-pub mod utils;
-
+#[cfg(feature = "generating")]
+pub mod path;
 #[cfg(feature = "generating")]
 pub mod registry;
+#[cfg(feature = "generating")]
 pub mod type_info;
 
 #[cfg(feature = "generating")]

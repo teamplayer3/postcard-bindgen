@@ -1,16 +1,46 @@
+use core::fmt::Display;
+use std::{borrow::Cow, collections::VecDeque};
+
 use alloc::vec::Vec;
-use tree_ds::prelude::{Node, Tree};
+use tree_ds::prelude::{Node, NodeRemovalStrategy, Tree};
 
 use crate::{
+    path::Path,
     type_info::{GenJsBinding, ValueType},
-    utils::ContainerPath,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Container {
-    pub path: ContainerPath<'static>,
+    pub path: Path<'static, 'static>,
     pub name: &'static str,
     pub r#type: BindingType,
+}
+
+impl Container {
+    pub fn flatten_paths(&mut self) {
+        self.path.flatten();
+
+        match self.r#type {
+            BindingType::Struct(ref mut ty) => ty.flatten_paths(),
+            BindingType::Enum(ref mut ty) => ty.flatten_paths(),
+            BindingType::TupleStruct(ref mut ty) => ty.flatten_paths(),
+            _ => (),
+        }
+    }
+}
+
+pub struct ContainerInfo<'a> {
+    pub name: Cow<'a, str>,
+    pub path: Path<'a, 'a>,
+}
+
+impl From<&Container> for ContainerInfo<'_> {
+    fn from(container: &Container) -> Self {
+        Self {
+            name: Cow::Borrowed(container.name),
+            path: container.path.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +86,24 @@ impl EnumType {
             inner_type: EnumVariantType::NewType(fields.into_inner()),
         })
     }
+
+    fn flatten_paths(&mut self) {
+        for variant in &mut self.variants {
+            match &mut variant.inner_type {
+                EnumVariantType::NewType(fields) => {
+                    for field in fields {
+                        field.v_type.flatten_paths();
+                    }
+                }
+                EnumVariantType::Tuple(fields) => {
+                    for field in fields {
+                        field.flatten_paths();
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,6 +143,12 @@ impl StructType {
             v_type: T::get_type(),
         })
     }
+
+    fn flatten_paths(&mut self) {
+        for field in &mut self.fields {
+            field.v_type.flatten_paths();
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -109,6 +163,12 @@ impl TupleStructType {
 
     pub fn register_field<T: GenJsBinding>(&mut self) {
         self.fields.push(T::get_type())
+    }
+
+    fn flatten_paths(&mut self) {
+        for field in &mut self.fields {
+            field.flatten_paths();
+        }
     }
 }
 
@@ -159,11 +219,73 @@ impl TupleFields {
 pub struct ContainerCollection(Tree<NodeId, NodeType>);
 
 impl ContainerCollection {
+    pub fn flatten(&mut self) {
+        let root_node_id = self.0.get_root_node().unwrap().get_node_id();
+        let root_node = self.0.get_node_by_id(&root_node_id).unwrap();
+
+        let root_mod_nodes = root_node
+            .get_children_ids()
+            .iter()
+            .filter_map(|i| {
+                let node = self.0.get_node_by_id(i).unwrap();
+
+                let node_value = node.get_value().unwrap();
+                if node_value.is_module() {
+                    Some(node)
+                } else {
+                    None
+                }
+            })
+            .collect::<VecDeque<_>>();
+
+        let mut mod_nodes = root_mod_nodes.clone();
+
+        loop {
+            if mod_nodes.is_empty() {
+                break;
+            }
+
+            let node = mod_nodes.pop_front().unwrap();
+
+            let children = node.get_children_ids();
+
+            for child in children {
+                let child_node = self.0.get_node_by_id(&child).unwrap();
+                let child_value = child_node.get_value().unwrap();
+
+                node.remove_child(child_node.clone());
+
+                if child_value.is_container() {
+                    root_node.add_child(child_node);
+                } else if child_value.is_module() {
+                    mod_nodes.push_back(child_node);
+                }
+            }
+        }
+
+        for node in root_mod_nodes {
+            self.0
+                .remove_node(
+                    &node.get_node_id(),
+                    NodeRemovalStrategy::RemoveNodeAndChildren,
+                )
+                .unwrap();
+        }
+
+        for node in root_node
+            .get_children_ids()
+            .iter()
+            .map(|node| self.0.get_node_by_id(node).unwrap())
+        {
+            node.update_value(|v| v.as_mut().unwrap().container_mut().unwrap().flatten_paths());
+        }
+    }
+
     pub fn all_containers(&self) -> impl Iterator<Item = Container> + Clone + '_ {
         self.0
             .get_nodes()
             .iter()
-            .filter_map(|node| node.get_value().unwrap().get_container().cloned())
+            .filter_map(|node| node.get_value().unwrap().container().cloned())
     }
 
     pub fn containers_per_module(&self) -> (Vec<Container>, Vec<Module<'_>>) {
@@ -176,12 +298,12 @@ impl ContainerCollection {
 pub struct Module<'a> {
     tree: &'a Tree<NodeId, NodeType>,
     node_id: NodeId,
-    name: &'static str,
+    name: Cow<'static, str>,
     cached_path: Option<String>,
 }
 
 impl<'a> Module<'a> {
-    fn new(tree: &'a Tree<NodeId, NodeType>, node_id: NodeId, name: &'static str) -> Self {
+    fn new(tree: &'a Tree<NodeId, NodeType>, node_id: NodeId, name: Cow<'static, str>) -> Self {
         Self {
             tree,
             node_id,
@@ -212,8 +334,8 @@ impl<'a> Module<'a> {
         }
     }
 
-    pub fn name(&self) -> &'static str {
-        self.name
+    pub fn name<'b>(&'b self) -> &'b str {
+        self.name.as_ref()
     }
 
     pub fn entries(&self) -> (Vec<Container>, Vec<Module<'a>>) {
@@ -255,21 +377,51 @@ type NodeId = u128;
 
 enum PathExists {
     Full(NodeId),
-    Partly(NodeId, &'static str),
+    Partly(NodeId, Cow<'static, str>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum NodeType {
     Container(Container),
-    Module(&'static str),
+    Module(Cow<'static, str>),
+}
+
+impl Default for NodeType {
+    fn default() -> Self {
+        NodeType::Module("_".into())
+    }
+}
+
+impl Display for NodeType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            NodeType::Container(c) => write!(f, "Container({}, {})", c.name, c.path),
+            NodeType::Module(m) => write!(f, "Module({})", m),
+        }
+    }
 }
 
 impl NodeType {
-    fn get_container(&self) -> Option<&Container> {
+    fn container(&self) -> Option<&Container> {
         match self {
             NodeType::Container(c) => Some(c),
             _ => None,
         }
+    }
+
+    fn container_mut(&mut self) -> Option<&mut Container> {
+        match self {
+            NodeType::Container(c) => Some(c),
+            _ => None,
+        }
+    }
+
+    fn is_module(&self) -> bool {
+        matches!(self, NodeType::Module(_))
+    }
+
+    fn is_container(&self) -> bool {
+        matches!(self, NodeType::Container(_))
     }
 }
 
@@ -280,11 +432,11 @@ impl BindingsRegistry {
     pub fn register_struct_binding(
         &mut self,
         name: &'static str,
-        path: ContainerPath<'static>,
+        path: impl Into<Cow<'static, str>>,
         value: StructType,
     ) {
         self.insert_container(Container {
-            path,
+            path: Path::new(path, "::"),
             name,
             r#type: BindingType::Struct(value),
         });
@@ -293,11 +445,11 @@ impl BindingsRegistry {
     pub fn register_tuple_struct_binding(
         &mut self,
         name: &'static str,
-        path: ContainerPath<'static>,
+        path: impl Into<Cow<'static, str>>,
         value: TupleStructType,
     ) {
         self.insert_container(Container {
-            path,
+            path: Path::new(path, "::"),
             name,
             r#type: BindingType::TupleStruct(value),
         });
@@ -306,11 +458,11 @@ impl BindingsRegistry {
     pub fn register_unit_struct_binding(
         &mut self,
         name: &'static str,
-        path: ContainerPath<'static>,
+        path: impl Into<Cow<'static, str>>,
         value: UnitStructType,
     ) {
         self.insert_container(Container {
-            path,
+            path: Path::new(path, "::"),
             name,
             r#type: BindingType::UnitStruct(value),
         });
@@ -319,11 +471,11 @@ impl BindingsRegistry {
     pub fn register_enum_binding(
         &mut self,
         name: &'static str,
-        path: ContainerPath<'static>,
+        path: impl Into<Cow<'static, str>>,
         value: EnumType,
     ) {
         self.insert_container(Container {
-            path,
+            path: Path::new(path, "::"),
             name,
             r#type: BindingType::Enum(value),
         });
@@ -335,54 +487,61 @@ impl BindingsRegistry {
 
     fn insert_container(&mut self, container: Container) {
         let mut node = self.0.get_root_node().unwrap();
-        let mut parts = container.path.parts().skip(1).peekable();
-        let path_exists = loop {
-            let part = parts.next();
-            let is_last = parts.peek().is_none();
+        let node_id = {
+            let container_path = &container.path;
+            let mut parts = container_path
+                .parts()
+                .skip(1)
+                .map(|p| p.to_owned())
+                .peekable();
+            let path_exists = loop {
+                let part = parts.next();
+                let is_last = parts.peek().is_none();
 
-            if let Some(part) = part {
-                let node_ids = node.get_children_ids();
-                let child = node_ids.iter().find(|child| {
-                    let node = self.0.get_node_by_id(child).unwrap();
-                    matches!(node.get_value(), Some(NodeType::Module(p)) if p == part)
-                });
+                if let Some(part) = part {
+                    let node_ids = node.get_children_ids();
+                    let child = node_ids.iter().find(|child| {
+                        let node = self.0.get_node_by_id(child).unwrap();
+                        matches!(node.get_value(), Some(NodeType::Module(p)) if p == part)
+                    });
 
-                if let Some(child) = child {
-                    if is_last {
-                        break PathExists::Full(*child);
+                    if let Some(child) = child {
+                        if is_last {
+                            break PathExists::Full(*child);
+                        }
+
+                        node = self.0.get_node_by_id(child).unwrap();
+                    } else {
+                        break PathExists::Partly(node.get_node_id(), part.into());
                     }
-
-                    node = self.0.get_node_by_id(child).unwrap();
                 } else {
-                    break PathExists::Partly(node.get_node_id(), part);
+                    break PathExists::Full(node.get_node_id());
                 }
-            } else {
-                break PathExists::Full(node.get_node_id());
-            }
-        };
+            };
 
-        let node_id = match path_exists {
-            PathExists::Full(node_id) => node_id,
-            PathExists::Partly(node_id, part) => {
-                let mut node = self
-                    .0
-                    .add_node(
-                        Node::new_with_auto_id(Some(NodeType::Module(part))),
-                        Some(&node_id),
-                    )
-                    .unwrap();
-
-                for part in parts {
-                    node = self
+            match path_exists {
+                PathExists::Full(node_id) => node_id,
+                PathExists::Partly(node_id, part) => {
+                    let mut node = self
                         .0
                         .add_node(
-                            Node::new_with_auto_id(Some(NodeType::Module(part))),
-                            Some(&node),
+                            Node::new_with_auto_id(Some(NodeType::Module(part.clone().into()))),
+                            Some(&node_id),
                         )
                         .unwrap();
-                }
 
-                node
+                    for part in parts {
+                        node = self
+                            .0
+                            .add_node(
+                                Node::new_with_auto_id(Some(NodeType::Module(part.clone().into()))),
+                                Some(&node),
+                            )
+                            .unwrap();
+                    }
+
+                    node
+                }
             }
         };
 
@@ -398,8 +557,11 @@ impl BindingsRegistry {
 impl Default for BindingsRegistry {
     fn default() -> Self {
         let mut tree: Tree<NodeId, NodeType> = Tree::new(None);
-        tree.add_node(Node::new_with_auto_id(Some(NodeType::Module("::"))), None)
-            .unwrap();
+        tree.add_node(
+            Node::new_with_auto_id(Some(NodeType::Module("::".into()))),
+            None,
+        )
+        .unwrap();
         Self(tree)
     }
 }
@@ -432,7 +594,7 @@ mod test {
                 ty.register_field::<u16>("b".into());
                 ty.register_field::<&str>("c".into());
 
-                registry.register_struct_binding("Test", "".into(), ty);
+                registry.register_struct_binding("Test", "", ty);
             }
         }
 
@@ -453,7 +615,7 @@ mod test {
                 ty.register_field::<&str>();
                 ty.register_field::<&[u8]>();
 
-                registry.register_tuple_struct_binding("Test", "".into(), ty);
+                registry.register_tuple_struct_binding("Test", "", ty);
             }
         }
 
@@ -485,7 +647,7 @@ mod test {
                 fields.register_field::<u16>("b".into());
                 ty.register_unnamed_struct("C".into(), fields);
 
-                registry.register_enum_binding("Test", "".into(), ty);
+                registry.register_enum_binding("Test", "", ty);
             }
         }
 
