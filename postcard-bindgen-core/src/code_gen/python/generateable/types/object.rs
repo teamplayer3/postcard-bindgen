@@ -1,30 +1,57 @@
+use convert_case::{Case, Casing};
 use genco::quote;
 
 use crate::{
-    code_gen::python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+    code_gen::{
+        import_registry::{ImportItem, Package},
+        python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+        utils::ContainerIdentifierBuilder,
+    },
     type_info::ObjectMeta,
-    utils::StrExt,
 };
 
 use super::PythonTypeGenerateable;
 
 impl PythonTypeGenerateable for ObjectMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
-        let obj_ident = self.name.to_obj_identifier();
-        quote!(serialize_$obj_ident(s, $variable_path))
+        let container_ident =
+            ContainerIdentifierBuilder::new(self.path.clone().into_buf(), self.name).build();
+        quote!(serialize_$container_ident(s, $variable_path))
     }
 
     fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {
-        let obj_ident = self.name.to_obj_identifier();
-        quote!($(field_accessor)deserialize_$obj_ident(d))
+        let container_ident =
+            ContainerIdentifierBuilder::new(self.path.clone().into_buf(), self.name).build();
+        quote!($(field_accessor)deserialize_$container_ident(d))
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        let obj_ident = self.name.to_obj_identifier();
-        quote!(assert_$obj_ident($variable_path))
+        let container_ident =
+            ContainerIdentifierBuilder::new(self.path.clone().into_buf(), self.name).build();
+        quote!(assert_$container_ident($variable_path))
     }
 
-    fn gen_typings(&self, _import_registry: &mut ImportRegistry) -> Tokens {
-        quote!($(self.name))
+    fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {
+        let mut container_path = self.path.clone().into_buf();
+        // remove the main crates name from the path
+        container_path.pop_front();
+
+        let mut import_path = container_path.clone();
+        import_path.push(format!("_{}", self.name.to_case(Case::Snake)));
+
+        import_path.push_front("types");
+
+        container_path.push(self.name);
+        let type_alias = format!("_{}", String::from(container_path.into_path("_")));
+
+        import_registry.push(
+            Package::Intern(import_path),
+            ImportItem::Aliased {
+                item_name: self.name.into(),
+                alias: type_alias.clone().into(),
+            },
+        );
+
+        quote!($type_alias)
     }
 }

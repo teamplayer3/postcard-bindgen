@@ -2,6 +2,7 @@ use genco::quote;
 
 use crate::{
     code_gen::{
+        import_registry::{ImportItem, Package},
         python::{generateable::types::bool::bool_to_python_bool, ImportRegistry, Tokens},
         utils::TokensIterExt,
     },
@@ -55,17 +56,24 @@ impl PythonTypeGenerateable for NumberMeta {
         }
     }
 
-    fn gen_typings(&self, _import_registry: &mut ImportRegistry) -> Tokens {
+    fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {
         match self {
             NumberMeta::FloatingPoint { .. } => {
                 quote!(float)
             }
-            NumberMeta::Integer { bytes, signed } => rust_int_to_python_type(*bytes, *signed),
+            NumberMeta::Integer { bytes, signed } => {
+                let int_type = rust_int_to_python_type(*bytes, *signed);
+                import_registry.push(
+                    Package::Intern("basic_types".into()),
+                    ImportItem::Single(int_type.clone().into()),
+                );
+                quote!($int_type)
+            }
         }
     }
 }
 
-fn rust_int_to_python_type(bytes: usize, signed: bool) -> Tokens {
+fn rust_int_to_python_type(bytes: usize, signed: bool) -> String {
     let bits = match bytes {
         1 => "8",
         2 => "16",
@@ -78,5 +86,5 @@ fn rust_int_to_python_type(bytes: usize, signed: bool) -> Tokens {
         false => "u",
     };
 
-    quote!($sign$bits)
+    format!("{sign}{bits}")
 }

@@ -2,7 +2,7 @@ use genco::quote;
 
 use crate::{
     code_gen::{
-        import_registry::ImportItem,
+        import_registry::{ImportItem, Package},
         python::{FieldAccessor, ImportRegistry, Tokens, VariablePath, PYTHON_OBJECT_VARIABLE},
     },
     type_info::OptionalMeta,
@@ -44,7 +44,10 @@ impl PythonTypeGenerateable for OptionalMeta {
     }
 
     fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {
-        import_registry.push(quote!(typing), ImportItem::Single(quote!(Optional)));
+        import_registry.push(
+            Package::Extern("typing".into()),
+            ImportItem::Single("Optional".into()),
+        );
         quote!(Optional[$(self.inner.gen_typings(import_registry))])
     }
 }

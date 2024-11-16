@@ -3,10 +3,9 @@ use genco::{quote, tokens::quoted};
 use crate::{
     code_gen::{
         js::{generateable::container::BindingTypeGenerateable, Tokens, JS_OBJECT_VARIABLE},
-        utils::TokensIterExt,
+        utils::{ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensIterExt},
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -27,26 +26,25 @@ pub fn gen_serializer_code() -> Tokens {
     }
 }
 
-pub fn gen_ser_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
-        .as_ref()
-        .iter()
         .map(gen_ser_function_for_type)
         .join_with_line_breaks()
 }
 
-fn gen_ser_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
-    let ser_body = binding_type.gen_ser_body();
+fn gen_ser_function_for_type(container: Container) -> Tokens {
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
+    let ser_body = container.r#type.gen_ser_body();
     quote! {
-        const serialize_$(&obj_name) = (s, $JS_OBJECT_VARIABLE) => { $ser_body }
+        const serialize_$(&container_ident) = (s, $JS_OBJECT_VARIABLE) => { $ser_body }
     }
 }
 
-pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>, runtime_type_checks: bool) -> Tokens {
+pub fn gen_serialize_func(
+    defines: impl Iterator<Item = Container>,
+    runtime_type_checks: bool,
+) -> Tokens {
     let body = defines
-        .as_ref()
-        .iter()
         .map(|d| gen_ser_case(d, runtime_type_checks))
         .join_with_semicolon();
     quote!(
@@ -61,13 +59,12 @@ pub fn gen_serialize_func(defines: impl AsRef<[BindingType]>, runtime_type_check
     )
 }
 
-fn gen_ser_case(define: &BindingType, runtime_type_checks: bool) -> Tokens {
-    let name = define.inner_name();
-    let case_str = quoted(name);
-    let type_name = name.to_obj_identifier();
+fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Tokens {
+    let full_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
     if runtime_type_checks {
-        quote!(case $case_str: if (is_$(type_name.as_str())(value)) { serialize_$(type_name)(s, value) } else throw "value has wrong format"; break)
+        quote!(case $(quoted(full_qualified)): if (is_$(container_ident.as_str())(value)) { serialize_$(container_ident)(s, value) } else throw "value has wrong format"; break)
     } else {
-        quote!(case $case_str: serialize_$(type_name)(s, value); break)
+        quote!(case $(quoted(full_qualified)): serialize_$(container_ident)(s, value); break)
     }
 }

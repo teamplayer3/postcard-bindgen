@@ -1,4 +1,21 @@
+use convert_case::{Case, Casing};
 use genco::{lang::Lang, quote, tokens::FormatInto, Tokens};
+
+use crate::{
+    path::PathBuf,
+    registry::{Container, ContainerInfo},
+    type_info::ObjectMeta,
+};
+
+pub trait StrExt {
+    fn to_obj_identifier(&self) -> String;
+}
+
+impl StrExt for &str {
+    fn to_obj_identifier(&self) -> String {
+        self.to_case(Case::Snake).to_uppercase()
+    }
+}
 
 pub fn wrapped_brackets<L: Lang>(inner: Tokens<L>) -> Tokens<L> {
     quote!(($inner))
@@ -122,5 +139,128 @@ where
         }
 
         tokens
+    }
+}
+
+pub struct ContainerIdentifierBuilder<'a> {
+    path: PathBuf<'a>,
+    name: &'a str,
+}
+
+impl<'a> ContainerIdentifierBuilder<'a> {
+    pub fn new(path: PathBuf<'a>, name: &'a str) -> Self {
+        Self { path, name }
+    }
+
+    pub fn build(mut self) -> String {
+        // We will skip the first part of the path, as it is the crate name.
+        self.path.pop_front();
+        self.path.push(self.name.to_obj_identifier());
+
+        self.path.into_path("_").to_string()
+    }
+}
+
+impl From<&Container> for ContainerIdentifierBuilder<'_> {
+    fn from(container: &Container) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name)
+    }
+}
+
+impl From<&ObjectMeta> for ContainerIdentifierBuilder<'_> {
+    fn from(meta: &ObjectMeta) -> Self {
+        Self::new(meta.path.clone().into_buf(), meta.name)
+    }
+}
+
+pub struct ContainerFullQualifiedTypeBuilder<'a> {
+    path: PathBuf<'a>,
+    name: &'a str,
+}
+
+impl ContainerFullQualifiedTypeBuilder<'_> {
+    pub fn new<'a>(path: PathBuf<'a>, name: &'a str) -> ContainerFullQualifiedTypeBuilder<'a> {
+        ContainerFullQualifiedTypeBuilder { path, name }
+    }
+
+    pub fn build(mut self) -> String {
+        // We will skip the first part of the path, as it is the crate name.
+        self.path.pop_front();
+        self.path.push(self.name);
+
+        self.path.into_path(".").to_string()
+    }
+}
+
+impl<'a> From<&'a ContainerInfo<'a>> for ContainerFullQualifiedTypeBuilder<'a> {
+    fn from(container: &'a ContainerInfo<'a>) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name.as_ref())
+    }
+}
+
+impl From<&Container> for ContainerFullQualifiedTypeBuilder<'_> {
+    fn from(container: &Container) -> Self {
+        Self::new(container.path.clone().into_buf(), container.name)
+    }
+}
+
+impl From<&ObjectMeta> for ContainerFullQualifiedTypeBuilder<'_> {
+    fn from(meta: &ObjectMeta) -> Self {
+        Self::new(meta.path.clone().into_buf(), meta.name)
+    }
+}
+
+#[cfg(test)]
+pub fn assert_tokens(generated: genco::lang::js::Tokens, compare: genco::lang::js::Tokens) {
+    assert_eq!(generated.to_file_string(), compare.to_file_string())
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_container_identifier_builder() {
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::new().into_path("::"),
+        };
+
+        let builder =
+            ContainerIdentifierBuilder::new(container.path.into_buf(), container.name.as_ref());
+
+        assert_eq!(builder.build(), "TEST".to_string());
+
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::from_iter(["crate".into(), "submodule".into()]).into_path("::"),
+        };
+
+        let builder =
+            ContainerIdentifierBuilder::new(container.path.into_buf(), container.name.as_ref());
+
+        assert_eq!(builder.build(), "submodule_TEST".to_string());
+    }
+
+    #[test]
+    fn test_container_full_qualified_type_builder() {
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::new().into_path("::"),
+        };
+
+        let builder: ContainerFullQualifiedTypeBuilder = (&container).into();
+
+        assert_eq!(builder.build(), "Test".to_string());
+
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::from_iter(["crate".into(), "submodule".into()]).into_path("::"),
+        };
+
+        let builder: ContainerFullQualifiedTypeBuilder = (&container).into();
+
+        assert_eq!(builder.build(), "submodule.Test".to_string());
     }
 }

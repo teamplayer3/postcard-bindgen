@@ -17,7 +17,7 @@ use generateable::gen_ts_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
 use type_checks::gen_type_checkings;
 
-use crate::{registry::BindingType, ExportFile, Exports};
+use crate::{registry::ContainerCollection, ExportFile, Exports};
 
 use super::utils::TokensIterExt;
 
@@ -49,6 +49,7 @@ pub struct GenerationSettings {
     des: bool,
     runtime_type_checks: bool,
     type_script_types: bool,
+    module_structure: bool,
 }
 
 impl GenerationSettings {
@@ -59,6 +60,7 @@ impl GenerationSettings {
             des: true,
             runtime_type_checks: true,
             type_script_types: true,
+            module_structure: true,
         }
     }
 
@@ -91,6 +93,19 @@ impl GenerationSettings {
         self.runtime_type_checks = enabled;
         self
     }
+
+    /// Enabling or disabling of module structure code generation.
+    ///
+    /// Enabling this will generate the types in typescript in the same module structure
+    /// as in rust. Root level types will be in the root of the generated
+    /// package. Types nested in modules will be in namespaces
+    /// (e.g. <mod_name>.<type_name>). This avoids name clashes.
+    ///
+    /// Disabling this will generate all types in the root module.
+    pub fn module_structure(mut self, enabled: bool) -> Self {
+        self.module_structure = enabled;
+        self
+    }
 }
 
 impl Default for GenerationSettings {
@@ -100,15 +115,20 @@ impl Default for GenerationSettings {
             des: true,
             runtime_type_checks: false,
             type_script_types: false,
+            module_structure: true,
         }
     }
 }
 
 pub fn generate(
-    tys: impl AsRef<[BindingType]>,
+    mut containers: ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
 ) -> Exports<JavaScript> {
     let gen_settings = gen_settings.borrow();
+
+    if !gen_settings.module_structure {
+        containers.flatten();
+    }
 
     let mut js_tokens = Tokens::new();
 
@@ -126,27 +146,30 @@ pub fn generate(
     }
 
     if gen_settings.ser {
-        js_tokens.append(gen_ser_functions(&tys));
+        js_tokens.append(gen_ser_functions(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_des_functions(&tys));
+        js_tokens.append(gen_des_functions(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.runtime_type_checks {
-        js_tokens.append(gen_type_checkings(&tys));
+        js_tokens.append(gen_type_checkings(containers.all_containers()));
         js_tokens.line();
     }
 
     if gen_settings.ser {
-        js_tokens.append(gen_serialize_func(&tys, gen_settings.runtime_type_checks));
+        js_tokens.append(gen_serialize_func(
+            containers.all_containers(),
+            gen_settings.runtime_type_checks,
+        ));
         js_tokens.line();
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_deserialize_func(&tys));
+        js_tokens.append(gen_deserialize_func(containers.all_containers()));
         js_tokens.line();
     }
 
@@ -156,7 +179,7 @@ pub fn generate(
     }];
 
     if gen_settings.type_script_types {
-        let ts = gen_ts_typings(tys);
+        let ts = gen_ts_typings(&containers);
         export_files.push(ExportFile {
             content_type: "ts".to_owned(),
             content: ts,
@@ -176,7 +199,7 @@ where
     const LOGICAL_OR: &'static str = JS_LOGIC_OR;
 }
 
-impl<'a> FormatInto<JavaScript> for FieldAccessor<'a> {
+impl FormatInto<JavaScript> for FieldAccessor<'_> {
     fn format_into(self, tokens: &mut Tokens) {
         quote_in! { *tokens =>
             $(match self {

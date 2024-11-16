@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "test-postcard-bindings": "../test-bindings",
+        "js-test-bindings": "file:../js-test-bindings",
         "tslint": "^6.1.3",
         "typescript": "^5.0.0"
     },

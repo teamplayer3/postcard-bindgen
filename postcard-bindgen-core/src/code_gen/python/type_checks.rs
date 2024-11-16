@@ -3,27 +3,23 @@ use genco::quote;
 use crate::{
     code_gen::{
         python::{generateable::container::BindingTypeGenerateable, PYTHON_OBJECT_VARIABLE},
-        utils::TokensIterExt,
+        utils::{ContainerIdentifierBuilder, TokensIterExt},
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 use super::Tokens;
 
-pub fn gen_type_checkings(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    bindings
-        .as_ref()
-        .iter()
-        .map(gen_type_check)
-        .join_with_empty_line()
+pub fn gen_type_checks(bindings: impl Iterator<Item = Container>) -> Tokens {
+    bindings.map(gen_type_check).join_with_empty_line()
 }
 
-fn gen_type_check(binding_type: &BindingType) -> Tokens {
-    let type_name = binding_type.inner_name().to_obj_identifier();
-    let body = binding_type.gen_ty_check_body();
+fn gen_type_check(container: Container) -> Tokens {
+    let container_ident =
+        ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
+    let body = container.r#type.gen_ty_check_body((&container).into());
     quote! {
-        def assert_$type_name($PYTHON_OBJECT_VARIABLE):
+        def assert_$container_ident($PYTHON_OBJECT_VARIABLE):
             $body
     }
 }

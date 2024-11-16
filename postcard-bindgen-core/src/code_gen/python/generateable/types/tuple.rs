@@ -2,7 +2,7 @@ use genco::quote;
 
 use crate::{
     code_gen::{
-        import_registry::ImportItem,
+        import_registry::{ImportItem, Package},
         python::{FieldAccessor, ImportRegistry, Tokens, VariableAccess, VariablePath},
         utils::TokensIterExt,
     },
@@ -63,7 +63,10 @@ impl PythonTypeGenerateable for TupleMeta {
             .iter()
             .map(|v| v.gen_typings(import_registry))
             .join_with_comma();
-        import_registry.push(quote!(typing), ImportItem::Single(quote!(Tuple)));
+        import_registry.push(
+            Package::Extern("typing".into()),
+            ImportItem::Single("Tuple".into()),
+        );
         quote!(Tuple[$type_checks])
     }
 }
