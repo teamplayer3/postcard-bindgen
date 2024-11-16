@@ -186,7 +186,7 @@ impl ContainerFullQualifiedTypeBuilder<'_> {
     pub fn build(mut self) -> String {
         // We will skip the first part of the path, as it is the crate name.
         self.path.pop_front();
-        self.path.push(self.name.to_obj_identifier());
+        self.path.push(self.name);
 
         self.path.into_path(".").to_string()
     }
@@ -213,4 +213,54 @@ impl From<&ObjectMeta> for ContainerFullQualifiedTypeBuilder<'_> {
 #[cfg(test)]
 pub fn assert_tokens(generated: genco::lang::js::Tokens, compare: genco::lang::js::Tokens) {
     assert_eq!(generated.to_file_string(), compare.to_file_string())
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_container_identifier_builder() {
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::new().into_path("::"),
+        };
+
+        let builder =
+            ContainerIdentifierBuilder::new(container.path.into_buf(), container.name.as_ref());
+
+        assert_eq!(builder.build(), "TEST".to_string());
+
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::from_iter(["crate".into(), "submodule".into()]).into_path("::"),
+        };
+
+        let builder =
+            ContainerIdentifierBuilder::new(container.path.into_buf(), container.name.as_ref());
+
+        assert_eq!(builder.build(), "submodule_TEST".to_string());
+    }
+
+    #[test]
+    fn test_container_full_qualified_type_builder() {
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::new().into_path("::"),
+        };
+
+        let builder: ContainerFullQualifiedTypeBuilder = (&container).into();
+
+        assert_eq!(builder.build(), "Test".to_string());
+
+        let container = ContainerInfo {
+            name: "Test".into(),
+            path: PathBuf::from_iter(["crate".into(), "submodule".into()]).into_path("::"),
+        };
+
+        let builder: ContainerFullQualifiedTypeBuilder = (&container).into();
+
+        assert_eq!(builder.build(), "submodule.Test".to_string());
+    }
 }
