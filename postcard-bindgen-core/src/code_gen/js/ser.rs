@@ -43,12 +43,19 @@ fn gen_ser_function_for_type(container: Container) -> Tokens {
 pub fn gen_serialize_func(
     defines: impl Iterator<Item = Container>,
     runtime_type_checks: bool,
+    esm_module: bool,
 ) -> Tokens {
     let body = defines
         .map(|d| gen_ser_case(d, runtime_type_checks))
         .join_with_semicolon();
-    quote!(
-        module.exports.serialize = (type, value) => {
+
+    let export_type = if esm_module {
+        quote!(export const serialize)
+    } else {
+        quote!(module.exports.serialize)
+    };
+    quote! {
+        $export_type = (type, value) => {
             if (!(typeof type === "string")) {
                 throw "type must be a string"
             }
@@ -56,7 +63,7 @@ pub fn gen_serialize_func(
             switch (type) { $body }
             return s.finish()
         }
-    )
+    }
 }
 
 fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Tokens {
