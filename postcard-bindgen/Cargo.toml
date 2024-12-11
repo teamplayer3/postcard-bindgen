@@ -23,7 +23,7 @@ alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 
 [dependencies.postcard-bindgen-core]
-version = "0.5.1"
+version = "0.5.0"
 path = "../postcard-bindgen-core"
 
 [dependencies.postcard-bindgen-derive]
