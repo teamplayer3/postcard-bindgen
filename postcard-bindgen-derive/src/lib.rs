@@ -44,7 +44,8 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
                 impl #generics _pb::__private::GenJsBinding for #ident #generics {
                     fn get_type() -> _pb::__private::ValueType {
                         _pb::__private::ValueType::Object(_pb::__private::ObjectMeta {
-                            name: #container_name.into()
+                            name: #container_name.into(),
+                            path: _pb::__private::Path::new(module_path!(), "::"),
                         })
                     }
                 }

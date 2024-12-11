@@ -4,11 +4,11 @@ extern crate alloc;
 
 #[cfg(feature = "generating")]
 pub mod code_gen;
-
 #[cfg(feature = "generating")]
-mod utils;
-
+pub mod path;
+#[cfg(feature = "generating")]
 pub mod registry;
+#[cfg(feature = "generating")]
 pub mod type_info;
 
 #[cfg(feature = "generating")]
@@ -46,6 +46,7 @@ impl<L: genco::lang::Lang> Exports<L> {
 }
 
 #[cfg(feature = "generating")]
+#[derive(Debug)]
 pub struct ExportFile<L: genco::lang::Lang> {
     pub content_type: String,
     pub content: genco::Tokens<L>,

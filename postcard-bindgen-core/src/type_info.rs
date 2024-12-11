@@ -1,5 +1,7 @@
 use alloc::{boxed::Box, vec, vec::Vec};
 
+use crate::path::Path;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueType {
     Number(NumberMeta),
@@ -11,6 +13,32 @@ pub enum ValueType {
     Map(MapMeta),
     Tuple(TupleMeta),
     Bool(BoolMeta),
+}
+
+impl ValueType {
+    pub fn flatten_paths(&mut self) {
+        match self {
+            ValueType::Object(meta) => {
+                meta.path.flatten();
+            }
+            ValueType::Array(meta) => {
+                meta.items_type.flatten_paths();
+            }
+            ValueType::Optional(meta) => {
+                meta.inner.flatten_paths();
+            }
+            ValueType::Map(meta) => {
+                meta.key_type.flatten_paths();
+                meta.value_type.flatten_paths();
+            }
+            ValueType::Tuple(meta) => {
+                for item in meta.items_types.iter_mut() {
+                    item.flatten_paths();
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 impl AsRef<ValueType> for ValueType {
@@ -54,6 +82,7 @@ pub struct StringMeta {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
     pub name: &'static str,
+    pub path: Path<'static, 'static>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,7 +153,7 @@ impl<T: GenJsBinding> GenJsBinding for Option<T> {
     }
 }
 
-impl<'a, T: GenJsBinding> GenJsBinding for &'a [T] {
+impl<T: GenJsBinding> GenJsBinding for &[T] {
     fn get_type() -> ValueType {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
@@ -151,7 +180,7 @@ impl<T: GenJsBinding, const S: usize> GenJsBinding for [T; S] {
     }
 }
 
-impl<'a> GenJsBinding for &'a str {
+impl GenJsBinding for &str {
     fn get_type() -> ValueType {
         ValueType::String(StringMeta {})
     }

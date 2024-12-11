@@ -3,10 +3,12 @@ use genco::{prelude::python::Tokens, quote, quote_in};
 use crate::{
     code_gen::{
         python::{generateable::container::BindingTypeGenerateable, PYTHON_OBJECT_VARIABLE},
-        utils::{TokensBranchedIterExt, TokensIterExt},
+        utils::{
+            ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
+            TokensIterExt,
+        },
     },
-    registry::BindingType,
-    utils::StrExt,
+    registry::Container,
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -64,39 +66,40 @@ pub fn gen_serializer_code() -> Tokens {
     }
 }
 
-pub fn gen_ser_functions(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
-        .as_ref()
-        .iter()
         .map(gen_ser_function_for_type)
         .join_with_empty_line()
 }
 
-fn gen_ser_function_for_type(binding_type: &BindingType) -> Tokens {
-    let obj_name = binding_type.inner_name().to_obj_identifier();
-    let ser_body = binding_type.gen_ser_body();
+fn gen_ser_function_for_type(container: Container) -> Tokens {
+    let container_ident =
+        ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
+    let ser_body = container.r#type.gen_ser_body((&container).into());
     quote! {
-        def serialize_$(&obj_name)(s, $PYTHON_OBJECT_VARIABLE):
+        def serialize_$(&container_ident)(s, $PYTHON_OBJECT_VARIABLE):
             $ser_body
     }
 }
 
-pub fn gen_serialize_func(tys: impl AsRef<[BindingType]>, runtime_type_checks: bool) -> Tokens {
-    let all_bindings = tys
-        .as_ref()
-        .iter()
-        .map(|d| quote!($(d.inner_name())))
+pub fn gen_serialize_func(
+    containers: impl Iterator<Item = Container> + Clone,
+    runtime_type_checks: bool,
+) -> Tokens {
+    let all_bindings = containers
+        .clone()
+        .map(|d| quote!($(d.name)))
         .collect::<Vec<_>>();
 
     let type_check = if all_bindings.len() == 1 {
         quote!($(all_bindings.first().unwrap()))
     } else {
-        quote!(Union[$(all_bindings.into_iter().join_with_comma())])
+        quote!(Union[$(containers.clone().map(|container| 
+            quote!($(ContainerFullQualifiedTypeBuilder::from(&container)
+                .build()))).join_with_comma())])
     };
 
-    let ser_switch = tys
-        .as_ref()
-        .iter()
+    let ser_switch = containers
         .map(|t| gen_ser_case(t, runtime_type_checks))
         .map(|(condition, body)| (Some(condition), body))
         .chain([(
@@ -123,21 +126,21 @@ pub fn gen_serialize_func(tys: impl AsRef<[BindingType]>, runtime_type_checks: b
     tokens
 }
 
-fn gen_ser_case(define: &BindingType, runtime_type_checks: bool) -> (Tokens, Tokens) {
-    let name = define.inner_name();
-    let type_name = name.to_obj_identifier();
+fn gen_ser_case(container: Container, runtime_type_checks: bool) -> (Tokens, Tokens) {
+    let case_str = ContainerFullQualifiedTypeBuilder::from(&container).build();
+    let container_ident = ContainerIdentifierBuilder::from(&container).build();
 
     let case_body = {
         let mut tokens = Tokens::new();
 
         if runtime_type_checks {
-            quote_in!(tokens=> assert_$(&type_name)(value));
+            quote_in!(tokens=> assert_$(&container_ident)(value));
             tokens.push();
         }
-        quote_in!(tokens=> serialize_$(&type_name)(s, value));
+        quote_in!(tokens=> serialize_$container_ident(s, value));
 
         tokens
     };
 
-    (quote!(isinstance(value, $(&type_name))), case_body)
+    (quote!(isinstance(value, $case_str)), case_body)
 }

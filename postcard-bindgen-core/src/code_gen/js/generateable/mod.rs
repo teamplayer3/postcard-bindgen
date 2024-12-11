@@ -2,20 +2,26 @@ pub mod container;
 pub mod types;
 
 use container::BindingTypeGenerateable;
-use genco::{quote, tokens::quoted};
+use genco::{quote, quote_in, tokens::quoted};
 
-use crate::{code_gen::js::Tokens, code_gen::utils::TokensIterExt, registry::BindingType};
+use crate::{
+    code_gen::{
+        js::Tokens,
+        utils::{ContainerFullQualifiedTypeBuilder, TokensIterExt},
+    },
+    registry::{Container, ContainerCollection, Module},
+};
 
-pub fn gen_ts_typings(bindings: impl AsRef<[BindingType]>) -> Tokens {
+pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
     quote!(
         $(gen_number_decls())
 
         $(gen_extra_types_decls())
 
-        $(gen_bindings_types(&bindings))
+        $(gen_bindings_types(containers))
 
-        $(gen_type_decl(&bindings))
-        $(gen_value_type_decl(bindings))
+        $(gen_type_decl(containers.all_containers()))
+        $(gen_value_type_decl(containers.all_containers()))
 
         $(gen_ser_des_decls())
     )
@@ -51,20 +57,19 @@ fn gen_extra_types_decls() -> Tokens {
     )
 }
 
-fn gen_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
+fn gen_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let type_cases = bindings
-        .as_ref()
-        .iter()
-        .map(|b| quote!($(quoted(b.inner_name()))))
+        .map(|container| quote!($(quoted(ContainerFullQualifiedTypeBuilder::from(&container).build()))))
         .join_with_vertical_line();
     quote!(export type Type = $type_cases)
 }
 
-fn gen_value_type_decl(bindings: impl AsRef<[BindingType]>) -> Tokens {
+fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     let if_cases = bindings
-        .as_ref()
-        .iter()
-        .map(|b| quote!(T extends $(quoted(b.inner_name())) ? $(b.inner_name())))
+        .map(|container| {
+            let full_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
+            quote!(T extends $(quoted(&full_qualified)) ? $(full_qualified))
+        })
         .join_with_colon();
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
@@ -76,17 +81,55 @@ fn gen_ser_des_decls() -> Tokens {
     )
 }
 
-fn gen_bindings_types(bindings: impl AsRef<[BindingType]>) -> Tokens {
-    bindings
-        .as_ref()
+fn gen_bindings_types(containers: &ContainerCollection) -> Tokens {
+    let (containers, mods) = containers.containers_per_module();
+
+    let mut root_level = Tokens::new();
+
+    for r#mod in mods {
+        create_namespace(&mut root_level, r#mod);
+    }
+
+    let containers = containers
         .iter()
         .map(gen_binding_type)
-        .join_with_line_breaks()
+        .join_with_line_breaks();
+
+    root_level.append(containers);
+
+    root_level
 }
 
-fn gen_binding_type(binding: &BindingType) -> Tokens {
-    let name = binding.inner_name();
-    let body = binding.gen_ts_typings_body();
+fn create_namespace(tokens: &mut Tokens, r#mod: Module<'_>) {
+    let (containers, mods) = r#mod.entries();
+
+    quote_in! {*tokens=>
+        export namespace $(r#mod.name()) $("{")
+    };
+
+    tokens.push();
+    tokens.indent();
+
+    for r#mod in mods {
+        create_namespace(tokens, r#mod);
+    }
+
+    let containers = containers
+        .iter()
+        .map(gen_binding_type)
+        .join_with_line_breaks();
+
+    tokens.append(containers);
+
+    tokens.push();
+    tokens.unindent();
+    tokens.append("}");
+    tokens.push();
+}
+
+fn gen_binding_type(binding: &Container) -> Tokens {
+    let name = binding.name;
+    let body = binding.r#type.gen_ts_typings_body();
     quote!(export type $name = $body)
 }
 
@@ -95,12 +138,15 @@ mod test {
     use genco::quote;
 
     use crate::{
-        code_gen::js::generateable::{
-            container::BindingTypeGenerateable, types::JsTypeGenerateable,
+        code_gen::{
+            js::generateable::{container::BindingTypeGenerateable, types::JsTypeGenerateable},
+            utils::assert_tokens,
         },
-        registry::{BindingType, EnumType, EnumVariant, EnumVariantType, StructField, StructType},
+        path::Path,
+        registry::{
+            BindingType, Container, EnumType, EnumVariant, EnumVariantType, StructField, StructType,
+        },
         type_info::{ArrayMeta, NumberMeta, ObjectMeta, OptionalMeta, StringMeta, ValueType},
-        utils::assert_tokens,
     };
 
     use super::gen_binding_type;
@@ -170,7 +216,10 @@ mod test {
 
     #[test]
     fn test_js_type_without_number_typings() {
-        let ty = ValueType::Object(ObjectMeta { name: "A" });
+        let ty = ValueType::Object(ObjectMeta {
+            name: "A",
+            path: Path::new("", "::"),
+        });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
         let ty = ValueType::String(StringMeta {});
@@ -180,7 +229,6 @@ mod test {
     #[test]
     fn test_struct_structure_typings() {
         let tokens = StructType {
-            name: "A",
             fields: vec![
                 StructField {
                     name: "a",
@@ -191,7 +239,10 @@ mod test {
                 },
                 StructField {
                     name: "b",
-                    v_type: ValueType::Object(ObjectMeta { name: "B" }),
+                    v_type: ValueType::Object(ObjectMeta {
+                        name: "B",
+                        path: Path::new("", "::"),
+                    }),
                 },
                 StructField {
                     name: "c",
@@ -228,42 +279,48 @@ mod test {
 
     #[test]
     fn test_struct_typings() {
-        let test_binding = gen_binding_type(&BindingType::Struct(StructType {
+        let test_binding = gen_binding_type(&Container {
             name: "A",
-            fields: vec![StructField {
-                name: "a",
-                v_type: ValueType::Number(NumberMeta::Integer {
-                    bytes: 1,
-                    signed: false,
-                }),
-            }],
-        }));
+            path: Path::new("", "::"),
+            r#type: BindingType::Struct(StructType {
+                fields: vec![StructField {
+                    name: "a",
+                    v_type: ValueType::Number(NumberMeta::Integer {
+                        bytes: 1,
+                        signed: false,
+                    }),
+                }],
+            }),
+        });
 
         assert_tokens(test_binding, quote!(export type A = { a: u8 }))
     }
 
     #[test]
     fn test_enum_typings() {
-        let test_binding = gen_binding_type(&BindingType::Enum(EnumType {
+        let test_binding = gen_binding_type(&Container {
             name: "A",
-            variants: vec![
-                EnumVariant {
-                    name: "A",
-                    index: 0,
-                    inner_type: EnumVariantType::Empty,
-                },
-                EnumVariant {
-                    name: "B",
-                    index: 1,
-                    inner_type: EnumVariantType::Tuple(vec![ValueType::Number(
-                        NumberMeta::Integer {
-                            bytes: 1,
-                            signed: false,
-                        },
-                    )]),
-                },
-            ],
-        }));
+            path: Path::new("", "::"),
+            r#type: BindingType::Enum(EnumType {
+                variants: vec![
+                    EnumVariant {
+                        name: "A",
+                        index: 0,
+                        inner_type: EnumVariantType::Empty,
+                    },
+                    EnumVariant {
+                        name: "B",
+                        index: 1,
+                        inner_type: EnumVariantType::Tuple(vec![ValueType::Number(
+                            NumberMeta::Integer {
+                                bytes: 1,
+                                signed: false,
+                            },
+                        )]),
+                    },
+                ],
+            }),
+        });
 
         assert_tokens(
             test_binding,

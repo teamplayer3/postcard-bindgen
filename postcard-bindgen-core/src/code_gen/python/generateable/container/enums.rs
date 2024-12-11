@@ -2,25 +2,25 @@ use genco::{quote, tokens::quoted};
 
 use crate::{
     code_gen::{
-        import_registry::ImportItem,
+        import_registry::{ImportItem, Package},
         python::{
             generateable::types::PythonTypeGenerateable, FieldAccessor, ImportRegistry, Tokens,
             PYTHON_OBJECT_VARIABLE,
         },
-        utils::{TokensBranchedIterExt, TokensIterExt},
+        utils::{ContainerFullQualifiedTypeBuilder, TokensBranchedIterExt, TokensIterExt},
         variable_path::{VariableAccess, VariablePath},
     },
     registry::{EnumType, EnumVariant, EnumVariantType},
 };
 
-use super::BindingTypeGenerateable;
+use super::{BindingTypeGenerateable, ContainerInfo};
 
 impl BindingTypeGenerateable for EnumType {
-    fn gen_ser_body(&self) -> Tokens {
+    fn gen_ser_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
         self.variants
             .iter()
             .map(|v| {
-                let variant_name = quote!($(self.name)_$(v.name));
+                let variant_name = quote!($(container_info.name.as_ref())_$(v.name));
 
                 let ser_fields = [quote!(s.serialize_number(U32_BYTES, False, $(v.index)))]
                     .into_iter()
@@ -59,7 +59,8 @@ impl BindingTypeGenerateable for EnumType {
             .join_if_branched()
     }
 
-    fn gen_des_body(&self) -> Tokens {
+    fn gen_des_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let switch = self
             .variants
             .iter()
@@ -75,7 +76,7 @@ impl BindingTypeGenerateable for EnumType {
                 };
                 (
                     Some(quote!(variant_index == $(v.index))),
-                    quote!(return $(self.name)_$(v.name)($constructor_args)),
+                    quote!(return $(&fully_qualified)_$(v.name)($constructor_args)),
                 )
             })
             .chain([(
@@ -90,7 +91,8 @@ impl BindingTypeGenerateable for EnumType {
         }
     }
 
-    fn gen_ty_check_body(&self) -> Tokens {
+    fn gen_ty_check_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         let assert_funcs = self
             .variants
             .iter()
@@ -128,7 +130,7 @@ impl BindingTypeGenerateable for EnumType {
             .variants
             .iter()
             .map(|v| {
-                let variant_name = quote!($(self.name)_$(v.name));
+                let variant_name = quote!($(&fully_qualified)_$(v.name));
                 (
                     Some(quote!(isinstance($PYTHON_OBJECT_VARIABLE, $variant_name))),
                     quote!(assert_$(v.name)($PYTHON_OBJECT_VARIABLE)),
@@ -147,15 +149,19 @@ impl BindingTypeGenerateable for EnumType {
         }
     }
 
-    fn gen_typings_body(&self, import_registry: &mut ImportRegistry) -> Tokens {
+    fn gen_typings_body(
+        &self,
+        container_info: ContainerInfo<'_>,
+        import_registry: &mut ImportRegistry,
+    ) -> Tokens {
         let variants = self
             .variants
             .iter()
-            .map(|v| gen_variant_typings(self.name, v, import_registry))
-            .join_with_line_breaks();
+            .map(|v| gen_variant_typings(container_info.name.as_ref(), v, import_registry))
+            .join_with_empty_line();
 
         quote! {
-            class $(self.name):
+            class $(container_info.name):
                 pass
 
             $variants
@@ -184,7 +190,10 @@ fn gen_variant_typings(
                 .map(|f| quote!($(f.name): $(f.v_type.gen_typings(import_registry))))
                 .join_with_line_breaks();
 
-            import_registry.push(quote!(dataclasses), ImportItem::Single(quote!(dataclass)));
+            import_registry.push(
+                Package::Extern("dataclasses".into()),
+                ImportItem::Single("dataclass".into()),
+            );
             quote! {
                 @dataclass
                 class $variant_name($enum_name):
