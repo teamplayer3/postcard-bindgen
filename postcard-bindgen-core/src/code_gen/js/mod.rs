@@ -50,6 +50,7 @@ pub struct GenerationSettings {
     runtime_type_checks: bool,
     type_script_types: bool,
     module_structure: bool,
+    esm_module: bool,
 }
 
 impl GenerationSettings {
@@ -61,6 +62,7 @@ impl GenerationSettings {
             runtime_type_checks: true,
             type_script_types: true,
             module_structure: true,
+            esm_module: true,
         }
     }
 
@@ -106,6 +108,20 @@ impl GenerationSettings {
         self.module_structure = enabled;
         self
     }
+
+    /// Enabling or disabling ESM (as opposed to cjs) output
+    ///
+    /// Eanbling will change the way the `serialize` and `desrialize`
+    /// functions are exported to bring them in line with ESM standards/importers.
+    /// The package.json file also gets `"type": "module"` added,
+    /// so package managers/bundlers importing it know it's ESM.
+    ///
+    ///
+    /// Disabling this will use the default `module.exports`-style export (cjs)
+    pub fn esm_module(mut self, enabled: bool) -> Self {
+        self.esm_module = enabled;
+        self
+    }
 }
 
 impl Default for GenerationSettings {
@@ -116,6 +132,7 @@ impl Default for GenerationSettings {
             runtime_type_checks: false,
             type_script_types: false,
             module_structure: true,
+            esm_module: false,
         }
     }
 }
@@ -123,7 +140,7 @@ impl Default for GenerationSettings {
 pub fn generate(
     mut containers: ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
-) -> Exports<JavaScript> {
+) -> (Exports<JavaScript>, bool) {
     let gen_settings = gen_settings.borrow();
 
     if !gen_settings.module_structure {
@@ -164,12 +181,16 @@ pub fn generate(
         js_tokens.append(gen_serialize_func(
             containers.all_containers(),
             gen_settings.runtime_type_checks,
+            gen_settings.esm_module,
         ));
         js_tokens.line();
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_deserialize_func(containers.all_containers()));
+        js_tokens.append(gen_deserialize_func(
+            containers.all_containers(),
+            gen_settings.esm_module,
+        ));
         js_tokens.line();
     }
 
@@ -186,9 +207,12 @@ pub fn generate(
         });
     }
 
-    Exports {
-        files: export_files,
-    }
+    (
+        Exports {
+            files: export_files,
+        },
+        gen_settings.esm_module,
+    )
 }
 
 impl<I> TokensIterExt<JavaScript> for I

@@ -44,12 +44,13 @@ pub fn build_npm_package(
 
     std::fs::create_dir_all(&dir)?;
 
-    let exports = generate(bindings, gen_settings);
+    let (exports, esm_module) = generate(bindings, gen_settings);
 
     let package_json = package_file_src(
         package_info.name.as_str(),
         &package_info.version,
         exports.file("ts").is_some(),
+        esm_module,
     );
 
     let mut package_json_path = dir.to_owned();
@@ -79,14 +80,15 @@ fn package_file_src(
     package_name: impl AsRef<str>,
     package_version: &Version,
     ts_types_enabled: bool,
+    esm_module: bool,
 ) -> String {
     format!("\
 {{
     \"name\": \"{}\",
     \"description\": \"Auto generated bindings for postcard format serializing and deserializing javascript to and from bytes.\",
     \"version\": \"{}\",
-    \"main\": \"index.js\"{}
+    \"main\": \"index.js\"{}{}
 }}",
-        package_name.as_ref(), package_version, if ts_types_enabled { ",\n\t\"types\": \"index.d.ts\"" } else { "" }
+        package_name.as_ref(), package_version, if ts_types_enabled { ",\n\t\"types\": \"index.d.ts\"" } else { "" }, if esm_module { ",\n\t\"type\": \"module\"" } else { "" }
     )
 }
