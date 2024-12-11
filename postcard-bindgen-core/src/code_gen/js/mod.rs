@@ -111,7 +111,7 @@ impl GenerationSettings {
 
     /// Enabling or disabling ESM (as opposed to cjs) output
     ///
-    /// Eanbling will change the way the `serialize` and `desrialize`
+    /// Enabling will change the way the `serialize` and `desrialize`
     /// functions are exported to bring them in line with ESM standards/importers.
     /// The package.json file also gets `"type": "module"` added,
     /// so package managers/bundlers importing it know it's ESM.
@@ -137,10 +137,18 @@ impl Default for GenerationSettings {
     }
 }
 
+/// Metadata for JS export
+///
+/// Contains information about the exported JS package needed to
+/// complete the full npm_package (e.g. if it's an ESM module or not)
+pub struct ExportMeta {
+    pub esm_module: bool,
+}
+
 pub fn generate(
     mut containers: ContainerCollection,
     gen_settings: impl Borrow<GenerationSettings>,
-) -> (Exports<JavaScript>, bool) {
+) -> (Exports<JavaScript>, ExportMeta) {
     let gen_settings = gen_settings.borrow();
 
     if !gen_settings.module_structure {
@@ -207,11 +215,16 @@ pub fn generate(
         });
     }
 
+    // Create metadata about export
+    let export_metadata = ExportMeta {
+        esm_module: gen_settings.esm_module,
+    };
+
     (
         Exports {
             files: export_files,
         },
-        gen_settings.esm_module,
+        export_metadata,
     )
 }
 

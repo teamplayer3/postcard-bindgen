@@ -44,13 +44,13 @@ pub fn build_npm_package(
 
     std::fs::create_dir_all(&dir)?;
 
-    let (exports, esm_module) = generate(bindings, gen_settings);
+    let (exports, export_meta) = generate(bindings, gen_settings);
 
     let package_json = package_file_src(
         package_info.name.as_str(),
         &package_info.version,
         exports.file("ts").is_some(),
-        esm_module,
+        export_meta.esm_module,
     );
 
     let mut package_json_path = dir.to_owned();

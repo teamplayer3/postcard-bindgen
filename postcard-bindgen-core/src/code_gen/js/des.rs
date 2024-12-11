@@ -43,26 +43,19 @@ fn gen_des_function_for_type(container: Container) -> Tokens {
 
 pub fn gen_deserialize_func(defines: impl Iterator<Item = Container>, esm_module: bool) -> Tokens {
     let body = defines.map(gen_des_case).join_with_semicolon();
-    if esm_module {
-        quote!(
-            export const deserialize = (type, bytes) => {
-                if (!(typeof type === "string")) {
-                    throw "type must be a string"
-                }
-                const d = new Deserializer(bytes)
-                switch (type) { $body }
-            }
-        )
+    let export_type = if esm_module {
+        quote!(export const deserialize)
     } else {
-        quote!(
-            module.exports.deserialize = (type, bytes) => {
-                if (!(typeof type === "string")) {
-                    throw "type must be a string"
-                }
-                const d = new Deserializer(bytes)
-                switch (type) { $body }
+        quote!(module.exports.deserialize)
+    };
+    quote! {
+        $export_type = (type, bytes) => {
+            if (!(typeof type === "string")) {
+                throw "type must be a string"
             }
-        )
+            const d = new Deserializer(bytes)
+            switch (type) { $body }
+        }
     }
 }
 
