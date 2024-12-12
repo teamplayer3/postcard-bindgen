@@ -5,28 +5,30 @@
 [![Crates.io](https://img.shields.io/crates/v/postcard-bindgen.svg)](https://crates.io/crates/postcard-bindgen)
 [![Documentation](https://docs.rs/postcard-bindgen/badge.svg)](https://docs.rs/postcard-bindgen)
 
-`Postcard Bindgen` allows generating code for other languages to serialize to and deserialize from [postcard](https://github.com/jamesmunns/postcard) byte format. This helps to setup a communication between for example a microcontroller and a App using the `postcard crate` and its lightweight memory format.
+`Postcard Bindgen` generates code for other languages to serialize and deserialize [postcard](https://github.com/jamesmunns/postcard) byte format. This facilitates communication between, for example, a microcontroller and a mobile app using the `postcard` crate.
 
-As main types structs and enums can be annotated with `PostcardBindings` to generate code for them. The generated code can be exported as a npm package to import it into a JavaScript project or as a pip package for python.
+Structs and enums can be annotated with `PostcardBindings` to generate code. The generated code can be exported as an npm package for JavaScript or a pip package for Python.
 
 ## Supported Languages
 
-* 🌐 <b>JavaScript</b>
-* 🐍 <b>Python</b>
+* 🌐 **JavaScript**
+* 🐍 **Python**
 
 ## Usage
 
-> :warning: Run the crate that generates the bindings with rust nightly. This is necessary because this crate depends on [genco](https://github.com/udoprog/genco) and this crate uses a nightly feature to detect column changes.
+> :warning: Use rust nightly to run the crate that generates the bindings. This crate depends on [genco](https://github.com/udoprog/genco), which uses a nightly feature.
 
-Structs and enums for which bindings should be generated must be annotated with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
+Annotate structs and enums with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
 
-The process is divided into two steps. Firstly the annotation step. This is done mostly in a library crate. Secondly in a extra binary crate the annotated structs and enums must be imported (this means the library crate must be defined as a dependency) and as a main function the generation logic added. To generate the npm package this extra binary crate must be run.
+The process has two steps:
+1. Annotate structs and enums in a library crate.
+2. Import the annotated structs and enums in a binary crate, add the generation logic, and run the binary crate to generate the npm package.
 
-> If the `postcard-bindgen` crate is added as a dependency in the generation binary crate the future `generating` must be enabled.
+> Enable the `generating` feature if `postcard-bindgen` is added as a dependency in the generation binary crate.
 
 ## Example
 
-This example shows how to easily generate a npm package. For this the struct `Test` and the generation logic is in the same rust file.
+This example shows how to generate an npm package. The struct `Test` and the generation logic are in the same Rust file.
 
 ```rust
 #[derive(Serialize, PostcardBindings)]
