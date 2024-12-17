@@ -8,7 +8,7 @@ on:
     branches: [main]
     paths: ["**/*.rs", "**/Cargo.toml", "**/Cargo.lock"]
 
-jobs:
+jobs:        
 
   fmt:
     name: Rustfmt
@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: typos-action      
+        uses: crate-ci/typos@v1.28.4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
