@@ -15,7 +15,7 @@ use genco::{
 use general::gen_util;
 use generateable::gen_ts_typings;
 use ser::{gen_ser_functions, gen_serialize_func, gen_serializer_code};
-use type_checks::gen_type_checkings;
+use type_checks::gen_type_checks;
 
 use crate::{registry::ContainerCollection, ExportFile, Exports};
 
@@ -181,7 +181,7 @@ pub fn generate(
     }
 
     if gen_settings.runtime_type_checks {
-        js_tokens.append(gen_type_checkings(containers.all_containers()));
+        js_tokens.append(gen_type_checks(containers.all_containers()));
         js_tokens.line();
     }
 
