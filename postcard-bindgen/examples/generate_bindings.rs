@@ -59,6 +59,7 @@ fn main() {
         },
         javascript::GenerationSettings::enable_all()
             .runtime_type_checks(false)
+            .esm_module(false)
             .module_structure(true),
         generate_bindings!(A, B, e::E, C, D, e::f::F),
     )
