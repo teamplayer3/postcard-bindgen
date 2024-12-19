@@ -148,7 +148,7 @@ pub fn generate(
         };
 
         files.push(ExportFile {
-            content_type: "type_checks".to_owned(),
+            content_type: "runtime_checks".to_owned(),
             content: type_checks,
         });
     }

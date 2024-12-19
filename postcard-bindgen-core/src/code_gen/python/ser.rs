@@ -2,8 +2,7 @@ use genco::{prelude::python::Tokens, quote, quote_in};
 
 use crate::{
     code_gen::{
-        python::{generateable::container::BindingTypeGenerateable, PYTHON_OBJECT_VARIABLE},
-        utils::{
+        import_registry::{ImportItem, Package}, python::{generateable::container::BindingTypeGenerateable, Function, ImportRegistry, PYTHON_OBJECT_VARIABLE}, utils::{
             ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
             TokensIterExt,
         },
@@ -110,7 +109,10 @@ pub fn gen_serialize_func(
 
     let mut tokens = Tokens::new();
     if runtime_type_checks {
-        quote_in!(tokens=> from .type_checks import *);
+let mut import_registry = ImportRegistry::new("".to_owned());
+        import_registry.push(Package::Relative("runtime_checks".into()), ImportItem::All);
+
+        quote_in!(tokens=> $import_registry);
         tokens.push();
     }
 
