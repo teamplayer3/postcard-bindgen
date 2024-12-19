@@ -285,6 +285,8 @@ pub fn assert_tokens(generated: genco::lang::js::Tokens, compare: genco::lang::j
 #[cfg(test)]
 mod test {
 
+    use genco::lang::JavaScript;
+
     use super::*;
 
     #[test]
