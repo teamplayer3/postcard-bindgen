@@ -162,9 +162,9 @@ pub fn generate(
     }
 
     let export_mode = if gen_settings.esm_module {
-        ExportMode::ESM
+        ExportMode::Esm
     } else {
-        ExportMode::CJS
+        ExportMode::Cjs
     };
 
     let mut export_files = Vec::new();
@@ -337,12 +337,12 @@ impl FormatInto<JavaScript> for Function {
 impl FormatInto<JavaScript> for ExportRegistry {
     fn format_into(self, tokens: &mut Tokens) {
         match self.export_mode {
-            ExportMode::CJS => {
+            ExportMode::Cjs => {
                 quote_in! { *tokens =>
                     $(for export in self.exports join () => exports.$(&export) = $export)
                 }
             }
-            ExportMode::ESM => {
+            ExportMode::Esm => {
                 quote_in! { *tokens =>
                     export {
                         $(for export in self.exports join (,) => $export)

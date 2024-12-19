@@ -373,11 +373,7 @@ impl FormatInto<Python> for FunctionArg {
 
 impl FormatInto<Python> for Function {
     fn format_into(self, tokens: &mut Tokens) {
-        let return_type = if let Some(ret_type) = self.return_type {
-            Some(quote!($(" ")-> $ret_type))
-        } else {
-            None
-        };
+        let return_type = self.return_type.map(|r| quote!($(" ")-> $r));
         quote_in! { *tokens =>
             def $(self.name)($(for arg in self.args join (, ) => $arg))$return_type:
                 $(self.body)

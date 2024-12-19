@@ -126,7 +126,7 @@ where
     &'a F: Into<FunctionArg<L>>,
 {
     fn to_args(self) -> Vec<FunctionArg<L>> {
-        self.into_iter().map(|f| f.into()).collect()
+        self.iter().map(|f| f.into()).collect()
     }
 }
 

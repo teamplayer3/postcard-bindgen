@@ -68,8 +68,7 @@ pub fn build_npm_package(
         "des",
     ]
     .into_iter()
-    .map(|t| exports.pop_file(t))
-    .filter_map(|t| t)
+    .filter_map(|t| exports.pop_file(t))
     .fold(Tokens::new(), |mut current, content| {
         current.append(content.clone());
         current.line();

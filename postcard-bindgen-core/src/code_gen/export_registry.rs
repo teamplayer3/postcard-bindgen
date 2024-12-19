@@ -3,8 +3,8 @@ use genco::{lang::Lang, quote, tokens::FormatInto, Tokens};
 #[derive(Debug, Default, Clone)]
 pub enum ExportMode {
     #[default]
-    CJS,
-    ESM,
+    Cjs,
+    Esm,
 }
 
 pub struct ExportRegistry<L>
