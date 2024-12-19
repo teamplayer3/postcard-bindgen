@@ -1,11 +1,40 @@
+use core::ops::Deref;
+
 use convert_case::{Case, Casing};
-use genco::{lang::Lang, quote, tokens::FormatInto, Tokens};
+use genco::{
+    lang::Lang,
+    quote,
+    tokens::{FormatInto, Item},
+    Tokens,
+};
 
 use crate::{
     path::PathBuf,
     registry::{Container, ContainerInfo},
     type_info::ObjectMeta,
 };
+
+pub fn break_long_logical_lines<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
+    let tokens = quote!($tokens);
+    let mut result = Tokens::new();
+    let mut intend = false;
+
+    for token in tokens {
+        let is_logical_operator =
+            matches!(&token, Item::Literal(l) if ["&&", "||"].contains(&l.deref()));
+        result.append(token);
+        if is_logical_operator {
+            result.push();
+            if !intend {
+                result.indent();
+                intend = true;
+            }
+        }
+    }
+
+    result.unindent();
+    result
+}
 
 pub trait StrExt {
     fn to_obj_identifier(&self) -> String;
