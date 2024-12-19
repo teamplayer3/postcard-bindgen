@@ -259,7 +259,8 @@ pub fn generate(
 
 impl<I, F> TokensIterExt<JavaScript, F> for I
 where
-    I: Iterator<Item = Tokens>,
+    I: Iterator<Item = F>,
+    F: FormatInto<JavaScript>,
 {
     const LOGICAL_AND: &'static str = JS_LOGIC_AND;
     const LOGICAL_OR: &'static str = JS_LOGIC_OR;

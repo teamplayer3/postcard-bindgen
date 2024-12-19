@@ -42,7 +42,7 @@ impl JsTypeGenerateable for NumberMeta {
             }
             NumberMeta::Integer { signed, .. } => {
                 let signed = bool_to_js_bool(*signed);
-                quote!((typeof $(variable_path.to_owned()) === "number" || typeof $(variable_path.to_owned()) === "bigint") && Number.isInteger($(variable_path.to_owned())) && check_bounds($byte_amount_str, $signed, $variable_path))
+                quote!(check_integer_type($variable_path, $byte_amount_str, $signed))
             }
         }
     }

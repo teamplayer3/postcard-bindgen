@@ -1,12 +1,21 @@
-use genco::{quote, tokens::quoted};
+use genco::{
+    lang::JavaScript,
+    quote,
+    tokens::{quoted, FormatInto},
+};
 
 use crate::{
     code_gen::{
-        js::{generateable::container::BindingTypeGenerateable, Tokens, JS_OBJECT_VARIABLE},
+        js::{
+            generateable::container::BindingTypeGenerateable, Function, Tokens, JS_OBJECT_VARIABLE,
+        },
         utils::{ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensIterExt},
     },
+    function_args,
     registry::Container,
 };
+
+use super::{Case, DefaultCase, ExportRegistry, SwitchCase};
 
 pub fn gen_serializer_code() -> Tokens {
     quote! {
@@ -29,49 +38,63 @@ pub fn gen_serializer_code() -> Tokens {
 pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
         .map(gen_ser_function_for_type)
-        .join_with_line_breaks()
+        .join_with_empty_line()
 }
 
-fn gen_ser_function_for_type(container: Container) -> Tokens {
+fn gen_ser_function_for_type(container: Container) -> impl FormatInto<JavaScript> {
     let container_ident = ContainerIdentifierBuilder::from(&container).build();
     let ser_body = container.r#type.gen_ser_body();
-    quote! {
-        const serialize_$(&container_ident) = (s, $JS_OBJECT_VARIABLE) => { $ser_body }
-    }
+
+    Function::new_untyped(
+        quote!(serialize_$container_ident),
+        function_args![quote!(s), JS_OBJECT_VARIABLE],
+        ser_body,
+    )
 }
 
 pub fn gen_serialize_func(
     defines: impl Iterator<Item = Container>,
     runtime_type_checks: bool,
-    esm_module: bool,
-) -> Tokens {
-    let body = defines
-        .map(|d| gen_ser_case(d, runtime_type_checks))
-        .join_with_semicolon();
+    export_registry: &mut ExportRegistry,
+) -> impl FormatInto<JavaScript> {
+    let mut switch_case = SwitchCase::new("type");
+    switch_case.extend_cases(defines.map(|d| gen_ser_case(d, runtime_type_checks)));
+    switch_case.default_case(DefaultCase::new_without_break(
+        quote!(throw "type not implemented";),
+    ));
 
-    let export_type = if esm_module {
-        quote!(export const serialize)
-    } else {
-        quote!(module.exports.serialize)
-    };
-    quote! {
-        $export_type = (type, value) => {
+    export_registry.push("serialize");
+
+    Function::new_untyped(
+        "serialize",
+        function_args!["type", "value"],
+        quote! {
             if (!(typeof type === "string")) {
-                throw "type must be a string"
+                throw "type must be a string";
             }
-            const s = new Serializer()
-            switch (type) { $body }
-            return s.finish()
-        }
-    }
+            const s = new Serializer();
+            $switch_case
+            return s.finish();
+        },
+    )
 }
 
-fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Tokens {
+fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Case {
     let full_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
     let container_ident = ContainerIdentifierBuilder::from(&container).build();
-    if runtime_type_checks {
-        quote!(case $(quoted(full_qualified)): if (is_$(container_ident.as_str())(value)) { serialize_$(container_ident)(s, value) } else throw "value has wrong format"; break)
+    let body = if runtime_type_checks {
+        quote! {
+            if (is_$(container_ident.as_str())(value)) {
+                serialize_$(container_ident)(s, value);
+            } else {
+                throw "value has wrong format";
+            }
+        }
     } else {
-        quote!(case $(quoted(full_qualified)): serialize_$(container_ident)(s, value); break)
-    }
+        quote! {
+            serialize_$(container_ident)(s, value);
+        }
+    };
+
+    Case::new(quoted(full_qualified), body)
 }

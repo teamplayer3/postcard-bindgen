@@ -10,7 +10,14 @@ use super::JsTypeGenerateable;
 impl JsTypeGenerateable for OptionalMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         let type_accessor = self.inner.gen_ser_accessor(variable_path.to_owned());
-        quote!(if ($variable_path !== undefined) { s.serialize_number(U32_BYTES, false, 1); $type_accessor } else { s.serialize_number(U32_BYTES, false, 0) })
+        quote! {
+            if ($variable_path !== undefined) {
+                s.serialize_number(U32_BYTES, false, 1);
+                $type_accessor
+            } else {
+                s.serialize_number(U32_BYTES, false, 0)
+            }
+        }
     }
 
     fn gen_des_accessor(&self, field_accessor: FieldAccessor) -> Tokens {

@@ -1,8 +1,7 @@
+use genco::quote;
+
 use crate::{
-    code_gen::{
-        js::{Tokens, VariablePath},
-        utils::wrapped_brackets,
-    },
+    code_gen::js::{Tokens, VariablePath},
     registry::TupleStructType,
 };
 
@@ -14,7 +13,8 @@ impl BindingTypeGenerateable for TupleStructType {
     }
 
     fn gen_des_body(&self) -> Tokens {
-        wrapped_brackets(des::gen_accessors_indexed(&self.fields))
+        let body = des::gen_accessors_indexed(&self.fields);
+        quote!(return $body;)
     }
 
     fn gen_ty_check_body(&self) -> Tokens {

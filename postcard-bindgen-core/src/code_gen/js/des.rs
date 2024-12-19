@@ -1,12 +1,19 @@
-use genco::{quote, tokens::quoted};
+use genco::{
+    lang::JavaScript,
+    quote,
+    tokens::{quoted, FormatInto},
+};
 
 use crate::{
     code_gen::{
         js::{generateable::container::BindingTypeGenerateable, Tokens},
         utils::{ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensIterExt},
     },
+    function_args,
     registry::Container,
 };
+
+use super::{Case, DefaultCase, ExportRegistry, Function, SwitchCase};
 
 pub fn gen_deserializer_code() -> Tokens {
     quote! {
@@ -30,37 +37,49 @@ pub fn gen_deserializer_code() -> Tokens {
 pub fn gen_des_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
     bindings
         .map(gen_des_function_for_type)
-        .join_with_line_breaks()
+        .join_with_empty_line()
 }
 
-fn gen_des_function_for_type(container: Container) -> Tokens {
+fn gen_des_function_for_type(container: Container) -> impl FormatInto<JavaScript> {
     let container_ident = ContainerIdentifierBuilder::from(&container).build();
     let des_body = container.r#type.gen_des_body();
-    quote! {
-        const deserialize_$container_ident = (d) => $des_body
-    }
+
+    Function::new_untyped(
+        quote!(deserialize_$container_ident),
+        function_args![quote!(d)],
+        des_body,
+    )
 }
 
-pub fn gen_deserialize_func(defines: impl Iterator<Item = Container>, esm_module: bool) -> Tokens {
-    let body = defines.map(gen_des_case).join_with_semicolon();
-    let export_type = if esm_module {
-        quote!(export const deserialize)
-    } else {
-        quote!(module.exports.deserialize)
-    };
-    quote! {
-        $export_type = (type, bytes) => {
-            if (!(typeof type === "string")) {
-                throw "type must be a string"
-            }
-            const d = new Deserializer(bytes)
-            switch (type) { $body }
+pub fn gen_deserialize_func(
+    defines: impl Iterator<Item = Container>,
+    export_registry: &mut ExportRegistry,
+) -> impl FormatInto<JavaScript> {
+    let mut switch_case = SwitchCase::new("type");
+    switch_case.extend_cases(defines.map(gen_des_case));
+    switch_case.default_case(DefaultCase::new_without_break(
+        quote!(throw "type not implemented";),
+    ));
+
+    let body = quote! {
+        if (!(typeof type === "string")) {
+            throw "type must be a string";
         }
-    }
+        const d = new Deserializer(bytes);
+        $switch_case
+    };
+
+    export_registry.push("deserialize");
+
+    Function::new_untyped("deserialize", function_args!("type", "bytes"), body)
 }
 
-fn gen_des_case(container: Container) -> Tokens {
+fn gen_des_case(container: Container) -> Case {
     let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
     let container_ident = ContainerIdentifierBuilder::from(&container).build();
-    quote!(case $(quoted(fully_qualified)): return deserialize_$container_ident(d))
+
+    Case::new_without_break(
+        quoted(fully_qualified),
+        quote!(return deserialize_$container_ident(d);),
+    )
 }

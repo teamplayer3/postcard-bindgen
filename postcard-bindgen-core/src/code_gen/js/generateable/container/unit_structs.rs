@@ -1,22 +1,20 @@
 use genco::quote;
 
 use crate::{
-    code_gen::{
-        js::{Tokens, VariablePath, JS_OBJECT_VARIABLE},
-        utils::wrapped_brackets,
-    },
+    code_gen::js::{Tokens, JS_OBJECT_VARIABLE},
     registry::UnitStructType,
 };
 
-use super::{des, ser, ts, BindingTypeGenerateable};
+use super::{des, ts, BindingTypeGenerateable};
 
 impl BindingTypeGenerateable for UnitStructType {
     fn gen_ser_body(&self) -> Tokens {
-        ser::gen_accessors_fields([], VariablePath::default())
+        quote!()
     }
 
     fn gen_des_body(&self) -> Tokens {
-        wrapped_brackets(des::gen_accessors_fields([]))
+        let body = des::gen_accessors_fields([]);
+        quote!(return $body;)
     }
 
     fn gen_ty_check_body(&self) -> Tokens {

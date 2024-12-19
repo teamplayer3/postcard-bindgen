@@ -4,7 +4,7 @@ use genco::{prelude::js::Tokens, quote};
 
 use crate::{
     code_gen::{
-        js::{FieldAccessor, VariablePath},
+        js::{FieldAccessor, VariablePath, JS_OBJECT_VARIABLE},
         utils::TokensIterExt,
     },
     type_info::{MapMeta, ValueType},
@@ -26,7 +26,12 @@ impl JsTypeGenerateable for MapMeta {
                 let inner_type_value_accessor = self
                     .value_type
                     .gen_ser_accessor(VariablePath::new("v".into()));
-                quote!(s.serialize_map((ser, k, v) => [$inner_type_key_accessor, $inner_type_value_accessor], $variable_path))
+                quote! {
+                    s.serialize_map((d, k, v) => [
+                        $inner_type_key_accessor,
+                        $inner_type_value_accessor
+                    ], $variable_path)
+                }
             }
         }
     }
@@ -41,7 +46,12 @@ impl JsTypeGenerateable for MapMeta {
                 let inner_type_key_accessor = self.key_type.gen_des_accessor(FieldAccessor::None);
                 let inner_type_value_accessor =
                     self.value_type.gen_des_accessor(FieldAccessor::None);
-                quote!($(field_accessor)d.deserialize_map(((des) => [$inner_type_key_accessor, $inner_type_value_accessor])))
+                quote! {
+                    $(field_accessor)d.deserialize_map(((d) => [
+                        $inner_type_key_accessor,
+                        $inner_type_value_accessor
+                    ]))
+                }
             }
         }
     }
@@ -49,7 +59,9 @@ impl JsTypeGenerateable for MapMeta {
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
         match self.key_type.deref() {
             &ValueType::String(_) => {
-                let inner_type_check = self.value_type.gen_ty_check(VariablePath::new("v".into()));
+                let inner_type_check = self
+                    .value_type
+                    .gen_ty_check(VariablePath::new(JS_OBJECT_VARIABLE.into()));
                 let inner_type_checks = quote!(Object.values($(variable_path.to_owned())).map((v) => $inner_type_check).every((v) => v));
                 [
                     quote!(typeof $variable_path === "object"),

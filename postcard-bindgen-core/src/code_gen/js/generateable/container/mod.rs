@@ -61,7 +61,7 @@ mod ser {
     use crate::{
         code_gen::{
             js::{generateable::types::JsTypeGenerateable, VariableAccess, VariablePath},
-            utils::TokensIterExt,
+            utils::{JoinType, TokensIterExt},
         },
         registry::StructField,
         type_info::ValueType,
@@ -71,7 +71,7 @@ mod ser {
         fields: impl AsRef<[ValueType]>,
         variable_path: VariablePath,
     ) -> Tokens {
-        fields
+        let mut body = fields
             .as_ref()
             .iter()
             .enumerate()
@@ -81,14 +81,17 @@ mod ser {
                     .modify_push(VariableAccess::Indexed(index));
                 field.gen_ser_accessor(path)
             })
-            .join_with_semicolon()
+            .join_with([JoinType::Semicolon, JoinType::LineBreak]);
+
+        body.append(";");
+        body
     }
 
     pub fn gen_accessors_fields(
         fields: impl AsRef<[StructField]>,
         variable_path: VariablePath,
     ) -> Tokens {
-        fields
+        let mut body = fields
             .as_ref()
             .iter()
             .map(|field| {
@@ -97,7 +100,10 @@ mod ser {
                     .modify_push(VariableAccess::Field(field.name.into()));
                 field.v_type.gen_ser_accessor(path)
             })
-            .join_with_semicolon()
+            .join_with([JoinType::Semicolon, JoinType::LineBreak]);
+
+        body.append(";");
+        body
     }
 }
 
@@ -107,7 +113,7 @@ mod des {
     use crate::{
         code_gen::{
             js::{generateable::types::JsTypeGenerateable, FieldAccessor},
-            utils::TokensIterExt,
+            utils::{JoinType, TokensIterExt},
         },
         registry::StructField,
         type_info::ValueType,
@@ -122,8 +128,12 @@ mod des {
                     .v_type
                     .gen_des_accessor(FieldAccessor::Object(field.name))
             })
-            .join_with_comma();
-        quote!({ $body })
+            .join_with([JoinType::Comma, JoinType::LineBreak]);
+        quote! {
+            {
+                $body
+            }
+        }
     }
 
     pub fn gen_accessors_indexed(fields: impl AsRef<[ValueType]>) -> Tokens {
@@ -131,8 +141,12 @@ mod des {
             .as_ref()
             .iter()
             .map(|v_type| v_type.gen_des_accessor(FieldAccessor::Array))
-            .join_with_comma();
-        quote!([$body])
+            .join_with([JoinType::Comma, JoinType::LineBreak]);
+        quote! {
+            [
+                $body
+            ]
+        }
     }
 }
 
@@ -181,6 +195,7 @@ mod ty_check {
                 field.gen_ty_check(path)
             })
             .join_logic_and();
+
         quote!(Array.isArray($(variable_path.to_owned())) && $variable_path.length === $arr_len && $field_checks)
     }
 }

@@ -1,17 +1,16 @@
-use crate::{
-    code_gen::{js::Tokens, utils::wrapped_curly_brackets},
-    registry::EnumType,
-};
+use genco::quote;
+
+use crate::{code_gen::js::Tokens, registry::EnumType};
 
 use super::BindingTypeGenerateable;
 
 impl BindingTypeGenerateable for EnumType {
     fn gen_ser_body(&self) -> Tokens {
-        ser::gen_function(&self.variants)
+        quote!($(ser::gen_function(&self.variants)))
     }
 
     fn gen_des_body(&self) -> Tokens {
-        wrapped_curly_brackets(des::gen_function(&self.variants))
+        quote!($(des::gen_function(&self.variants)))
     }
 
     fn gen_ty_check_body(&self) -> Tokens {
@@ -36,19 +35,26 @@ pub mod ser {
         code_gen::{
             js::{
                 generateable::{container::ser, types::JsTypeGenerateable},
-                VariableAccess, VariablePath, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                Case, SwitchCase, VariableAccess, VariablePath, JS_ENUM_VARIANT_KEY,
+                JS_ENUM_VARIANT_VALUE,
             },
-            utils::TokensIterExt,
+            switch_case::DefaultCase,
         },
         registry::{EnumVariant, EnumVariantType},
     };
 
-    pub fn gen_function(variants: impl AsRef<[EnumVariant]>) -> Tokens {
+    pub fn gen_function(variants: impl AsRef<[EnumVariant]>) -> impl FormatInto<JavaScript> {
         let enumerated_variants = variants.as_ref().iter().enumerate();
-        let switch_body = enumerated_variants
-            .map(|(index, variant)| gen_case_for_variant(index, variant))
-            .join_with_semicolon();
-        quote!(switch (v.$JS_ENUM_VARIANT_KEY) { $switch_body })
+
+        let mut switch_case = SwitchCase::new(quote!(v.$JS_ENUM_VARIANT_KEY));
+        switch_case.extend_cases(
+            enumerated_variants.map(|(index, variant)| gen_case_for_variant(index, variant)),
+        );
+        switch_case.default_case(DefaultCase::new_without_break(
+            quote!(throw "variant not implemented"),
+        ));
+
+        switch_case
     }
 
     enum CaseBody {
@@ -60,21 +66,21 @@ pub mod ser {
         fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
             quote_in! { *tokens =>
                 $(match self {
-                    CaseBody::Body(b) => $b;,
+                    CaseBody::Body(b) => $b,
                     CaseBody::None => ()
                 })
             }
         }
     }
 
-    fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
+    fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Case {
         let variant_name = quoted(variant.name);
         let variable_path = VariablePath::default()
             .modify_push(VariableAccess::Field(JS_ENUM_VARIANT_VALUE.into()));
         let body = match &variant.inner_type {
             EnumVariantType::Empty => CaseBody::None,
             EnumVariantType::Tuple(fields) => CaseBody::Body(match fields.len() {
-                1 => fields[0].gen_ser_accessor(variable_path),
+                1 => quote!($(fields[0].gen_ser_accessor(variable_path));),
                 _ => ser::gen_accessors_indexed(fields, variable_path),
             }),
             EnumVariantType::NewType(fields) => {
@@ -82,7 +88,13 @@ pub mod ser {
             }
         };
 
-        quote!(case $variant_name: s.serialize_number(U32_BYTES, false, $index); $body break)
+        Case::new(
+            variant_name,
+            quote! {
+                s.serialize_number(U32_BYTES, false, $index);
+                $body
+            },
+        )
     }
 }
 
@@ -98,19 +110,26 @@ pub mod des {
         code_gen::{
             js::{
                 generateable::{container::des, types::JsTypeGenerateable},
-                FieldAccessor, JS_ENUM_VARIANT_KEY, JS_ENUM_VARIANT_VALUE,
+                Case, DefaultCase, FieldAccessor, SwitchCase, JS_ENUM_VARIANT_KEY,
+                JS_ENUM_VARIANT_VALUE,
             },
-            utils::TokensIterExt,
+            utils::{JoinType, TokensIterExt},
         },
         registry::{EnumVariant, EnumVariantType},
     };
 
-    pub fn gen_function(variants: impl AsRef<[EnumVariant]>) -> Tokens {
+    pub fn gen_function(variants: impl AsRef<[EnumVariant]>) -> impl FormatInto<JavaScript> {
         let enumerated_variants = variants.as_ref().iter().enumerate();
-        let switch_body = enumerated_variants
-            .map(|(index, variant)| gen_case_for_variant(index, variant))
-            .join_with_semicolon();
-        quote!(switch (d.deserialize_number(U32_BYTES, false)) { $switch_body; default: throw "variant not implemented" })
+
+        let mut switch_case = SwitchCase::new(quote!(d.deserialize_number(U32_BYTES, false)));
+        switch_case.extend_cases(
+            enumerated_variants.map(|(index, variant)| gen_case_for_variant(index, variant)),
+        );
+        switch_case.default_case(DefaultCase::new_without_break(
+            quote!(throw "variant not implemented"),
+        ));
+
+        switch_case
     }
 
     enum CaseBody {
@@ -122,14 +141,14 @@ pub mod des {
         fn format_into(self, tokens: &mut genco::Tokens<JavaScript>) {
             quote_in! { *tokens =>
                 $(match self {
-                    CaseBody::Body(b) => {, $JS_ENUM_VARIANT_VALUE: $b},
+                    CaseBody::Body(b) => {$JS_ENUM_VARIANT_VALUE: $b},
                     CaseBody::None => ()
                 })
             }
         }
     }
 
-    fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Tokens {
+    fn gen_case_for_variant(index: usize, variant: &EnumVariant) -> Case {
         let variant_name = quoted(variant.name);
         let body = match &variant.inner_type {
             EnumVariantType::Empty => CaseBody::None,
@@ -139,7 +158,19 @@ pub mod des {
                 _ => des::gen_accessors_indexed(fields),
             }),
         };
-        quote!(case $index: return { $JS_ENUM_VARIANT_KEY: $variant_name $body })
+
+        let body = [quote!($JS_ENUM_VARIANT_KEY: $variant_name), quote!($body)]
+            .into_iter()
+            .join_with([JoinType::Comma, JoinType::LineBreak]);
+
+        Case::new_without_break(
+            index,
+            quote! {
+                return {
+                    $body
+                };
+            },
+        )
     }
 }
 
