@@ -216,9 +216,16 @@ impl TupleFields {
     }
 }
 
+/// Wraps a tree of nodes that contain the bindings.
+///
+/// Can be build from a `BindingsRegistry` by calling [BindingsRegistry::into_entries()].
+#[derive(Debug, Clone)]
 pub struct ContainerCollection(Tree<NodeId, NodeType>);
 
 impl ContainerCollection {
+    /// Removes all module nodes and moves their children to the root node.
+    ///
+    /// Can be used to remove the module hierarchy.
     pub fn flatten(&mut self) {
         let root_node_id = self.0.get_root_node().unwrap().get_node_id();
         let root_node = self.0.get_node_by_id(&root_node_id).unwrap();
