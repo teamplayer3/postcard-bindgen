@@ -1,13 +1,12 @@
-use genco::{prelude::python::Tokens, quote, quote_in};
+use genco::{lang::Python, prelude::python::Tokens, quote, quote_in, tokens::FormatInto};
 
 use crate::{
     code_gen::{
         import_registry::{ImportItem, Package}, python::{generateable::container::BindingTypeGenerateable, Function, ImportRegistry, PYTHON_OBJECT_VARIABLE}, utils::{
             ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
             TokensIterExt,
-        },
-    },
-    registry::Container,
+        }
+    }, function_args, registry::Container
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -71,14 +70,12 @@ pub fn gen_ser_functions(bindings: impl Iterator<Item = Container>) -> Tokens {
         .join_with_empty_line()
 }
 
-fn gen_ser_function_for_type(container: Container) -> Tokens {
+fn gen_ser_function_for_type(container: Container) -> impl FormatInto<Python> {
     let container_ident =
         ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
-    let ser_body = container.r#type.gen_ser_body((&container).into());
-    quote! {
-        def serialize_$(&container_ident)(s, $PYTHON_OBJECT_VARIABLE):
-            $ser_body
-    }
+    let body = container.r#type.gen_ser_body((&container).into());
+
+    Function::new_untyped(quote!(serialize_$container_ident), function_args!("s", PYTHON_OBJECT_VARIABLE), body)
 }
 
 pub fn gen_serialize_func(
@@ -109,21 +106,23 @@ pub fn gen_serialize_func(
 
     let mut tokens = Tokens::new();
     if runtime_type_checks {
-let mut import_registry = ImportRegistry::new("".to_owned());
+        let mut import_registry = ImportRegistry::new("".to_owned());
         import_registry.push(Package::Relative("runtime_checks".into()), ImportItem::All);
 
         quote_in!(tokens=> $import_registry);
         tokens.push();
     }
 
-    quote_in! {tokens=>
-        def serialize(value: $type_check) -> bytes:
-            s = Serializer()
+    
+    let ser_func = Function::new("serialize", function_args![("value", type_check)], quote! {
+        s = Serializer()
+        
+        $ser_switch
 
-            $ser_switch
+        return s.finish()
+    }, "bytes");
 
-            return s.finish()
-    }
+    tokens.append(ser_func);
 
     tokens
 }
