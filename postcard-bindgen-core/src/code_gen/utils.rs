@@ -46,16 +46,16 @@ impl StrExt for &str {
     }
 }
 
-pub fn wrapped_brackets<L: Lang>(inner: Tokens<L>) -> Tokens<L> {
-    quote!(($inner))
+#[derive(Debug, Clone, Copy)]
+pub enum JoinType {
+    LineBreak,
+    Semicolon,
+    Comma,
 }
 
-pub fn wrapped_curly_brackets<L: Lang>(inner: Tokens<L>) -> Tokens<L> {
-    quote!({ $inner })
-}
-
-pub(super) trait TokensIterExt<L: Lang>: Iterator<Item = Tokens<L>>
+pub(super) trait TokensIterExt<L: Lang, F>: Iterator<Item = F>
 where
+F: FormatInto<L>,
     Self: Sized,
 {
     const LOGICAL_OR: &'static str;
@@ -77,6 +77,44 @@ where
             acc.append(x);
             acc
         })
+    }
+
+    fn join_with(mut self, separators: impl IntoIterator<Item = JoinType> + Clone) -> Tokens<L> {
+        let init = loop {
+            let init = match self.next() {
+                Some(first) => quote!($first),
+                None => break None,
+            };
+
+            if init.is_empty() {
+                continue;
+            }
+
+            break Some(init);
+        };
+
+        if let Some(init) = init {
+            self.fold(init, |mut acc, part| {
+                let mut tokens = Tokens::new();
+                part.format_into(&mut tokens);
+
+                if tokens.is_empty() {
+                    return acc;
+                }
+
+                for sep in separators.clone() {
+                    match sep {
+                        JoinType::Semicolon => acc.append(";"),
+                        JoinType::Comma => acc.append(","),
+                        JoinType::LineBreak => acc.push(),
+                    }
+                }
+                acc.append(tokens);
+                acc
+            })
+        } else {
+            Tokens::new()
+        }
     }
 
     fn join_with_comma(self) -> Tokens<L> {

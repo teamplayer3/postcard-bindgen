@@ -257,7 +257,7 @@ pub fn generate(
     )
 }
 
-impl<I> TokensIterExt<JavaScript> for I
+impl<I, F> TokensIterExt<JavaScript, F> for I
 where
     I: Iterator<Item = Tokens>,
 {

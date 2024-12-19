@@ -229,9 +229,10 @@ pub fn generate(
     Exports { files }
 }
 
-impl<I> TokensIterExt<Python> for I
+impl<I, F> TokensIterExt<Python, F> for I
 where
-    I: Iterator<Item = Tokens>,
+    I: Iterator<Item = F>,
+    F: FormatInto<Python>,
 {
     const LOGICAL_AND: &'static str = PYTHON_LOGIC_AND;
     const LOGICAL_OR: &'static str = PYTHON_LOGIC_OR;
