@@ -2,11 +2,18 @@ use genco::{lang::Python, prelude::python::Tokens, quote, quote_in, tokens::Form
 
 use crate::{
     code_gen::{
-        import_registry::{ImportItem, Package}, python::{generateable::container::BindingTypeGenerateable, Function, ImportRegistry, PYTHON_OBJECT_VARIABLE}, utils::{
+        import_registry::{ImportItem, Package},
+        python::{
+            generateable::container::BindingTypeGenerateable, Function, ImportRegistry,
+            PYTHON_OBJECT_VARIABLE,
+        },
+        utils::{
             ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
             TokensIterExt,
-        }
-    }, function_args, registry::Container
+        },
+    },
+    function_args,
+    registry::Container,
 };
 
 pub fn gen_serializer_code() -> Tokens {
@@ -75,7 +82,11 @@ fn gen_ser_function_for_type(container: Container) -> impl FormatInto<Python> {
         ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
     let body = container.r#type.gen_ser_body((&container).into());
 
-    Function::new_untyped(quote!(serialize_$container_ident), function_args!("s", PYTHON_OBJECT_VARIABLE), body)
+    Function::new_untyped(
+        quote!(serialize_$container_ident),
+        function_args!("s", PYTHON_OBJECT_VARIABLE),
+        body,
+    )
 }
 
 pub fn gen_serialize_func(
@@ -90,7 +101,7 @@ pub fn gen_serialize_func(
     let type_check = if all_bindings.len() == 1 {
         quote!($(all_bindings.first().unwrap()))
     } else {
-        quote!(Union[$(containers.clone().map(|container| 
+        quote!(Union[$(containers.clone().map(|container|
             quote!($(ContainerFullQualifiedTypeBuilder::from(&container)
                 .build()))).join_with_comma())])
     };
@@ -113,14 +124,18 @@ pub fn gen_serialize_func(
         tokens.push();
     }
 
-    
-    let ser_func = Function::new("serialize", function_args![("value", type_check)], quote! {
-        s = Serializer()
-        
-        $ser_switch
+    let ser_func = Function::new(
+        "serialize",
+        function_args![("value", type_check)],
+        quote! {
+            s = Serializer()
 
-        return s.finish()
-    }, "bytes");
+            $ser_switch
+
+            return s.finish()
+        },
+        "bytes",
+    );
 
     tokens.append(ser_func);
 
