@@ -1,7 +1,9 @@
 mod available_check;
 mod export_registry;
 mod field_accessor;
+mod function;
 mod import_registry;
+mod switch_case;
 mod utils;
 mod variable_path;
 

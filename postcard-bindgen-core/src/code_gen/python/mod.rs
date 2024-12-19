@@ -35,6 +35,8 @@ type FieldAccessor<'a> = super::field_accessor::FieldAccessor<'a>;
 type AvailableCheck = super::available_check::AvailableCheck<Python>;
 type ImportRegistry = super::import_registry::ImportRegistry;
 type ExportFile = crate::ExportFile<Python>;
+type FunctionArg = super::function::FunctionArg<Python>;
+type Function = super::function::Function<Python>;
 
 /// Settings for bindings generation.
 ///
@@ -350,6 +352,34 @@ impl FormatInto<Python> for ImportRegistry {
             }
 
             tokens.push();
+        }
+    }
+}
+
+impl FormatInto<Python> for FunctionArg {
+    fn format_into(self, tokens: &mut Tokens) {
+        if let Some(r#type) = self.r#type {
+            quote_in! { *tokens =>
+                $(self.name): $r#type
+            }
+        } else {
+            quote_in! { *tokens =>
+                $(self.name)
+            }
+        }
+    }
+}
+
+impl FormatInto<Python> for Function {
+    fn format_into(self, tokens: &mut Tokens) {
+        let return_type = if let Some(ret_type) = self.return_type {
+            Some(quote!($(" ")-> $ret_type))
+        } else {
+            None
+        };
+        quote_in! { *tokens =>
+            def $(self.name)($(for arg in self.args join (, ) => $arg))$return_type:
+                $(self.body)
         }
     }
 }

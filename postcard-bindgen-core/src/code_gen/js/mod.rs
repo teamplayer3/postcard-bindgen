@@ -33,7 +33,12 @@ type VariablePath = super::variable_path::VariablePath<JavaScript>;
 type VariableAccess = super::variable_path::VariableAccess;
 type FieldAccessor<'a> = super::field_accessor::FieldAccessor<'a>;
 type AvailableCheck = super::available_check::AvailableCheck<JavaScript>;
+type Function = super::function::Function<JavaScript>;
+type FunctionArg = super::function::FunctionArg<JavaScript>;
 type ExportRegistry = super::export_registry::ExportRegistry<JavaScript>;
+type Case = super::switch_case::Case<JavaScript>;
+type DefaultCase = super::switch_case::DefaultCase<JavaScript>;
+type SwitchCase = super::switch_case::SwitchCase<JavaScript>;
 
 /// Settings for bindings generation.
 ///
@@ -306,6 +311,74 @@ impl FormatInto<JavaScript> for AvailableCheck {
                 AvailableCheck::Object(path, name) => $(quoted(name)) in $path,
                 AvailableCheck::None => ()
             })
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for FunctionArg {
+    fn format_into(self, tokens: &mut Tokens) {
+        quote_in! { *tokens =>
+            $(self.name)
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for Function {
+    fn format_into(self, tokens: &mut Tokens) {
+        quote_in! { *tokens =>
+            function $(self.name)($(for arg in self.args join (, ) => $arg)) {
+                $(self.body)
+            }
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for ExportRegistry {
+    fn format_into(self, tokens: &mut Tokens) {
+        match self.export_mode {
+            ExportMode::CJS => {
+                quote_in! { *tokens =>
+                    $(for export in self.exports join () => exports.$(&export) = $export)
+                }
+            }
+            ExportMode::ESM => {
+                quote_in! { *tokens =>
+                    export {
+                        $(for export in self.exports join (,) => $export)
+                    };
+                }
+            }
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for Case {
+    fn format_into(self, tokens: &mut Tokens) {
+        quote_in! {*tokens =>
+            case $(self.case):
+                $(self.body)
+                $(if self.break_after { break; })
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for DefaultCase {
+    fn format_into(self, tokens: &mut Tokens) {
+        quote_in! { *tokens =>
+            default:
+                $(self.body)
+                $(if self.break_after { break; })
+        }
+    }
+}
+
+impl FormatInto<JavaScript> for SwitchCase {
+    fn format_into(self, tokens: &mut Tokens) {
+        quote_in! { *tokens =>
+            switch ($(self.switch_arg)) {
+            $(for case in self.cases => $case)
+            $(if let Some(default_case) = self.default_case { $default_case })
+            }
         }
     }
 }
