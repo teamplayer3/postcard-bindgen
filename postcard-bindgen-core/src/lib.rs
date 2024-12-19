@@ -31,6 +31,7 @@ impl ArchPointerLen {
 
 /// Helper struct to pass the generated language strings to an export function.
 #[cfg(feature = "generating")]
+#[derive(Debug)]
 pub struct Exports<L: genco::lang::Lang> {
     pub files: Vec<ExportFile<L>>,
 }
@@ -42,6 +43,14 @@ impl<L: genco::lang::Lang> Exports<L> {
             .iter()
             .find(|f| f.content_type.as_str() == content_type.as_ref())
             .map(|f| &f.content)
+    }
+
+    pub fn pop_file(&mut self, content_type: impl AsRef<str>) -> Option<genco::Tokens<L>> {
+        let index = self
+            .files
+            .iter()
+            .position(|f| f.content_type.as_str() == content_type.as_ref())?;
+        Some(self.files.remove(index).content)
     }
 }
 

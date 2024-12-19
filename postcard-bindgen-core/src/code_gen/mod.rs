@@ -1,4 +1,5 @@
 mod available_check;
+mod export_registry;
 mod field_accessor;
 mod import_registry;
 mod utils;

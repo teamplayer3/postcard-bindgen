@@ -19,7 +19,7 @@ use type_checks::gen_type_checks;
 
 use crate::{registry::ContainerCollection, ExportFile, Exports};
 
-use super::utils::TokensIterExt;
+use super::{export_registry::ExportMode, utils::TokensIterExt};
 
 const JS_ENUM_VARIANT_KEY: &str = "tag";
 const JS_ENUM_VARIANT_VALUE: &str = "value";
@@ -33,6 +33,7 @@ type VariablePath = super::variable_path::VariablePath<JavaScript>;
 type VariableAccess = super::variable_path::VariableAccess;
 type FieldAccessor<'a> = super::field_accessor::FieldAccessor<'a>;
 type AvailableCheck = super::available_check::AvailableCheck<JavaScript>;
+type ExportRegistry = super::export_registry::ExportRegistry<JavaScript>;
 
 /// Settings for bindings generation.
 ///
@@ -155,57 +156,80 @@ pub fn generate(
         containers.flatten();
     }
 
-    let mut js_tokens = Tokens::new();
+    let export_mode = if gen_settings.esm_module {
+        ExportMode::ESM
+    } else {
+        ExportMode::CJS
+    };
 
-    js_tokens.append(gen_util());
-    js_tokens.line();
+    let mut export_files = Vec::new();
+
+    export_files.push(ExportFile {
+        content_type: "util".to_owned(),
+        content: gen_util(),
+    });
 
     if gen_settings.ser {
-        js_tokens.append(gen_serializer_code());
-        js_tokens.line();
+        export_files.push(ExportFile {
+            content_type: "serializer".to_owned(),
+            content: gen_serializer_code(),
+        });
+
+        let mut tokens = Tokens::new();
+
+        tokens.append(gen_ser_functions(containers.all_containers()));
+        tokens.line();
+
+        let mut export_registry = ExportRegistry::new(export_mode.clone());
+
+        tokens.append(gen_serialize_func(
+            containers.all_containers(),
+            gen_settings.runtime_type_checks,
+            &mut export_registry,
+        ));
+
+        tokens.line();
+        tokens.append(export_registry);
+
+        export_files.push(ExportFile {
+            content_type: "ser".to_owned(),
+            content: tokens,
+        });
     }
 
     if gen_settings.des {
-        js_tokens.append(gen_deserializer_code());
-        js_tokens.line();
-    }
+        export_files.push(ExportFile {
+            content_type: "deserializer".to_owned(),
+            content: gen_deserializer_code(),
+        });
 
-    if gen_settings.ser {
-        js_tokens.append(gen_ser_functions(containers.all_containers()));
-        js_tokens.line();
-    }
+        let mut tokens = Tokens::new();
 
-    if gen_settings.des {
-        js_tokens.append(gen_des_functions(containers.all_containers()));
-        js_tokens.line();
+        tokens.append(gen_des_functions(containers.all_containers()));
+        tokens.line();
+
+        let mut export_registry = ExportRegistry::new(export_mode);
+
+        tokens.append(gen_deserialize_func(
+            containers.all_containers(),
+            &mut export_registry,
+        ));
+        tokens.line();
+
+        tokens.append(export_registry);
+
+        export_files.push(ExportFile {
+            content_type: "des".to_owned(),
+            content: tokens,
+        });
     }
 
     if gen_settings.runtime_type_checks {
-        js_tokens.append(gen_type_checks(containers.all_containers()));
-        js_tokens.line();
+        export_files.push(ExportFile {
+            content_type: "runtime_checks".to_owned(),
+            content: gen_type_checks(containers.all_containers()),
+        });
     }
-
-    if gen_settings.ser {
-        js_tokens.append(gen_serialize_func(
-            containers.all_containers(),
-            gen_settings.runtime_type_checks,
-            gen_settings.esm_module,
-        ));
-        js_tokens.line();
-    }
-
-    if gen_settings.des {
-        js_tokens.append(gen_deserialize_func(
-            containers.all_containers(),
-            gen_settings.esm_module,
-        ));
-        js_tokens.line();
-    }
-
-    let mut export_files = vec![ExportFile {
-        content_type: "js".to_owned(),
-        content: js_tokens,
-    }];
 
     if gen_settings.type_script_types {
         let ts = gen_ts_typings(&containers);

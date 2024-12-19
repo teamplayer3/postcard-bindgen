@@ -7,6 +7,7 @@ use std::{
 
 use postcard_bindgen_core::{
     code_gen::js::{generate, GenerationSettings},
+    lang::js::Tokens,
     registry::ContainerCollection,
 };
 
@@ -44,7 +45,7 @@ pub fn build_npm_package(
 
     std::fs::create_dir_all(&dir)?;
 
-    let (exports, export_meta) = generate(bindings, gen_settings);
+    let (mut exports, export_meta) = generate(bindings, gen_settings);
 
     let package_json = package_file_src(
         package_info.name.as_str(),
@@ -58,14 +59,25 @@ pub fn build_npm_package(
     File::create(package_json_path.as_path())?.write_all(package_json.as_bytes())?;
 
     let js_export_path = dir.join("index.js");
-    File::create(js_export_path.as_path())?.write_all(
-        exports
-            .file("js")
-            .unwrap()
-            .to_file_string()
-            .unwrap()
-            .as_bytes(),
-    )?;
+    let js_tokens = [
+        "util",
+        "serializer",
+        "deserializer",
+        "runtime_checks",
+        "ser",
+        "des",
+    ]
+    .into_iter()
+    .map(|t| exports.pop_file(t))
+    .filter_map(|t| t)
+    .fold(Tokens::new(), |mut current, content| {
+        current.append(content.clone());
+        current.line();
+        current
+    });
+
+    File::create(js_export_path.as_path())?
+        .write_all(js_tokens.to_file_string().unwrap().as_bytes())?;
 
     if let Some(file) = exports.file("ts") {
         let ts_export_path = dir.join("index.d.ts");
