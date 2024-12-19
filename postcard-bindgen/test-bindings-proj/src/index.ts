@@ -10,10 +10,10 @@ const b = deserialize("B", bytes)
 console.log(b)
 
 // test namespaces
-const bytes_b_b = serialize("b.B", [2323]);
-console.log(bytes_b_b)
-const b_b = deserialize("b.B", bytes_b_b)
-console.log(b_b)
+const bytes_e_e = serialize("e.E",  [234, [21]]);
+console.log(bytes_e_e)
+const e_e = deserialize("e.E", bytes_e_e)
+console.log(e_e)
 
 const bytes_file = `${process.cwd()}/../serialized.bytes`
 const loaded_bytes = readFileSync(bytes_file)
