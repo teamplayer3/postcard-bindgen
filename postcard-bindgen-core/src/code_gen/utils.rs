@@ -330,4 +330,13 @@ mod test {
 
         assert_eq!(builder.build(), "submodule.Test".to_string());
     }
+
+    #[test]
+    fn test_break_long_logical_lines() {
+        let line: Tokens<JavaScript> = quote!(a && b && c || d && e && f && g || h && i && j && k);
+
+        let break_line = break_long_logical_lines(line);
+
+        assert_eq!(break_line.to_file_string().unwrap(), "a &&\n     b &&\n     c ||\n     d &&\n     e &&\n     f &&\n     g ||\n     h &&\n     i &&\n     j &&\n     k\n".to_string());
+    }
 }
