@@ -55,7 +55,7 @@ pub enum JoinType {
 
 pub(super) trait TokensIterExt<L: Lang, F>: Iterator<Item = F>
 where
-F: FormatInto<L>,
+    F: FormatInto<L>,
     Self: Sized,
 {
     const LOGICAL_OR: &'static str;
@@ -136,10 +136,6 @@ F: FormatInto<L>,
             acc.append(x);
             acc
         })
-    }
-
-    fn join_with_semicolon(self) -> Tokens<L> {
-        quote!($(for part in self join (; ) => $part))
     }
 
     fn join_with_colon(self) -> Tokens<L> {
