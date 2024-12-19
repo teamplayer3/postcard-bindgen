@@ -1,0 +1,45 @@
+---
+source: postcard-bindgen-core/tests/python.rs
+expression: des_file
+snapshot_kind: text
+---
+from typing import TypeVar, Type, cast
+
+from .types import *
+from .util import *
+from .deserializer import Deserializer
+
+def deserialize_STRUCT_TYPE(d) -> StructType:
+    return StructType(field_1 = d.deserialize_number(U32_BYTES, False), field_2 = d.deserialize_string(), field_3 = d.deserialize_array(lambda d: d.deserialize_number(U32_BYTES, False), None), field_4 = d.deserialize_array(lambda d: deserialize_STRUCT_TYPE(d), None), field_5 = range(d.deserialize_number(U32_BYTES, False), d.deserialize_number(U32_BYTES, False)), field_6 = d.deserialize_map((lambda d: (d.deserialize_string(), d.deserialize_number(U32_BYTES, False)))), field_7 = d.deserialize_map((lambda d: (d.deserialize_number(U32_BYTES, False), d.deserialize_number(U32_BYTES, False)))), field_8 = None if d.deserialize_number(U32_BYTES, False) == 0 else d.deserialize_number(U32_BYTES, False), field_9 = d.deserialize_bool(), field_10 = (d.deserialize_number(U32_BYTES, False), d.deserialize_string()), field_11 = d.deserialize_array(lambda d: d.deserialize_string(), 3), field_12 = d.deserialize_array(lambda d: d.deserialize_number(U32_BYTES, False), None), field_13 = d.deserialize_number_float(U32_BYTES))
+
+def deserialize_UNIT_STRUCT_TYPE(d) -> UnitStructType:
+    return UnitStructType()
+
+def deserialize_TUPLE_STRUCT_TYPE(d) -> TupleStructType:
+    return TupleStructType(d.deserialize_number(U32_BYTES, False), d.deserialize_string())
+
+def deserialize_ENUM_TYPE(d) -> EnumType:
+    variant_index = d.deserialize_number(U32_BYTES, False)
+    if variant_index == 0:
+        return EnumType_AVariant()
+    elif variant_index == 1:
+        return EnumType_BVariant(d.deserialize_number(U32_BYTES, False), d.deserialize_string())
+    elif variant_index == 2:
+        return EnumType_CVariant(field_1 = d.deserialize_number(U32_BYTES, False), field_2 = d.deserialize_string(), struct_type = deserialize_STRUCT_TYPE(d))
+    else:
+        raise TypeError("variant index {} not exists".format(variant_index))
+
+T = TypeVar("T", StructType, UnitStructType, TupleStructType, EnumType)
+def deserialize(obj_type: Type[T], bytes: bytes) -> T:
+    d = Deserializer(bytes)
+
+    if obj_type is StructType:
+        return cast(T, deserialize_STRUCT_TYPE(d))
+    elif obj_type is UnitStructType:
+        return cast(T, deserialize_UNIT_STRUCT_TYPE(d))
+    elif obj_type is TupleStructType:
+        return cast(T, deserialize_TUPLE_STRUCT_TYPE(d))
+    elif obj_type is EnumType:
+        return cast(T, deserialize_ENUM_TYPE(d))
+    else:
+        raise TypeError("{} not deserializable".format(obj_type))

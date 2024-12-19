@@ -1,0 +1,94 @@
+---
+source: postcard-bindgen-core/tests/python.rs
+expression: runtime_checks_file
+snapshot_kind: text
+---
+from .util import *
+from .types import *
+
+def assert_STRUCT_TYPE(v):
+    assert isinstance(v, StructType), "{} is not of type {}".format(v, StructType)
+    assert isinstance(v.field_1, int), "{} is not an int".format(v.field_1)
+    assert check_bounds(U32_BYTES, False, v.field_1), "{} does not fit into an {}".format(v.field_1, U32_BYTES)
+    assert isinstance(v.field_2, str), "{} is not a string".format(v.field_2)
+    assert isinstance(v.field_3, list), "{} is not a list".format(v.field_3)
+    def assert_v_field_3(v):
+        assert isinstance(v, int), "{} is not an int".format(v)
+        assert check_bounds(U32_BYTES, False, v), "{} does not fit into an {}".format(v, U32_BYTES)
+    [assert_v_field_3(v) for v in v.field_3]
+    assert isinstance(v.field_4, list), "{} is not a list".format(v.field_4)
+    def assert_v_field_4(v):
+        assert_STRUCT_TYPE(v)
+    [assert_v_field_4(v) for v in v.field_4]
+    assert isinstance(v.field_5, range), "{} is not a range".format(v.field_5)
+    assert isinstance(v.field_5.start, int), "{} is not an int".format(v.field_5.start)
+    assert check_bounds(U32_BYTES, False, v.field_5.start), "{} does not fit into an {}".format(v.field_5.start, U32_BYTES)
+    assert isinstance(v.field_5.stop, int), "{} is not an int".format(v.field_5.stop)
+    assert check_bounds(U32_BYTES, False, v.field_5.stop), "{} does not fit into an {}".format(v.field_5.stop, U32_BYTES)
+    assert isinstance(v.field_6, dict), "{} is not a dict".format(v.field_6)
+    def assert_v_field_6(key, value):
+        assert isinstance(key, str), "{} is not a string".format(key)
+        assert isinstance(value, int), "{} is not an int".format(value)
+        assert check_bounds(U32_BYTES, False, value), "{} does not fit into an {}".format(value, U32_BYTES)
+    [assert_v_field_6(key, value) for key, value in v.field_6.items()]
+    assert isinstance(v.field_7, dict), "{} is not a dict".format(v.field_7)
+    def assert_v_field_7(key, value):
+        assert isinstance(key, int), "{} is not an int".format(key)
+        assert check_bounds(U32_BYTES, False, key), "{} does not fit into an {}".format(key, U32_BYTES)
+        assert isinstance(value, int), "{} is not an int".format(value)
+        assert check_bounds(U32_BYTES, False, value), "{} does not fit into an {}".format(value, U32_BYTES)
+    [assert_v_field_7(key, value) for key, value in v.field_7.items()]
+    def assert_v_field_8(v):
+        assert isinstance(v, int), "{} is not an int".format(v)
+        assert check_bounds(U32_BYTES, False, v), "{} does not fit into an {}".format(v, U32_BYTES)
+    if v.field_8 is not None:
+        assert_v_field_8(v.field_8)
+    assert isinstance(v.field_9, int), "{} is not a bool".format(v.field_9)
+    assert isinstance(v.field_10, tuple), "{} is not a tuple".format(v.field_10)
+    assert len(v.field_10) == 2, "{} is not of length {}".format(v.field_10, 2)
+    assert isinstance(v.field_10[0], int), "{} is not an int".format(v.field_10[0])
+    assert check_bounds(U32_BYTES, False, v.field_10[0]), "{} does not fit into an {}".format(v.field_10[0], U32_BYTES)
+    assert isinstance(v.field_10[1], str), "{} is not a string".format(v.field_10[1])
+    assert isinstance(v.field_11, list), "{} is not a list".format(v.field_11)
+    assert len(v.field_11) == 3, "{} has not a length of {}".format(v.field_11, 3)
+    def assert_v_field_11(v):
+        assert isinstance(v, str), "{} is not a string".format(v)
+    [assert_v_field_11(v) for v in v.field_11]
+    assert isinstance(v.field_12, list), "{} is not a list".format(v.field_12)
+    def assert_v_field_12(v):
+        assert isinstance(v, int), "{} is not an int".format(v)
+        assert check_bounds(U32_BYTES, False, v), "{} does not fit into an {}".format(v, U32_BYTES)
+    [assert_v_field_12(v) for v in v.field_12]
+    assert isinstance(v.field_13, float), "{} is not a float".format(v.field_13)
+
+def assert_UNIT_STRUCT_TYPE(v):
+    assert isinstance(v, UnitStructType)
+
+def assert_TUPLE_STRUCT_TYPE(v):
+    assert isinstance(v, tuple), "{} is not a tuple".format(TupleStructType)
+    assert len(v) == 2, "{} is not of length {}".format(TupleStructType, 2)
+    assert isinstance(v[0], int), "{} is not an int".format(v[0])
+    assert check_bounds(U32_BYTES, False, v[0]), "{} does not fit into an {}".format(v[0], U32_BYTES)
+    assert isinstance(v[1], str), "{} is not a string".format(v[1])
+
+def assert_ENUM_TYPE(v):
+    def assert_AVariant(v):
+        pass
+    def assert_BVariant(v):
+        assert isinstance(v[0], int), "{} is not an int".format(v[0])
+        assert check_bounds(U32_BYTES, False, v[0]), "{} does not fit into an {}".format(v[0], U32_BYTES)
+        assert isinstance(v[1], str), "{} is not a string".format(v[1])
+    def assert_CVariant(v):
+        assert isinstance(v.CVariant, int), "{} is not an int".format(v.CVariant)
+        assert check_bounds(U32_BYTES, False, v.CVariant), "{} does not fit into an {}".format(v.CVariant, U32_BYTES)
+        assert isinstance(v.CVariant, str), "{} is not a string".format(v.CVariant)
+        assert_STRUCT_TYPE(v.CVariant)
+
+    if isinstance(v, EnumType_AVariant):
+        assert_AVariant(v)
+    elif isinstance(v, EnumType_BVariant):
+        assert_BVariant(v)
+    elif isinstance(v, EnumType_CVariant):
+        assert_CVariant(v)
+    else:
+        raise TypeError("variant {} not exists".format(v))

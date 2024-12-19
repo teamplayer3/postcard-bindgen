@@ -1,0 +1,85 @@
+---
+source: postcard-bindgen-core/tests/javascript.rs
+expression: runtime_checks_file
+snapshot_kind: text
+---
+function check_bounds(v, n_bytes, signed) {
+    const max = BigInt(2 ** (n_bytes * BITS_PER_BYTE)), value_b = BigInt(v);
+    if (signed) {
+        const bounds = max / 2n;
+        return value_b >= -bounds && value_b < bounds
+    } else {
+        return value_b < max && value_b >= 0
+    }
+}
+
+function check_integer_type(v, n_bytes, signed) {
+    return (
+        typeof v === "number" ||
+        typeof v === "bigint"
+    ) && Number.isInteger(v) && check_bounds(v, n_bytes, signed)
+}
+
+function is_STRUCT_TYPE(v) {
+    typeof v === "object" &&
+         check_integer_type(v.field_1, U32_BYTES, false) &&
+         typeof v.field_2 === "string" &&
+         Array.isArray(v.field_3) &&
+         v.field_3.every((v) => check_integer_type(v, U32_BYTES, false)) &&
+         Array.isArray(v.field_4) &&
+         v.field_4.every((v) => is_STRUCT_TYPE(v)) &&
+         typeof v.field_5 === "object" &&
+         "start" in v.field_5 &&
+         "end" in v.field_5 &&
+         typeof v.field_6 === "object" &&
+         Object.values(v.field_6).map((v) => check_integer_type(v, U32_BYTES, false)).every((v) => v) &&
+         v.field_7 instanceof Map &&
+         (("field_8" in v &&
+         (v.field_8 !== undefined &&
+         check_integer_type(v.field_8, U32_BYTES, false)) ||
+         v.field_8 === undefined) ||
+         !("field_8" in v)) &&
+         typeof v.field_9 === "boolean" &&
+         Array.isArray(v.field_10) &&
+         v.field_10.length === 2 &&
+         check_integer_type(v.field_10[0], U32_BYTES, false) &&
+         typeof v.field_10[1] === "string" &&
+         Array.isArray(v.field_11) &&
+         v.field_11.every((v) => typeof v === "string") &&
+         v.field_11.length === 3 &&
+         Array.isArray(v.field_12) &&
+         v.field_12.every((v) => check_integer_type(v, U32_BYTES, false)) &&
+         typeof v.field_13 === "number" &&
+         Number.isFinite(v.field_13)
+}
+
+function is_UNIT_STRUCT_TYPE(v) {
+    typeof v === "object" &&
+         Object.keys(v).length === 0
+}
+
+function is_TUPLE_STRUCT_TYPE(v) {
+    Array.isArray(v) &&
+         v.length === 2 &&
+         check_integer_type(v[0], U32_BYTES, false) &&
+         typeof v[1] === "string"
+}
+
+function is_ENUM_TYPE(v) {
+    (typeof v === "object" &&
+         "tag" in v &&
+         v.tag === "AVariant") ||
+         (typeof v === "object" &&
+         "tag" in v &&
+         "value" in v &&
+         (v.tag === "BVariant" &&
+         Array.isArray(v.value) &&
+         v.value.length === 2 &&
+         check_integer_type(v.value[0], U32_BYTES, false) &&
+         typeof v.value[1] === "string") ||
+         (v.tag === "CVariant" &&
+         typeof v.value === "object" &&
+         check_integer_type(v.value.field_1, U32_BYTES, false) &&
+         typeof v.value.field_2 === "string" &&
+         is_STRUCT_TYPE(v.value.struct_type)))
+}

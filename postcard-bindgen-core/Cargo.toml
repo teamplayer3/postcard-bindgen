@@ -35,3 +35,9 @@ optional = true
 version = "0.1.6"
 optional = true
 features = ["auto_id"]
+
+[dev-dependencies.insta]
+version = "1.41.1"
+
+[dev-dependencies.with_builtin_macros]
+version = "0.1.0"

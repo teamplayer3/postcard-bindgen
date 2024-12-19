@@ -1,0 +1,69 @@
+---
+source: postcard-bindgen-core/tests/python.rs
+expression: ser_file
+snapshot_kind: text
+---
+from typing import Union
+
+from .types import *
+from .util import *
+from .serializer import Serializer
+
+def serialize_STRUCT_TYPE(s, v):
+    s.serialize_number(U32_BYTES, False, v.field_1)
+    s.serialize_string(v.field_2)
+    s.serialize_array(lambda s, v: s.serialize_number(U32_BYTES, False, v), v.field_3, None)
+    s.serialize_array(lambda s, v: serialize_STRUCT_TYPE(s, v), v.field_4, None)
+    s.serialize_number(U32_BYTES, False, v.field_5.start)
+    s.serialize_number(U32_BYTES, False, v.field_5.stop)
+    s.serialize_map(lambda s, k, v: (s.serialize_string(k), s.serialize_number(U32_BYTES, False, v)), v.field_6)
+    s.serialize_map(lambda s, k, v: (s.serialize_number(U32_BYTES, False, k), s.serialize_number(U32_BYTES, False, v)), v.field_7)
+    if v.field_8 is not None:
+        s.serialize_number(U32_BYTES, False, 1)
+        s.serialize_number(U32_BYTES, False, v.field_8)
+    else:
+        s.serialize_number(U32_BYTES, False, 0)
+    s.serialize_bool(v.field_9)
+    s.serialize_number(U32_BYTES, False, v.field_10[0])
+    s.serialize_string(v.field_10[1])
+    s.serialize_array(lambda s, v: s.serialize_string(v), v.field_11, 3)
+    s.serialize_array(lambda s, v: s.serialize_number(U32_BYTES, False, v), v.field_12, None)
+    s.serialize_number_float(U32_BYTES, v.field_13)
+
+def serialize_UNIT_STRUCT_TYPE(s, v):
+    pass
+
+def serialize_TUPLE_STRUCT_TYPE(s, v):
+    s.serialize_number(U32_BYTES, False, v[0])
+    s.serialize_string(v[1])
+
+def serialize_ENUM_TYPE(s, v):
+    if isinstance(v, EnumType_AVariant):
+        s.serialize_number(U32_BYTES, False, 0)
+    elif isinstance(v, EnumType_BVariant):
+        s.serialize_number(U32_BYTES, False, 1)
+        s.serialize_number(U32_BYTES, False, v[0])
+        s.serialize_string(v[1])
+    elif isinstance(v, EnumType_CVariant):
+        s.serialize_number(U32_BYTES, False, 2)
+        s.serialize_number(U32_BYTES, False, v.field_1)
+        s.serialize_string(v.field_2)
+        serialize_STRUCT_TYPE(s, v.struct_type)
+    else:
+        raise TypeError("variant {} not exists".format(v))
+
+def serialize(value: Union[StructType, UnitStructType, TupleStructType, EnumType]) -> bytes:
+    s = Serializer()
+
+    if isinstance(value, StructType):
+        serialize_STRUCT_TYPE(s, value)
+    elif isinstance(value, UnitStructType):
+        serialize_UNIT_STRUCT_TYPE(s, value)
+    elif isinstance(value, TupleStructType):
+        serialize_TUPLE_STRUCT_TYPE(s, value)
+    elif isinstance(value, EnumType):
+        serialize_ENUM_TYPE(s, value)
+    else:
+        raise TypeError("{} not serializable".format(type(value)))
+
+    return s.finish()

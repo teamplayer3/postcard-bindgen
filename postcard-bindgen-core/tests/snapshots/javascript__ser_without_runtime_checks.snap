@@ -1,0 +1,86 @@
+---
+source: postcard-bindgen-core/tests/javascript.rs
+expression: ser_file
+snapshot_kind: text
+---
+function serialize_STRUCT_TYPE(s, v) {
+    s.serialize_number(U32_BYTES, false, v.field_1);
+    s.serialize_string(v.field_2);
+    s.serialize_array((s, v) => s.serialize_number(U32_BYTES, false, v), v.field_3);
+    s.serialize_array((s, v) => serialize_STRUCT_TYPE(s, v), v.field_4);
+    s.serialize_number(U32_BYTES, false, v.field_5.start);
+    s.serialize_number(U32_BYTES, false, v.field_5.end);
+    s.serialize_string_key_map((s, v) => s.serialize_number(U32_BYTES, false, v), v.field_6);
+    s.serialize_map((d, k, v) => [
+        s.serialize_number(U32_BYTES, false, k),
+        s.serialize_number(U32_BYTES, false, v)
+    ], v.field_7);
+    if (v.field_8 !== undefined) {
+        s.serialize_number(U32_BYTES, false, 1);
+        s.serialize_number(U32_BYTES, false, v.field_8)
+    } else {
+        s.serialize_number(U32_BYTES, false, 0)
+    };
+    s.serialize_bool(v.field_9);
+    s.serialize_number(U32_BYTES, false, v.field_10[0]);
+    s.serialize_string(v.field_10[1]);
+    s.serialize_array((s, v) => s.serialize_string(v), v.field_11, 3);
+    s.serialize_array((s, v) => s.serialize_number(U32_BYTES, false, v), v.field_12);
+    s.serialize_number_float(U32_BYTES, v.field_13);
+}
+
+function serialize_UNIT_STRUCT_TYPE(s, v) {}
+
+function serialize_TUPLE_STRUCT_TYPE(s, v) {
+    s.serialize_number(U32_BYTES, false, v[0]);
+    s.serialize_string(v[1]);
+}
+
+function serialize_ENUM_TYPE(s, v) {
+    switch (v.tag) {
+    case "AVariant":
+        s.serialize_number(U32_BYTES, false, 0);
+        break;
+    case "BVariant":
+        s.serialize_number(U32_BYTES, false, 1);
+        s.serialize_number(U32_BYTES, false, v.value[0]);
+        s.serialize_string(v.value[1]);
+        break;
+    case "CVariant":
+        s.serialize_number(U32_BYTES, false, 2);
+        s.serialize_number(U32_BYTES, false, v.value.field_1);
+        s.serialize_string(v.value.field_2);
+        serialize_STRUCT_TYPE(s, v.value.struct_type);
+        break;
+    default:
+        throw "variant not implemented"
+    }
+}
+
+function serialize(type, value) {
+    if (!(typeof type === "string")) {
+        throw "type must be a string";
+    }
+    const s = new Serializer();
+    switch (type) {
+    case "StructType":
+        serialize_STRUCT_TYPE(s, value);
+        break;
+    case "UnitStructType":
+        serialize_UNIT_STRUCT_TYPE(s, value);
+        break;
+    case "TupleStructType":
+        serialize_TUPLE_STRUCT_TYPE(s, value);
+        break;
+    case "EnumType":
+        serialize_ENUM_TYPE(s, value);
+        break;
+    default:
+        throw "type not implemented";
+    }
+    return s.finish();
+}
+
+export {
+    serialize
+};
