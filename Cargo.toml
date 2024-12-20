@@ -5,8 +5,17 @@ members = [
     "postcard-bindgen",
 ]
 
-exclude = [
-    "examples"
-]
+exclude = ["examples"]
 
 resolver = "2"
+
+[workspace.package]
+version = "0.5.1"
+authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
+edition = "2021"
+repository = "https://github.com/teamplayer3/postcard-bindgen"
+keywords = ["postcard", "generating", "javascript", "serde", "serialize"]
+categories = ["embedded", "encoding", "no-std"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/postcard-bindgen"
