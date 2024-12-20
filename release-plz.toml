@@ -1,3 +1,16 @@
 [workspace]
 changelog_config = "cliff.toml"
 semver_check = true
+
+
+[[package]]
+name = "postcard-bindgen-derive"
+git_release_enable = false
+git_tag_enable = false
+semver_check = false
+
+[[package]]
+name = "postcard-bindgen-core"
+git_release_enable = false
+git_tag_enable = false
+semver_check = false
