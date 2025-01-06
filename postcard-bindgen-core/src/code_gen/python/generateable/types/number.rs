@@ -79,6 +79,7 @@ fn rust_int_to_python_type(bytes: usize, signed: bool) -> String {
         2 => "16",
         4 => "32",
         8 => "64",
+        16 => "128",
         _ => unimplemented!(),
     };
     let sign = match signed {
