@@ -133,5 +133,7 @@ pub fn gen_basic_typings() -> Tokens {
         i32 = int
         u64 = int
         i64 = int
+        u128 = int
+        i128 = int
     }
 }
