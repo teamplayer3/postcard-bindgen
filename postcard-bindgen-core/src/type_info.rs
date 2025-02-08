@@ -131,12 +131,14 @@ macro_rules! impl_gen_js_binding_numbers_ints {
 }
 
 macro_rules! impl_gen_js_binding_numbers_floats {
-    ($ty:ty, $bytes:expr) => {
-        impl GenJsBinding for $ty {
-            fn get_type() -> ValueType {
-                ValueType::Number(NumberMeta::FloatingPoint { bytes: $bytes })
+    ($($ty:ty: $bytes:expr);*) => {
+        $(
+            impl GenJsBinding for $ty {
+                fn get_type() -> ValueType {
+                    ValueType::Number(NumberMeta::FloatingPoint { bytes: $bytes })
+                }
             }
-        }
+        )*
     };
 }
 
@@ -169,8 +171,10 @@ impl_gen_js_binding_numbers_ints![
     NonZeroI128: 16, true, false
 ];
 
-impl_gen_js_binding_numbers_floats!(f32, 4);
-impl_gen_js_binding_numbers_floats!(f64, 8);
+impl_gen_js_binding_numbers_floats![
+    f32: 4;
+    f64: 8
+];
 
 impl<T: GenJsBinding> GenJsBinding for Option<T> {
     fn get_type() -> ValueType {
