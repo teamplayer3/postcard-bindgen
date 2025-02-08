@@ -1,3 +1,8 @@
+use core::num::{
+    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
+    NonZeroU32, NonZeroU64, NonZeroU8,
+};
+
 use alloc::{boxed::Box, vec, vec::Vec};
 
 use crate::path::Path;
@@ -65,8 +70,14 @@ pub struct OptionalMeta {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NumberMeta {
-    Integer { bytes: usize, signed: bool },
-    FloatingPoint { bytes: usize },
+    Integer {
+        bytes: usize,
+        signed: bool,
+        zero_able: bool,
+    },
+    FloatingPoint {
+        bytes: usize,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -104,15 +115,18 @@ impl<T: GenJsBinding> GenJsBinding for &mut T {
 }
 
 macro_rules! impl_gen_js_binding_numbers_ints {
-    ($ty:ty, $bytes:expr, $signed:ident) => {
-        impl GenJsBinding for $ty {
-            fn get_type() -> ValueType {
-                ValueType::Number(NumberMeta::Integer {
-                    bytes: $bytes,
-                    signed: $signed,
-                })
+    ($($ty:ty: $bytes:expr, $signed:ident, $zero_able:ident);*) => {
+        $(
+            impl GenJsBinding for $ty {
+                fn get_type() -> ValueType {
+                    ValueType::Number(NumberMeta::Integer {
+                        bytes: $bytes,
+                        signed: $signed,
+                        zero_able: $zero_able,
+                    })
+                }
             }
-        }
+        )*
     };
 }
 
@@ -126,21 +140,34 @@ macro_rules! impl_gen_js_binding_numbers_floats {
     };
 }
 
-impl_gen_js_binding_numbers_ints!(u8, 1, false);
-impl_gen_js_binding_numbers_ints!(u16, 2, false);
-impl_gen_js_binding_numbers_ints!(u32, 4, false);
-impl_gen_js_binding_numbers_ints!(u64, 8, false);
-impl_gen_js_binding_numbers_ints!(u128, 16, false);
-// TODO check for operating system
-impl_gen_js_binding_numbers_ints!(usize, 4, false);
+impl_gen_js_binding_numbers_ints![
+    u8: 1, false, true;
+    u16: 2, false, true;
+    u32: 4, false, true;
+    u64: 8, false, true;
+    u128: 1, false, true;
 
-impl_gen_js_binding_numbers_ints!(i8, 1, true);
-impl_gen_js_binding_numbers_ints!(i16, 2, true);
-impl_gen_js_binding_numbers_ints!(i32, 4, true);
-impl_gen_js_binding_numbers_ints!(i64, 8, true);
-impl_gen_js_binding_numbers_ints!(i128, 16, true);
-// TODO check for operating system
-impl_gen_js_binding_numbers_ints!(isize, 4, true);
+    i8: 1, true, true;
+    i16: 2, true, true;
+    i32: 4, true, true;
+    i64: 8, true, true;
+    i128: 16, true, true;
+
+    usize: 4, false, true;
+    isize: 4, true, true;
+
+    NonZeroU8: 1, false, false;
+    NonZeroU16: 2, false, false;
+    NonZeroU32: 4, false, false;
+    NonZeroU64: 8, false, false;
+    NonZeroU128: 16, false, false;
+
+    NonZeroI8: 1, true, false;
+    NonZeroI16: 2, true, false;
+    NonZeroI32: 4, true, false;
+    NonZeroI64: 8, true, false;
+    NonZeroI128: 16, true, false
+];
 
 impl_gen_js_binding_numbers_floats!(f32, 4);
 impl_gen_js_binding_numbers_floats!(f64, 8);
