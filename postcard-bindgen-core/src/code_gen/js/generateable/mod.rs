@@ -183,6 +183,7 @@ mod test {
             let ty = ValueType::Number(NumberMeta::Integer {
                 bytes: assertion.0 .0,
                 signed: assertion.0 .1,
+                zero_able: true,
             });
             assert_tokens(quote!($(ty.gen_ts_type())), assertion.1);
         }
@@ -192,6 +193,7 @@ mod test {
                 items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
+                    zero_able: true,
                 })),
                 length: None,
             });
@@ -204,6 +206,7 @@ mod test {
                 inner: Box::new(ValueType::Number(NumberMeta::Integer {
                     bytes: assertion.0 .0,
                     signed: assertion.0 .1,
+                    zero_able: true,
                 })),
             });
 
@@ -235,6 +238,7 @@ mod test {
                     v_type: ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
+                        zero_able: true,
                     }),
                 },
                 StructField {
@@ -254,6 +258,7 @@ mod test {
                         items_type: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
+                            zero_able: true,
                         })),
                         length: None,
                     }),
@@ -264,6 +269,7 @@ mod test {
                         inner: Box::new(ValueType::Number(NumberMeta::Integer {
                             bytes: 1,
                             signed: false,
+                            zero_able: true,
                         })),
                     }),
                 },
@@ -288,6 +294,7 @@ mod test {
                     v_type: ValueType::Number(NumberMeta::Integer {
                         bytes: 1,
                         signed: false,
+                        zero_able: true,
                     }),
                 }],
             }),
@@ -315,6 +322,7 @@ mod test {
                             NumberMeta::Integer {
                                 bytes: 1,
                                 signed: false,
+                                zero_able: true,
                             },
                         )]),
                     },

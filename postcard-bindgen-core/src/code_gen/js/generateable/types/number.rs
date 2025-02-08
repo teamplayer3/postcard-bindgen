@@ -40,9 +40,12 @@ impl JsTypeGenerateable for NumberMeta {
             NumberMeta::FloatingPoint { .. } => {
                 quote!(typeof $(variable_path.to_owned()) === "number" && Number.isFinite($(variable_path.to_owned())))
             }
-            NumberMeta::Integer { signed, .. } => {
+            NumberMeta::Integer {
+                signed, zero_able, ..
+            } => {
                 let signed = bool_to_js_bool(*signed);
-                quote!(check_integer_type($variable_path, $byte_amount_str, $signed))
+                let zero_able = bool_to_js_bool(*zero_able);
+                quote!(check_integer_type($variable_path, $byte_amount_str, $signed, $zero_able))
             }
         }
     }
@@ -57,7 +60,11 @@ impl JsTypeGenerateable for NumberMeta {
                 };
                 quote!(f$bits)
             }
-            NumberMeta::Integer { bytes, signed } => {
+            NumberMeta::Integer {
+                bytes,
+                signed,
+                zero_able: _,
+            } => {
                 let prefix = if *signed { "i" } else { "u" };
                 let bits = match bytes {
                     1 => "8",
