@@ -38,13 +38,15 @@ pub fn gen_util() -> Tokens {
                 value >>= 7
             return out
 
-        def check_bounds(n_bytes, signed, value):
+        def check_bounds(n_bytes, signed, value, zero_able):
+            assert not zero_able and value != 0, "Value {} must not be zero".format(value)
+
             max_val = 2 ** (n_bytes * BITS_PER_BYTE)
             value_b = int(value)
             if signed:
                 bounds = max_val // 2
-                return -bounds <= value_b < bounds
+                assert -bounds <= value_b < bounds, "Value {} is out of bounds ({}..{})".format(value, -bounds, bounds)
             else:
-                return 0 <= value_b < max_val
+                assert 0 <= value_b < max_val, "Value {} is out of bounds (0..{})".format(value, max_val)
     }
 }
