@@ -56,6 +56,7 @@ impl AsRef<ValueType> for ValueType {
 pub struct MapMeta {
     pub(crate) key_type: Box<ValueType>,
     pub(crate) value_type: Box<ValueType>,
+    pub(crate) max_length: Option<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,10 +86,13 @@ pub struct ArrayMeta {
     // Boxed to avoid infinite recursion
     pub(crate) items_type: Box<ValueType>,
     pub(crate) length: Option<usize>,
+    pub(crate) max_length: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct StringMeta {}
+pub struct StringMeta {
+    pub(crate) max_length: Option<usize>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectMeta {
@@ -189,6 +193,7 @@ impl<T: GenBinding> GenBinding for &[T] {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
             length: None,
+            max_length: None,
         })
     }
 }
@@ -198,6 +203,7 @@ impl<T: GenBinding> GenBinding for [T] {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
             length: None,
+            max_length: None,
         })
     }
 }
@@ -207,13 +213,14 @@ impl<T: GenBinding, const S: usize> GenBinding for [T; S] {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
             length: Some(S),
+            max_length: Some(S),
         })
     }
 }
 
 impl GenBinding for &str {
     fn get_type() -> ValueType {
-        ValueType::String(StringMeta {})
+        ValueType::String(StringMeta { max_length: None })
     }
 }
 
@@ -276,6 +283,7 @@ impl<K: GenBinding, V: GenBinding> GenBinding for alloc::collections::BTreeMap<K
         ValueType::Map(MapMeta {
             key_type: Box::new(K::get_type()),
             value_type: Box::new(V::get_type()),
+            max_length: None,
         })
     }
 }
@@ -283,7 +291,7 @@ impl<K: GenBinding, V: GenBinding> GenBinding for alloc::collections::BTreeMap<K
 #[cfg(feature = "alloc")]
 impl GenBinding for alloc::string::String {
     fn get_type() -> ValueType {
-        ValueType::String(StringMeta {})
+        ValueType::String(StringMeta { max_length: None })
     }
 }
 
@@ -293,6 +301,7 @@ impl<T: GenBinding> GenBinding for alloc::vec::Vec<T> {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
             length: None,
+            max_length: None,
         })
     }
 }
@@ -317,6 +326,7 @@ impl<K: GenBinding, V: GenBinding> GenBinding for std::collections::HashMap<K, V
         ValueType::Map(MapMeta {
             key_type: Box::new(K::get_type()),
             value_type: Box::new(V::get_type()),
+            max_length: None,
         })
     }
 }
@@ -334,6 +344,7 @@ impl<T: GenBinding, const N: usize> GenBinding for heapless::Vec<T, N> {
         ValueType::Array(ArrayMeta {
             items_type: Box::new(T::get_type()),
             length: None,
+            max_length: Some(N),
         })
     }
 }
@@ -341,7 +352,9 @@ impl<T: GenBinding, const N: usize> GenBinding for heapless::Vec<T, N> {
 #[cfg(feature = "heapless")]
 impl<const N: usize> GenBinding for heapless::String<N> {
     fn get_type() -> ValueType {
-        ValueType::String(StringMeta {})
+        ValueType::String(StringMeta {
+            max_length: Some(N),
+        })
     }
 }
 
@@ -351,6 +364,7 @@ impl<K: GenBinding, V: GenBinding, const N: usize> GenBinding for heapless::Line
         ValueType::Map(MapMeta {
             key_type: Box::new(K::get_type()),
             value_type: Box::new(V::get_type()),
+            max_length: Some(N),
         })
     }
 }

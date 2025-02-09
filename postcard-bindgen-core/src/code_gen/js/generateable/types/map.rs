@@ -57,21 +57,30 @@ impl JsTypeGenerateable for MapMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
+        let mut checks = vec![];
+
         match self.key_type.deref() {
             &ValueType::String(_) => {
                 let inner_type_check = self
                     .value_type
                     .gen_ty_check(VariablePath::new(JS_OBJECT_VARIABLE.into()));
                 let inner_type_checks = quote!(Object.values($(variable_path.to_owned())).map((v) => $inner_type_check).every((v) => v));
-                [
-                    quote!(typeof $variable_path === "object"),
-                    inner_type_checks,
-                ]
-                .into_iter()
-                .join_logic_and()
+
+                checks.push(quote!(typeof $(variable_path.to_owned()) === "object"));
+                if let Some(len) = self.max_length {
+                    checks.push(quote!(Object.keys($(variable_path.to_owned()).length <= $len)));
+                }
+                checks.push(inner_type_checks);
             }
-            _ => quote!($variable_path instanceof Map),
+            _ => {
+                checks.push(quote!($(variable_path.to_owned()) instanceof Map));
+                if let Some(len) = self.max_length {
+                    checks.push(quote!($(variable_path.to_owned()).size <= $len));
+                }
+            }
         }
+
+        checks.into_iter().join_logic_and()
     }
 
     fn gen_ts_type(&self) -> Tokens {

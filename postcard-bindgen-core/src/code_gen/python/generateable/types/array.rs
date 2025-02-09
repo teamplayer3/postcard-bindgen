@@ -35,24 +35,20 @@ impl PythonTypeGenerateable for ArrayMeta {
                 $(self.items_type.gen_ty_check(VariablePath::default()))
         };
         let item_ty_check = quote!([assert_$(variable_path.to_owned().into_string("_"))($PYTHON_OBJECT_VARIABLE) for $PYTHON_OBJECT_VARIABLE in $(variable_path.clone())]);
+
+        let mut checks = vec![];
+        checks.push(quote!(assert isinstance($(variable_path.to_owned()), list), "{} is not a list".format($(variable_path.to_owned()))));
+
         if let Some(len) = self.length {
-            [
-                quote!(assert isinstance($(variable_path.to_owned()), list), "{} is not a list".format($(variable_path.to_owned()))),
-                quote!(assert len($(variable_path.to_owned())) == $len, "{} has not a length of {}".format($(variable_path.to_owned()), $len)),
-                assert_item_type_check_func,
-                quote!($item_ty_check),
-            ]
-            .into_iter()
-            .join_with_line_breaks()
-        } else {
-            [
-                quote!(assert isinstance($(variable_path.to_owned()), list), "{} is not a list".format($(variable_path.to_owned()))),
-                assert_item_type_check_func,
-                quote!($item_ty_check),
-            ]
-            .into_iter()
-            .join_with_line_breaks()
+            checks.push(quote!(assert len($(variable_path.to_owned())) == $len, "{} has not a length of {}".format($variable_path, $len)));
+        } else if let Some(len) = self.length {
+            checks.push(quote!(assert len($(variable_path.to_owned())) <= $len, "{} has a length greater than {}".format($variable_path, $len)));
         }
+
+        checks.push(assert_item_type_check_func);
+        checks.push(item_ty_check);
+
+        checks.into_iter().join_with_line_breaks()
     }
 
     fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {
