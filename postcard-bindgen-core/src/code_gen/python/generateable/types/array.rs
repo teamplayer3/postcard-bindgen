@@ -41,7 +41,7 @@ impl PythonTypeGenerateable for ArrayMeta {
 
         if let Some(len) = self.length {
             checks.push(quote!(assert len($(variable_path.to_owned())) == $len, "{} has not a length of {}".format($variable_path, $len)));
-        } else if let Some(len) = self.length {
+        } else if let Some(len) = self.max_length {
             checks.push(quote!(assert len($(variable_path.to_owned())) <= $len, "{} has a length greater than {}".format($variable_path, $len)));
         }
 
