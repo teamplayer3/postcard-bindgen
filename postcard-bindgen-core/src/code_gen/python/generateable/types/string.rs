@@ -1,7 +1,10 @@
 use genco::quote;
 
 use crate::{
-    code_gen::python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+    code_gen::{
+        python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
+        utils::TokensIterExt,
+    },
     type_info::StringMeta,
 };
 
@@ -17,7 +20,12 @@ impl PythonTypeGenerateable for StringMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        quote!(assert isinstance($(variable_path.to_owned()), str), "{} is not a string".format($variable_path))
+        let mut checks = vec![];
+        checks.push(quote!(assert isinstance($(variable_path.to_owned()), str), "{} is not a string".format($(variable_path.to_owned()))));
+        if let Some(len) = self.max_length {
+            checks.push(quote!(assert len($(variable_path.to_owned())) <= $len, "{} has a length greater than {}".format($variable_path, $len)));
+        }
+        checks.into_iter().join_with_line_breaks()
     }
 
     fn gen_typings(&self, _import_registry: &mut ImportRegistry) -> Tokens {

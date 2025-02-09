@@ -17,7 +17,11 @@ impl JsTypeGenerateable for StringMeta {
     }
 
     fn gen_ty_check(&self, variable_path: VariablePath) -> Tokens {
-        quote!(typeof $variable_path === "string")
+        if let Some(len) = self.max_length {
+            quote!(typeof $(variable_path.to_owned()) === "string" && $variable_path.length <= $len)
+        } else {
+            quote!(typeof $variable_path === "string")
+        }
     }
 
     fn gen_ts_type(&self) -> Tokens {

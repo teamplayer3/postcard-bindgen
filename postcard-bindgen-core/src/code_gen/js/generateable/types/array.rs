@@ -30,6 +30,8 @@ impl JsTypeGenerateable for ArrayMeta {
         let item_ty_check = quote!($(variable_path.clone()).every(($JS_OBJECT_VARIABLE) => $(self.items_type.gen_ty_check(VariablePath::default()))));
         if let Some(len) = self.length {
             quote!(Array.isArray($(variable_path.clone())) && $item_ty_check && $variable_path.length === $len)
+        } else if let Some(len) = self.max_length {
+            quote!(Array.isArray($(variable_path.clone())) && $item_ty_check && $variable_path.length <= $len)
         } else {
             quote!(Array.isArray($variable_path) && $item_ty_check)
         }

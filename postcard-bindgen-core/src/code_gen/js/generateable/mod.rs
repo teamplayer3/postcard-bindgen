@@ -196,6 +196,7 @@ mod test {
                     zero_able: true,
                 })),
                 length: None,
+                max_length: None,
             });
 
             assert_tokens(quote!($(ty.gen_ts_type())), quote!($(assertion.1)[]));
@@ -225,7 +226,7 @@ mod test {
         });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(A));
 
-        let ty = ValueType::String(StringMeta {});
+        let ty = ValueType::String(StringMeta { max_length: None });
         assert_tokens(quote!($(ty.gen_ts_type())), quote!(string));
     }
 
@@ -250,7 +251,7 @@ mod test {
                 },
                 StructField {
                     name: "c",
-                    v_type: ValueType::String(StringMeta {}),
+                    v_type: ValueType::String(StringMeta { max_length: None }),
                 },
                 StructField {
                     name: "d",
@@ -261,6 +262,7 @@ mod test {
                             zero_able: true,
                         })),
                         length: None,
+                        max_length: None,
                     }),
                 },
                 StructField {

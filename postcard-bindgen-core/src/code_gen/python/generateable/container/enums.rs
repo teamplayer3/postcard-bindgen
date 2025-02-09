@@ -104,7 +104,7 @@ impl BindingTypeGenerateable for EnumType {
                         .map(|f| {
                             f.v_type.gen_ty_check(
                                 VariablePath::default()
-                                    .modify_push(VariableAccess::Field(v.name.to_owned())),
+                                    .modify_push(VariableAccess::Field(f.name.to_owned())),
                             )
                         })
                         .join_with_line_breaks(),

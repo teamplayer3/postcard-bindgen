@@ -36,14 +36,18 @@ impl PythonTypeGenerateable for MapMeta {
         };
         let item_ty_check = quote!([$assert_func_name(key, value) for key, value in $(variable_path.to_owned()).items()]);
 
-        [
-            quote!(assert isinstance($(variable_path.to_owned()), dict), "{} is not a dict".format($variable_path)),
-            assert_item_type_check_func,
-            item_ty_check
+        let mut checks = vec![];
 
-        ]
-        .into_iter()
-        .join_with_line_breaks()
+        checks.push(quote!(assert isinstance($(variable_path.to_owned()), dict), "{} is not a dict".format($(variable_path.to_owned()))));
+
+        if let Some(len) = self.max_length {
+            checks.push(quote!(assert len($(variable_path.to_owned())) <= $len, "{} has a length greater than {}".format($variable_path, $len)));
+        }
+
+        checks.push(assert_item_type_check_func);
+        checks.push(item_ty_check);
+
+        checks.into_iter().join_with_line_breaks()
     }
 
     fn gen_typings(&self, import_registry: &mut ImportRegistry) -> Tokens {

@@ -29,11 +29,11 @@ pub fn gen_type_checks(bindings: impl Iterator<Item = Container>) -> Tokens {
             if (signed) {
                 const bounds = max / 2n;
                 if (value_b < -bounds || value_b >= bounds) {
-                    throw new Error("Value is out of bounds (" + -bounds + ".." + bounds + ")")
+                    throw new Error("Value " + value_b + " is out of bounds (" + -bounds + ".." + bounds + ")")
                 }
             } else {
                 if (value_b >= max || value_b < 0) {
-                    throw new Error("Value is out of bounds (0.." + max + ")")
+                    throw new Error("Value " + value_b + " is out of bounds (0.." + max + ")")
                 }
             }
 
@@ -46,9 +46,10 @@ pub fn gen_type_checks(bindings: impl Iterator<Item = Container>) -> Tokens {
         function_args![JS_OBJECT_VARIABLE, "n_bytes", "signed", "zero_able"],
         quote! {
             return (
-                typeof $JS_OBJECT_VARIABLE === "number" ||
+                typeof $JS_OBJECT_VARIABLE === "number" &&
+                Number.isInteger($JS_OBJECT_VARIABLE) ||
                 typeof $JS_OBJECT_VARIABLE === "bigint"
-            ) && Number.isInteger($JS_OBJECT_VARIABLE) && check_bounds($JS_OBJECT_VARIABLE, n_bytes, signed, zero_able)
+            ) && check_bounds($JS_OBJECT_VARIABLE, n_bytes, signed, zero_able)
         },
     );
 
