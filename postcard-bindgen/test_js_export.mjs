@@ -2,7 +2,7 @@
 // `$cargo run --example generate_bindings --features std,generating`.
 
 import fs from "fs";
-import { serialize, deserialize } from "./test-bindings/index.js"
+import { serialize, deserialize } from "./js-test-bindings/index.js"
 
 const d = {
     a: 22,
@@ -28,8 +28,12 @@ const d = {
     },
     j: new Map([[12, 32]]),
     k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    l: [23, [2]],
     m: [25, "hello", [34, 34, 22]],
-    n: true
+    n: true,
+    o: 23,
+    p: -123,
+    q: -1234
 }
 
 const bytes = serialize("D", d)
