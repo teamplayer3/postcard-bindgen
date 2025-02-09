@@ -151,7 +151,7 @@ impl_gen_js_binding_numbers_ints![
     u16: 2, false, true;
     u32: 4, false, true;
     u64: 8, false, true;
-    u128: 1, false, true;
+    u128: 16, false, true;
 
     i8: 1, true, true;
     i16: 2, true, true;
@@ -159,8 +159,9 @@ impl_gen_js_binding_numbers_ints![
     i64: 8, true, true;
     i128: 16, true, true;
 
-    usize: 4, false, true;
-    isize: 4, true, true;
+    // TODO: make byte amount OS dependent
+    usize: 8, false, true;
+    isize: 8, true, true;
 
     NonZeroU8: 1, false, false;
     NonZeroU16: 2, false, false;
