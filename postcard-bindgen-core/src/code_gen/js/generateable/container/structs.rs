@@ -18,7 +18,8 @@ impl BindingTypeGenerateable for StructType {
     }
 
     fn gen_ty_check_body(&self) -> Tokens {
-        ty_check::gen_object_checks(&self.fields, VariablePath::default())
+        let body = ty_check::gen_object_checks(&self.fields, VariablePath::default());
+        quote!(return $body;)
     }
 
     fn gen_ts_typings_body(&self) -> Tokens {

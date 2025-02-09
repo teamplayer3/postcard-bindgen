@@ -14,7 +14,8 @@ impl BindingTypeGenerateable for EnumType {
     }
 
     fn gen_ty_check_body(&self) -> Tokens {
-        ty_check::gen_check_func(&self.variants)
+        let body = ty_check::gen_check_func(&self.variants);
+        quote!(return $body)
     }
 
     fn gen_ts_typings_body(&self) -> Tokens {

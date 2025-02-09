@@ -1,15 +1,15 @@
-use std::{collections::HashMap, io::Write, ops::Range};
+use std::{collections::HashMap, io::Write, num::NonZero, ops::Range};
 
 use postcard_bindgen::{generate_bindings, javascript, python, PackageInfo, PostcardBindings};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, PostcardBindings)]
+#[derive(Debug, Serialize, Deserialize, PostcardBindings)]
 struct A;
 
-#[derive(Serialize, PostcardBindings)]
+#[derive(Debug, Serialize, Deserialize, PostcardBindings)]
 struct B(u8, Vec<u16>, String, HashMap<u16, u8>);
 
-#[derive(Serialize, PostcardBindings)]
+#[derive(Debug, Serialize, Deserialize, PostcardBindings)]
 #[allow(dead_code)]
 enum C {
     A,
@@ -18,7 +18,7 @@ enum C {
     D { a: Vec<u8>, b: B, c: bool },
 }
 
-#[derive(Serialize, PostcardBindings)]
+#[derive(Debug, Serialize, Deserialize, PostcardBindings)]
 struct D {
     a: u8,
     b: C,
@@ -34,18 +34,21 @@ struct D {
     l: e::E,
     m: (u8, String, Vec<u8>),
     n: bool,
+    o: NonZero<u32>,
+    p: i8,
+    q: i16,
 }
 
 mod e {
     use super::*;
 
-    #[derive(Serialize, PostcardBindings)]
+    #[derive(Debug, Serialize, Deserialize, PostcardBindings)]
     pub struct E(pub u8, pub f::F);
 
     pub mod f {
         use super::*;
 
-        #[derive(Serialize, PostcardBindings)]
+        #[derive(Debug, Serialize, Deserialize, PostcardBindings)]
         pub struct F(pub u8);
     }
 }
@@ -58,7 +61,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         javascript::GenerationSettings::enable_all()
-            .runtime_type_checks(false)
+            .runtime_type_checks(true)
             .esm_module(false)
             .module_structure(true),
         generate_bindings!(A, B, e::E, C, D, e::f::F),
@@ -72,7 +75,7 @@ fn main() {
             version: "0.1.0".try_into().unwrap(),
         },
         python::GenerationSettings::enable_all()
-            .runtime_type_checks(false)
+            .runtime_type_checks(true)
             .module_structure(true),
         generate_bindings!(A, B, e::E, C, D, e::f::F),
     )
@@ -111,6 +114,9 @@ fn main() {
         l: e::E(123, e::f::F(234)),
         m: (123, "hello".into(), vec![1, 2, 3]),
         n: true,
+        o: NonZero::new(123).unwrap(),
+        p: -123,
+        q: -1234,
     };
     let postcard_bytes = postcard::to_vec::<_, 100>(&d).unwrap();
     let mut file =

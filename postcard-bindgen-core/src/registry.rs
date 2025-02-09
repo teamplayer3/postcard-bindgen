@@ -6,7 +6,7 @@ use tree_ds::prelude::{Node, NodeRemovalStrategy, Tree};
 
 use crate::{
     path::Path,
-    type_info::{GenJsBinding, ValueType},
+    type_info::{GenBinding, ValueType},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -137,7 +137,7 @@ impl StructType {
         Self::default()
     }
 
-    pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
+    pub fn register_field<T: GenBinding>(&mut self, name: &'static str) {
         self.fields.push(StructField {
             name,
             v_type: T::get_type(),
@@ -161,7 +161,7 @@ impl TupleStructType {
         Self::default()
     }
 
-    pub fn register_field<T: GenJsBinding>(&mut self) {
+    pub fn register_field<T: GenBinding>(&mut self) {
         self.fields.push(T::get_type())
     }
 
@@ -191,7 +191,7 @@ pub struct StructField {
 pub struct StructFields(Vec<StructField>);
 
 impl StructFields {
-    pub fn register_field<T: GenJsBinding>(&mut self, name: &'static str) {
+    pub fn register_field<T: GenBinding>(&mut self, name: &'static str) {
         self.0.push(StructField {
             name,
             v_type: T::get_type(),
@@ -207,7 +207,7 @@ impl StructFields {
 pub struct TupleFields(Vec<ValueType>);
 
 impl TupleFields {
-    pub fn register_field<T: GenJsBinding>(&mut self) {
+    pub fn register_field<T: GenBinding>(&mut self) {
         self.0.push(T::get_type())
     }
 

@@ -18,7 +18,7 @@ impl BindingTypeGenerateable for UnitStructType {
     }
 
     fn gen_ty_check_body(&self) -> Tokens {
-        quote!(typeof $JS_OBJECT_VARIABLE === "object" && Object.keys($JS_OBJECT_VARIABLE).length === 0)
+        quote!(return typeof $JS_OBJECT_VARIABLE === "object" && Object.keys($JS_OBJECT_VARIABLE).length === 0)
     }
 
     fn gen_ts_typings_body(&self) -> Tokens {

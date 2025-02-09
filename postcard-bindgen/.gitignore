@@ -1,5 +1,4 @@
 .env/
 serialized.bytes
 *-test-bindings/
-test-bindings/
 test-package/

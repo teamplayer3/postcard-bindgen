@@ -44,11 +44,14 @@ impl PythonTypeGenerateable for NumberMeta {
             NumberMeta::FloatingPoint { .. } => {
                 quote!(assert isinstance($(variable_path.to_owned()), float), "{} is not a float".format($variable_path))
             }
-            NumberMeta::Integer { signed, .. } => {
+            NumberMeta::Integer {
+                signed, zero_able, ..
+            } => {
                 let signed = bool_to_python_bool(*signed);
+                let zero_able = bool_to_python_bool(*zero_able);
                 [
                     quote!(assert isinstance($(variable_path.to_owned()), int), "{} is not an int".format($(variable_path.to_owned()))),
-                    quote!(assert check_bounds($byte_amount_str, $signed, $(variable_path.to_owned())), "{} does not fit into an {}".format($variable_path, $byte_amount_str))
+                    quote!(check_bounds($byte_amount_str, $signed, $(variable_path.to_owned()), $zero_able))
                 ]
                 .into_iter()
                 .join_with_line_breaks()
@@ -61,7 +64,11 @@ impl PythonTypeGenerateable for NumberMeta {
             NumberMeta::FloatingPoint { .. } => {
                 quote!(float)
             }
-            NumberMeta::Integer { bytes, signed } => {
+            NumberMeta::Integer {
+                bytes,
+                signed,
+                zero_able: _,
+            } => {
                 let int_type = rust_int_to_python_type(*bytes, *signed);
                 import_registry.push(
                     Package::Intern("basic_types".into()),
