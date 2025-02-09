@@ -1,11 +1,4 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    io::{Read, Write},
-    num::NonZero,
-    ops::{Deref, DerefMut, Range},
-    sync::Mutex,
-};
+use std::{collections::HashMap, io::Write, num::NonZero, ops::Range};
 
 use postcard_bindgen::{generate_bindings, javascript, python, PackageInfo, PostcardBindings};
 use serde::{Deserialize, Serialize};
@@ -129,15 +122,4 @@ fn main() {
     let mut file =
         std::fs::File::create(std::env::current_dir().unwrap().join("serialized.bytes")).unwrap();
     file.write_all(postcard_bytes.as_slice()).unwrap();
-
-    let mut file_read = std::fs::File::open("serialized_own.bytes").unwrap();
-    static mut BUFFER: Vec<u8> = Vec::new();
-
-    unsafe {
-        file_read.read_to_end(&mut BUFFER).unwrap();
-    }
-
-    let deserialized: D = unsafe { postcard::from_bytes(BUFFER.as_slice()).unwrap() };
-
-    println!("{:?}", deserialized);
 }
