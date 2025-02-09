@@ -29,8 +29,8 @@ impl JsTypeGenerateable for RangeMeta {
         let field_des = self.bounds_type.gen_des_accessor(FieldAccessor::None);
         quote! {
             $field_accessor{
-                end: $(field_des.to_owned()),
-                start: $field_des
+                start: $(field_des.to_owned()),
+                end: $field_des
             }
         }
     }
