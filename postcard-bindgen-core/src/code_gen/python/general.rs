@@ -47,6 +47,6 @@ pub fn gen_util() -> Tokens {
                 bounds = max / 2
                 assert -bounds <= value < bounds, "Value is out of bounds ({}..{})".format(-bounds, bounds)
             else:
-                assert 0 <= value < max, "Value is out of bounds (0..{})".format(max_val)
+                assert 0 <= value < max, "Value is out of bounds (0..{})".format(max)
     }
 }
