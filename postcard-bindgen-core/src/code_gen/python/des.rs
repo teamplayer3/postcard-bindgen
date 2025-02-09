@@ -19,7 +19,7 @@ pub fn gen_deserializer_code() -> Tokens {
 
         class Deserializer:
             def __init__(self, bytes_in):
-                self.bytes = list(bytes_in)
+                self.bytes = bytearray(bytes_in)
 
             def pop_next(self):
                 if not self.bytes:
@@ -32,8 +32,8 @@ pub fn gen_deserializer_code() -> Tokens {
                     bytes_out.append(self.pop_next())
                 return bytes_out
 
-            def get_uint8(self):
-                return self.pop_next()
+            def get_int8(self, signed):
+                return int.from_bytes(bytes([self.pop_next()]), byteorder="little", signed=signed)
 
             def try_take(self, n_bytes):
                 out = 0
@@ -55,7 +55,7 @@ pub fn gen_deserializer_code() -> Tokens {
 
             def deserialize_number(self, n_bytes, signed):
                 if n_bytes == U8_BYTES:
-                    return self.get_uint8()
+                    return self.get_int8(signed)
                 elif n_bytes in {U16_BYTES, U32_BYTES, U64_BYTES, U128_BYTES}:
                     val = self.try_take(n_bytes)
                     return to_number_if_safe(de_zig_zag_signed(val) if signed else val)

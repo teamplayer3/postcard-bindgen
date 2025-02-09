@@ -24,7 +24,7 @@ pub fn gen_serializer_code() -> Tokens {
             finish = () => this.bytes
             push_n = (bytes) => bytes.forEach((byte) => this.bytes.push(byte))
             serialize_bool = (value) => this.serialize_number(U8_BYTES, false, value ? 1 : 0)
-            serialize_number = (n_bytes, signed, value) => { if (n_bytes === U8_BYTES) { this.bytes.push(value) } else if (n_bytes === U16_BYTES || n_bytes === U32_BYTES || n_bytes === U64_BYTES || n_bytes === U128_BYTES) { const value_b = BigInt(value), buffer = signed ? varint(n_bytes, zig_zag(n_bytes, value_b)) : varint(n_bytes, value_b); this.push_n(buffer) } else { throw "byte count not supported" } }
+            serialize_number = (n_bytes, signed, value) => { if (n_bytes === U8_BYTES) { this.bytes.push(new Uint8Array([value])[0]) } else if (n_bytes === U16_BYTES || n_bytes === U32_BYTES || n_bytes === U64_BYTES || n_bytes === U128_BYTES) { const value_b = BigInt(value), buffer = signed ? varint(n_bytes, zig_zag(n_bytes, value_b)) : varint(n_bytes, value_b); this.push_n(buffer) } else { throw "byte count not supported" } }
             serialize_number_float = (n_bytes, value) => { const b_buffer = new ArrayBuffer(n_bytes), b_view = new DataView(b_buffer); if (n_bytes === U32_BYTES) { b_view.setFloat32(0, value, true) } else if (n_bytes === U64_BYTES) { b_view.setFloat64(0, value, true) } else { throw "byte count not supported" } this.push_n(new Uint8Array(b_buffer)) }
             serialize_string = (str) => { this.push_n(varint(U32_BYTES, str.length)); const bytes = []; for (const c of str) { bytes.push(c.charCodeAt(0)) } this.push_n(bytes) }
             serialize_array = (ser, array, len) => { if (len == undefined) this.push_n(varint(U32_BYTES, array.length)); array.slice(0, len != undefined ? len : array.length).forEach((v) => ser(this, v)) }
@@ -70,7 +70,7 @@ pub fn gen_serialize_func(
         function_args!["type", "value"],
         quote! {
             if (!(typeof type === "string")) {
-                throw "type must be a string";
+                throw new Error("type must be a string");
             }
             const s = new Serializer();
             $switch_case
@@ -87,7 +87,7 @@ fn gen_ser_case(container: Container, runtime_type_checks: bool) -> Case {
             if (is_$(container_ident.as_str())(value)) {
                 serialize_$(container_ident)(s, value);
             } else {
-                throw "value has wrong format";
+                throw new Error("Value " + $(quoted(full_qualified.as_str())) + " has wrong format");
             }
         }
     } else {

@@ -24,20 +24,20 @@ pub fn gen_serializer_code() -> Tokens {
 
         class Serializer:
             def __init__(self):
-                self.bytes = []
+                self.bytes = bytearray()
 
             def finish(self) -> bytes:
                 return bytes(self.bytes)
 
             def push_n(self, bytes_in):
-                self.bytes.extend(bytes_in)
+                self.bytes.extend(bytes(bytes_in))
 
             def serialize_bool(self, value):
                 self.serialize_number(U8_BYTES, False, 1 if value else 0)
 
             def serialize_number(self, n_bytes, signed, value):
                 if n_bytes == U8_BYTES:
-                    self.bytes.append(value)
+                    self.bytes.extend(value.to_bytes(1, byteorder="little", signed=signed))
                 elif n_bytes in {U16_BYTES, U32_BYTES, U64_BYTES, U128_BYTES}:
                     value_b = int(value)
                     buffer = varint(n_bytes, zig_zag(n_bytes, value_b) if signed else value_b)

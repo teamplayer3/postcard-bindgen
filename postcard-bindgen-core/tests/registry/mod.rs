@@ -6,7 +6,7 @@ use postcard_bindgen_core::{
         BindingsRegistry, EnumType, StructFields, StructType, TupleFields, TupleStructType,
         UnitStructType,
     },
-    type_info::{GenJsBinding, ObjectMeta, ValueType},
+    type_info::{GenBinding, ObjectMeta, ValueType},
 };
 
 macro_rules! dummy_struct {
@@ -14,7 +14,7 @@ macro_rules! dummy_struct {
         with_builtin_macros::with_builtin! {
             let $sname = concat_idents!(Dummy, $name) in {
                 struct $sname;
-                impl GenJsBinding for $sname {
+                impl GenBinding for $sname {
                     fn get_type() -> ValueType {
                         ValueType::Object(ObjectMeta {
                             name: stringify!($name),
