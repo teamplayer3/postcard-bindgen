@@ -67,13 +67,13 @@ all_tests = AllTests(
 )
 
 ser = open("serialized.bytes", "rb").read()
-d = deserialize(AllTests, ser)
+d, _bytes = deserialize(AllTests, ser)
 print(d)
 
 ser_own = serialize(all_tests)
 print(ser_own)
 
-d_des = deserialize(AllTests, ser_own)
+d_des, _bytes = deserialize(AllTests, ser_own)
 print(d_des)
 
 assert ser == ser_own

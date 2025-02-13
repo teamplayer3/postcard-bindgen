@@ -70,22 +70,22 @@ const all_tests = {
 const bytes = serialize("AllTests", all_tests)
 console.log(bytes)
 
-const js_des = deserialize("AllTests", bytes)
+const { value: js_des } = deserialize("AllTests", bytes)
 console.log(js_des)
 
 const bytes_file = `${process.cwd()}/serialized.bytes`
 const loaded_bytes = fs.readFileSync(bytes_file)
-const rust_des = deserialize("AllTests", loaded_bytes);
+const { value: rust_des } = deserialize("AllTests", new Uint8Array(loaded_bytes));
 console.log(rust_des)
 
 function bigIntFix (key, value) {
     if (typeof value === 'bigint') {
         return value.toString()
+    } else if (typeof value === 'number' && Number.isFinite(value)) {
+        return value.toFixed(3)
     }
     return value
 }
 
-// TODO: Fails because of precision error in f32 and f64
-// assert(JSON.stringify(all_tests, bigIntFix) === JSON.stringify(js_des, bigIntFix))
-assert(bytes, loaded_bytes)
-assert(JSON.stringify(js_des, bigIntFix) === JSON.stringify(rust_des, bigIntFix))
+assert(JSON.stringify(all_tests, bigIntFix) === JSON.stringify(js_des, bigIntFix), "JS deserialization failed")
+assert(JSON.stringify(js_des, bigIntFix) === JSON.stringify(rust_des, bigIntFix), "Rust deserialization failed")
