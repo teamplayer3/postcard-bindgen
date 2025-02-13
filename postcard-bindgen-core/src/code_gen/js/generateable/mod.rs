@@ -1,6 +1,8 @@
 pub mod container;
 pub mod types;
 
+use core::borrow::Borrow;
+
 use container::BindingTypeGenerateable;
 use genco::{quote, quote_in, tokens::quoted};
 
@@ -12,7 +14,12 @@ use crate::{
     registry::{Container, ContainerCollection, Module},
 };
 
-pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
+use super::GenerationSettings;
+
+pub fn gen_ts_typings(
+    containers: &ContainerCollection,
+    gen_settings: impl Borrow<GenerationSettings>,
+) -> Tokens {
     quote!(
         $(gen_number_decls())
 
@@ -23,7 +30,7 @@ pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
         $(gen_type_decl(containers.all_containers()))
         $(gen_value_type_decl(containers.all_containers()))
 
-        $(gen_ser_des_decls())
+        $(gen_ser_des_decls(gen_settings.borrow().ser, gen_settings.borrow().des))
     )
 }
 
@@ -64,7 +71,7 @@ fn gen_number_decls() -> Tokens {
 
 fn gen_extra_types_decls() -> Tokens {
     quote!(
-        declare type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" |  "unshift"
+        declare type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" | "unshift"
         declare type FixedLengthArray<T, L extends number, TObj = [T, ...Array<T>]> =
             Pick<TObj, Exclude<keyof TObj, ArrayLengthMutationKeys>>
             & {
@@ -92,10 +99,20 @@ fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
 
-fn gen_ser_des_decls() -> Tokens {
+fn gen_ser_des_decls(ser: bool, des: bool) -> Tokens {
     quote!(
-        export function serialize<T extends Type>(type: T, value: ValueType<T>): u8[]
-        export function deserialize<T extends Type>(type: T, bytes: u8[]): ValueType<T>
+        $(if ser {
+            export function serialize<T extends Type>(type: T, value: ValueType<T>): Uint8Array
+        })
+
+        $(if des {
+            export interface Result<T extends Type> {
+                value: ValueType<T>;
+                bytes: Uint8Array;
+            }
+
+            export function deserialize<T extends Type>(type: T, bytes: Uint8Array): Result<T>
+        })
     )
 }
 

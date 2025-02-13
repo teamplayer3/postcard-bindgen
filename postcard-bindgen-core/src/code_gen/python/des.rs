@@ -2,12 +2,13 @@ use genco::{prelude::python::Tokens, quote};
 
 use crate::{
     code_gen::{
-        python::generateable::container::BindingTypeGenerateable,
+        python::{generateable::container::BindingTypeGenerateable, Function},
         utils::{
             ContainerFullQualifiedTypeBuilder, ContainerIdentifierBuilder, TokensBranchedIterExt,
             TokensIterExt,
         },
     },
+    function_args,
     registry::Container,
 };
 
@@ -81,6 +82,9 @@ pub fn gen_deserializer_code() -> Tokens {
 
             def deserialize_map(self, des):
                 return {key: value for key, value in (des(self) for _ in range(self.try_take(U32_BYTES)))}
+
+            def release_bytes(self):
+                return bytes(self.bytes)
     }
 }
 
@@ -126,13 +130,37 @@ pub fn gen_deserialize_func(containers: impl Iterator<Item = Container> + Clone)
         )])
         .join_if_branched();
 
-    quote! {
-        $obj_type_type
-        def deserialize(obj_type: Type[T], bytes: bytes) -> T:
-            d = Deserializer(bytes)
+    let body = quote! {
+        d = Deserializer(bytes)
+        result_value = None
 
-            $des_switch
-    }
+        $des_switch
+
+        return (result_value, d.release_bytes())
+    };
+
+    let des_func = Function::new(
+        "deserialize",
+        function_args!(("obj_type", "Type[T]"), ("bytes", "bytes")),
+        body,
+        "Tuple[T, bytes]",
+    )
+    .with_doc_string(
+        "Deserialize a value from an array of bytes.
+
+Args:
+    obj_type: The type of the value to deserialize.
+    bytes: The byte array to deserialize from.
+
+Returns:
+    The deserialized value and the remaining bytes.
+
+",
+    );
+
+    [obj_type_type, quote!($des_func)]
+        .iter()
+        .join_with_line_breaks()
 }
 
 fn gen_des_case(container: Container) -> (Tokens, Tokens) {
@@ -143,6 +171,6 @@ fn gen_des_case(container: Container) -> (Tokens, Tokens) {
         ContainerIdentifierBuilder::new(container.path.clone().into_buf(), container.name).build();
     (
         quote!(obj_type is $fully_qualified),
-        quote!(return cast(T, deserialize_$container_ident(d))),
+        quote!(result_value = cast(T, deserialize_$container_ident(d))),
     )
 }

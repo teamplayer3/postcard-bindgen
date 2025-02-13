@@ -181,7 +181,7 @@ pub fn generate(
     if gen_settings.des {
         let deserializer_code = gen_deserializer_code();
         let des_code = quote! {
-            from typing import TypeVar, Type, cast
+            from typing import TypeVar, Type, cast, Tuple
 
             from .types import *
             from .util import *

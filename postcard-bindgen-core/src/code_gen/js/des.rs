@@ -18,7 +18,7 @@ use super::{Case, DefaultCase, ExportRegistry, Function, SwitchCase};
 pub fn gen_deserializer_code() -> Tokens {
     quote! {
         class Deserializer {
-            constructor(bytes_in) { this.bytes = Array.from(bytes_in) }
+            constructor(bytes_in) { this.bytes = Array.from(bytes_in); }
             pop_next = () => { const next = this.bytes.shift(); if (next === undefined) { throw "input buffer too small" } return next }
             pop_n = (n) => { const bytes = Array(); for (let i = 0; i < n; i++) { bytes.push(this.bytes.shift()) } return bytes }
             get_int8 = (signed) => signed ? new Int8Array([this.pop_next()])[0] : this.pop_next();
@@ -30,6 +30,7 @@ pub fn gen_deserializer_code() -> Tokens {
             deserialize_array = (des, len) => Array.from({length: len === undefined ? Number(this.try_take(U32_BYTES)) : len}, (v, i) => des(this))
             deserialize_string_key_map = (des) => { return [...Array(Number(this.try_take(U32_BYTES)))].reduce((prev) => { prev[this.deserialize_string()] = des(this); return prev }, {}) }
             deserialize_map = (des) => { return [...Array(Number(this.try_take(U32_BYTES)))].reduce((prev) => { const d = des(this); prev.set(d[0], d[1]); return prev }, new Map()) }
+            release_bytes = () => { return new Uint8Array(this.bytes); }
         }
     }
 }
@@ -66,20 +67,27 @@ pub fn gen_deserialize_func(
             throw "type must be a string";
         }
         const d = new Deserializer(bytes);
+        var return_value = undefined;
         $switch_case
+        return { value: return_value, bytes: d.release_bytes() };
     };
 
     export_registry.push("deserialize");
 
-    Function::new_untyped("deserialize", function_args!("type", "bytes"), body)
+    Function::new_untyped("deserialize", function_args!("type", "bytes"), body).with_doc_string(
+        "Deserialize a value from an array of bytes.
+        @param {string} type - The type of the value to deserialize.
+        @param {Uint8Array} bytes - The byte array to deserialize from.
+        @return {Object} The deserialized value and remaining bytes.",
+    )
 }
 
 fn gen_des_case(container: Container) -> Case {
     let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container).build();
     let container_ident = ContainerIdentifierBuilder::from(&container).build();
 
-    Case::new_without_break(
+    Case::new(
         quoted(fully_qualified),
-        quote!(return deserialize_$container_ident(d);),
+        quote!(return_value = deserialize_$container_ident(d);),
     )
 }

@@ -237,7 +237,7 @@ pub fn generate(
     }
 
     if gen_settings.type_script_types {
-        let ts = gen_ts_typings(&containers);
+        let ts = gen_ts_typings(&containers, gen_settings);
         export_files.push(ExportFile {
             content_type: "ts".to_owned(),
             content: ts,
