@@ -28,20 +28,38 @@ pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
 }
 
 fn gen_number_decls() -> Tokens {
-    quote!(
-        declare type u8 = number
-        declare type u16 = number
-        declare type u32 = number
-        declare type u64 = number
-        declare type u128 = number
-        declare type usize = number
-        declare type i8 = number
-        declare type i16 = number
-        declare type i32 = number
-        declare type i64 = number
-        declare type i128 = number
-        declare type isize = number
-    )
+    let types = [
+        ("u8", "number"),
+        ("u16", "number"),
+        ("u32", "number"),
+        ("u64", "bigint"),
+        ("u128", "bigint"),
+        ("usize", "bigint"),
+        ("i8", "number"),
+        ("i16", "number"),
+        ("i32", "number"),
+        ("i64", "bigint"),
+        ("i128", "bigint"),
+        ("isize", "bigint"),
+        ("NonZeroU8", "number"),
+        ("NonZeroU16", "number"),
+        ("NonZeroU32", "number"),
+        ("NonZeroU64", "bigint"),
+        ("NonZeroU128", "bigint"),
+        ("NonZeroUsize", "bigint"),
+        ("NonZeroI8", "number"),
+        ("NonZeroI16", "number"),
+        ("NonZeroI32", "number"),
+        ("NonZeroI64", "bigint"),
+        ("NonZeroI128", "bigint"),
+        ("NonZeroIsize", "bigint"),
+        ("f32", "number"),
+        ("f64", "number"),
+    ];
+    types
+        .into_iter()
+        .map(|(name, ty)| quote!(declare type $name = $ty))
+        .join_with_line_breaks()
 }
 
 fn gen_extra_types_decls() -> Tokens {

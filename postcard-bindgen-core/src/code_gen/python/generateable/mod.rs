@@ -124,16 +124,31 @@ fn generate_typings_for_mod<'a>(
 }
 
 pub fn gen_basic_typings() -> Tokens {
-    quote! {
-        u8 = int
-        i8 = int
-        u16 = int
-        i16 = int
-        u32 = int
-        i32 = int
-        u64 = int
-        i64 = int
-        u128 = int
-        i128 = int
-    }
+    let types = [
+        "u8",
+        "i8",
+        "u16",
+        "i16",
+        "u32",
+        "i32",
+        "u64",
+        "i64",
+        "u128",
+        "i128",
+        "NonZeroU8",
+        "NonZeroI8",
+        "NonZeroU16",
+        "NonZeroI16",
+        "NonZeroU32",
+        "NonZeroI32",
+        "NonZeroU64",
+        "NonZeroI64",
+        "NonZeroU128",
+        "NonZeroI128",
+    ];
+
+    types
+        .into_iter()
+        .map(|t| quote!($(t) = int))
+        .join_with_line_breaks()
 }
