@@ -64,5 +64,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-cache"
-      - run: cargo test --package postcard-bindgen --features=generating
+      - run: cargo test --all-features
 
