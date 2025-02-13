@@ -10,10 +10,23 @@ use super::JsTypeGenerateable;
 impl JsTypeGenerateable for ArrayMeta {
     fn gen_ser_accessor(&self, variable_path: VariablePath) -> Tokens {
         let inner_type_accessor = self.items_type.gen_ser_accessor(VariablePath::default());
+        let helper_func_name = quote!(lambda_$(variable_path.to_owned().into_string("_")));
+        let helper_func = quote! {
+            const $(&helper_func_name) = (s, $JS_OBJECT_VARIABLE) => {
+                $inner_type_accessor
+            };
+        };
+
         if let Some(len) = self.length {
-            quote!(s.serialize_array((s, $JS_OBJECT_VARIABLE) => $inner_type_accessor, $variable_path, $len))
+            quote! {
+                $helper_func
+                s.serialize_array($helper_func_name, $variable_path, $len)
+            }
         } else {
-            quote!(s.serialize_array((s, $JS_OBJECT_VARIABLE) => $inner_type_accessor, $variable_path))
+            quote! {
+                $helper_func
+                s.serialize_array($helper_func_name, $variable_path)
+            }
         }
     }
 

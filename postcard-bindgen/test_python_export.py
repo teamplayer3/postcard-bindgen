@@ -51,7 +51,9 @@ all_tests = AllTests(
             EnumContainer_A(),
             TupleContainer(123, StructContainer(
                 a=123, b=123, c=123, d=123), EnumContainer_A())
-        )
+        ),
+        vec_of_tuples=[(123, 123), (123, 123), (123, 123),
+                       (123, 123), (123, 123)],
     ),
     d=AllocTypes(
         a=[123, 123, 123, 123, 123, 123, 123, 123, 123, 123],

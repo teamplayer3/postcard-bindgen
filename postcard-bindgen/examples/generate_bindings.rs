@@ -74,6 +74,7 @@ struct CompoundTypes {
     option_some: Option<u8>,
     option_none: Option<u8>,
     tuple: (u8, StructContainer, EnumContainer, TupleContainer),
+    vec_of_tuples: Vec<(u8, u8)>,
 }
 
 #[derive(Debug, Serialize, PostcardBindings)]
@@ -262,6 +263,7 @@ fn main() {
                     EnumContainer::A,
                 ),
             ),
+            vec_of_tuples: vec![(123, 123), (123, 123), (123, 123), (123, 123), (123, 123)],
         },
         d: AllocTypes {
             a: vec![123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
