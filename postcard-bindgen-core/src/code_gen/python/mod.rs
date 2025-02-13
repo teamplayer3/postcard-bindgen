@@ -333,6 +333,7 @@ impl FormatInto<Python> for ImportRegistry {
                             .to_string()
                     }
                 }
+                Package::Root => base_path.to_owned(),
             };
 
             quote_in!(*tokens=> from $(package) import);
