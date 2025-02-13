@@ -1,7 +1,6 @@
 ---
 source: postcard-bindgen-core/tests/javascript.rs
 expression: des_file
-snapshot_kind: text
 ---
 function deserialize_STRUCT_TYPE(d) {
     return {
@@ -10,8 +9,8 @@ function deserialize_STRUCT_TYPE(d) {
         field_3: d.deserialize_array(() => d.deserialize_number(U32_BYTES, false)),
         field_4: d.deserialize_array(() => deserialize_STRUCT_TYPE(d)),
         field_5: {
-            end: d.deserialize_number(U32_BYTES, false),
-            start: d.deserialize_number(U32_BYTES, false)
+            start: d.deserialize_number(U32_BYTES, false),
+            end: d.deserialize_number(U32_BYTES, false)
         },
         field_6: d.deserialize_string_key_map(((d) => d.deserialize_number(U32_BYTES, false))),
         field_7: d.deserialize_map(((d) => [
@@ -69,23 +68,35 @@ function deserialize_ENUM_TYPE(d) {
     }
 }
 
+/**
+ * Deserialize a value from an array of bytes.
+ * @param {string} type - The type of the value to deserialize.
+ * @param {Uint8Array} bytes - The byte array to deserialize from.
+ * @return {Object} The deserialized value and remaining bytes.
+ */
 function deserialize(type, bytes) {
     if (!(typeof type === "string")) {
         throw "type must be a string";
     }
     const d = new Deserializer(bytes);
+    var return_value = undefined;
     switch (type) {
     case "StructType":
-        return deserialize_STRUCT_TYPE(d);
+        return_value = deserialize_STRUCT_TYPE(d);
+        break;
     case "UnitStructType":
-        return deserialize_UNIT_STRUCT_TYPE(d);
+        return_value = deserialize_UNIT_STRUCT_TYPE(d);
+        break;
     case "TupleStructType":
-        return deserialize_TUPLE_STRUCT_TYPE(d);
+        return_value = deserialize_TUPLE_STRUCT_TYPE(d);
+        break;
     case "EnumType":
-        return deserialize_ENUM_TYPE(d);
+        return_value = deserialize_ENUM_TYPE(d);
+        break;
     default:
         throw "type not implemented";
     }
+    return { value: return_value, bytes: d.release_bytes() };
 }
 
 export {

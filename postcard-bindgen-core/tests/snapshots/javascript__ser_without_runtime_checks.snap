@@ -1,7 +1,6 @@
 ---
 source: postcard-bindgen-core/tests/javascript.rs
 expression: ser_file
-snapshot_kind: text
 ---
 function serialize_STRUCT_TYPE(s, v) {
     s.serialize_number(U32_BYTES, false, v.field_1);
@@ -57,9 +56,15 @@ function serialize_ENUM_TYPE(s, v) {
     }
 }
 
+/**
+ * Serialize a value to an array of bytes.
+ * @param {string} type - The type of the value to serialize.
+ * @param {Object} value - The value to serialize.
+ * @return {Uint8Array} The serialized value as an array of bytes.
+ */
 function serialize(type, value) {
     if (!(typeof type === "string")) {
-        throw "type must be a string";
+        throw new Error("type must be a string");
     }
     const s = new Serializer();
     switch (type) {
