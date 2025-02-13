@@ -373,9 +373,32 @@ impl FormatInto<Python> for FunctionArg {
 
 impl FormatInto<Python> for Function {
     fn format_into(self, tokens: &mut Tokens) {
+        let doc_string = self.doc_string.map(|doc_string| {
+            let mut tokens = Tokens::new();
+
+            tokens.append("\"\"\"");
+            tokens.append(
+                doc_string
+                    .lines()
+                    .enumerate()
+                    .map(|(i, f)| {
+                        if i > 0 {
+                            format!("    {}", f)
+                        } else {
+                            f.to_string()
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+            tokens.append("\"\"\"");
+            tokens
+        });
+
         let return_type = self.return_type.map(|r| quote!($(" ")-> $r));
         quote_in! { *tokens =>
             def $(self.name)($(for arg in self.args join (, ) => $arg))$return_type:
+                $(doc_string)
                 $(self.body)
         }
     }

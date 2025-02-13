@@ -326,7 +326,21 @@ impl FormatInto<JavaScript> for FunctionArg {
 
 impl FormatInto<JavaScript> for Function {
     fn format_into(self, tokens: &mut Tokens) {
+        let doc_string = self.doc_string.map(|doc| {
+            let mut tokens = Tokens::new();
+            tokens.append("/**\n");
+            tokens.append(
+                doc.lines()
+                    .map(|line| format!(" * {}", line.trim()))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+            tokens.push();
+            tokens.append(" */");
+            tokens
+        });
         quote_in! { *tokens =>
+            $(doc_string)
             function $(self.name)($(for arg in self.args join (, ) => $arg)) {
                 $(self.body)
             }

@@ -138,6 +138,7 @@ where
     pub(super) name: Tokens<L>,
     pub(super) body: Tokens<L>,
     pub(super) return_type: Option<Tokens<L>>,
+    pub(super) doc_string: Option<String>,
 }
 
 impl<L> Function<L>
@@ -155,6 +156,7 @@ where
             args: args.to_args(),
             return_type: Some(quote!($return_type)),
             body: quote!($body),
+            doc_string: None,
         }
     }
 
@@ -168,6 +170,12 @@ where
             args: args.to_args(),
             return_type: None,
             body: quote!($body),
+            doc_string: None,
         }
+    }
+
+    pub fn with_doc_string(mut self, doc_string: impl ToString) -> Self {
+        self.doc_string = Some(doc_string.to_string());
+        self
     }
 }
