@@ -67,20 +67,17 @@ impl PythonTypeGenerateable for NumberMeta {
             NumberMeta::Integer {
                 bytes,
                 signed,
-                zero_able: _,
+                zero_able,
             } => {
-                let int_type = rust_int_to_python_type(*bytes, *signed);
-                import_registry.push(
-                    Package::Intern("basic_types".into()),
-                    ImportItem::Single(int_type.clone().into()),
-                );
-                quote!($int_type)
+                let int_type = rust_int_to_python_type(*bytes, *signed, !*zero_able);
+                import_registry.push(Package::Root, ImportItem::Single("basic_types".into()));
+                quote!(basic_types.$int_type)
             }
         }
     }
 }
 
-fn rust_int_to_python_type(bytes: usize, signed: bool) -> String {
+fn rust_int_to_python_type(bytes: usize, signed: bool, non_zero: bool) -> String {
     let bits = match bytes {
         1 => "8",
         2 => "16",
@@ -94,5 +91,9 @@ fn rust_int_to_python_type(bytes: usize, signed: bool) -> String {
         false => "u",
     };
 
-    format!("{sign}{bits}")
+    if non_zero {
+        format!("NonZero{}{bits}", sign.to_uppercase())
+    } else {
+        format!("{sign}{bits}")
+    }
 }

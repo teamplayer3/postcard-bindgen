@@ -1,21 +1,96 @@
+import { assert } from "console";
 import { readFileSync } from "fs";
-import { deserialize, serialize } from "js-test-bindings";
+import { AllTests, deserialize, serialize } from "js-test-bindings";
 
 
-const map = new Map()
-map.set(234, 21)
-const bytes = serialize("B", [234, [234], "Hello", map])
+const all_tests: AllTests = {
+    a: {
+        u: {},
+        e_a: { tag: "A" },
+        e_b: { tag: "B", value: 123 },
+        e_c: { tag: "C", value: [123, { a: 123, b: 123, c: 123, d: 123 }] },
+        e_d: { tag: "D", value: { a: 123, b: { a: 123, b: 123, c: 123, d: 123 } } },
+        t: [123, { a: 123, b: 123, c: 123, d: 123 }, { tag: "A" }],
+        s: { a: 123, b: 123, c: 123, d: 123 }
+    },
+    b: {
+        u8: 255,
+        u16: 65535,
+        u32: 4294967295,
+        u64: 18446744073709551615n,
+        u128: 340282366920938463463374607431768211455n,
+        usize: 18446744073709551615n,
+        i8_max: 127,
+        i8_min: -128,
+        i16_max: 32767,
+        i16_min: -32768,
+        i32_max: 2147483647,
+        i32_min: -2147483648,
+        i64_max: 9223372036854775807n,
+        i64_min: -9223372036854775808n,
+        i128_max: 170141183460469231731687303715884105727n,
+        i128_min: -170141183460469231731687303715884105728n,
+        isize_max: 9223372036854775807n,
+        isize_min: -9223372036854775808n,
+        f32: 123.123,
+        f64: 123.123,
+        bool_true: true,
+        bool_false: false,
+        none_zero: 123
+    },
+    c: {
+        static_byte_slice: [123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
+        static_str: "Hello",
+        array: [123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
+        range: { start: 10, end: 20 },
+        option_some: 123,
+        option_none: undefined,
+        tuple: [
+            123,
+            { a: 123, b: 123, c: 123, d: 123 },
+            { tag: "A" },
+            [123, { a: 123, b: 123, c: 123, d: 123 }, { tag: "A" }]
+        ],
+        vec_of_tuples: [
+            [123, 123],
+            [123, 123],
+            [123, 123],
+            [123, 123],
+            [123, 123],
+        ]
+    },
+    d: {
+        a: [123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
+        b: "Hello",
+        c: new Map([[123, 123]])
+    },
+    e: {
+        a: [123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
+        b: "Hello",
+        c: new Map([[123, 123]])
+    },
+    f: [123, [123]]
+};
+
+const bytes = serialize("AllTests", all_tests)
 console.log(bytes)
-const b = deserialize("B", bytes)
-console.log(b)
 
-// test namespaces
-const bytes_e_e = serialize("e.E",  [234, [21]]);
-console.log(bytes_e_e)
-const e_e = deserialize("e.E", bytes_e_e)
-console.log(e_e)
+const { value: js_des } = deserialize("AllTests", bytes)
+console.log(js_des)
 
-const bytes_file = `${process.cwd()}/../serialized.bytes`
+const bytes_file = `${process.cwd()}/serialized.bytes`
 const loaded_bytes = readFileSync(bytes_file)
-const rust_des = deserialize("D", [...loaded_bytes]);
+const { value: rust_des } = deserialize("AllTests", new Uint8Array(loaded_bytes));
 console.log(rust_des)
+
+function bigIntFix (_key: any, value: any) {
+    if (typeof value === 'bigint') {
+        return value.toString()
+    } else if (typeof value === 'number' && Number.isFinite(value)) {
+        return value.toFixed(3)
+    }
+    return value
+}
+
+assert(JSON.stringify(all_tests, bigIntFix) === JSON.stringify(js_des, bigIntFix), "JS deserialization failed")
+assert(JSON.stringify(js_des, bigIntFix) === JSON.stringify(rust_des, bigIntFix), "Rust deserialization failed")

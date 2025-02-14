@@ -21,7 +21,7 @@ pub fn gen_serializer_code() -> Tokens {
     quote! {
         class Serializer {
             constructor() { this.bytes = [] }
-            finish = () => this.bytes
+            finish = () => new Uint8Array(this.bytes)
             push_n = (bytes) => bytes.forEach((byte) => this.bytes.push(byte))
             serialize_bool = (value) => this.serialize_number(U8_BYTES, false, value ? 1 : 0)
             serialize_number = (n_bytes, signed, value) => { if (n_bytes === U8_BYTES) { this.bytes.push(new Uint8Array([value])[0]) } else if (n_bytes === U16_BYTES || n_bytes === U32_BYTES || n_bytes === U64_BYTES || n_bytes === U128_BYTES) { const value_b = BigInt(value), buffer = signed ? varint(n_bytes, zig_zag(n_bytes, value_b)) : varint(n_bytes, value_b); this.push_n(buffer) } else { throw "byte count not supported" } }
@@ -76,6 +76,12 @@ pub fn gen_serialize_func(
             $switch_case
             return s.finish();
         },
+    )
+    .with_doc_string(
+        "Serialize a value to an array of bytes.
+        @param {string} type - The type of the value to serialize.
+        @param {Object} value - The value to serialize.
+        @return {Uint8Array} The serialized value as an array of bytes.",
     )
 }
 

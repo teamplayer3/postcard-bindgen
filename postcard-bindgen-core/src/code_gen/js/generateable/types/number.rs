@@ -63,7 +63,7 @@ impl JsTypeGenerateable for NumberMeta {
             NumberMeta::Integer {
                 bytes,
                 signed,
-                zero_able: _,
+                zero_able,
             } => {
                 let prefix = if *signed { "i" } else { "u" };
                 let bits = match bytes {
@@ -74,7 +74,11 @@ impl JsTypeGenerateable for NumberMeta {
                     16 => "128",
                     _ => unreachable!(),
                 };
-                quote!($prefix$bits)
+                if *zero_able {
+                    quote!($prefix$bits)
+                } else {
+                    quote!(NonZero$(prefix.to_uppercase())$bits)
+                }
             }
         }
     }

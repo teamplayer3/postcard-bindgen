@@ -1,9 +1,8 @@
 ---
 source: postcard-bindgen-core/tests/python.rs
 expression: des_file
-snapshot_kind: text
 ---
-from typing import TypeVar, Type, cast
+from typing import TypeVar, Type, cast, Tuple
 
 from .types import *
 from .util import *
@@ -30,16 +29,28 @@ def deserialize_ENUM_TYPE(d) -> EnumType:
         raise TypeError("variant index {} not exists".format(variant_index))
 
 T = TypeVar("T", StructType, UnitStructType, TupleStructType, EnumType)
-def deserialize(obj_type: Type[T], bytes: bytes) -> T:
+def deserialize(obj_type: Type[T], bytes: bytes) -> Tuple[T, bytes]:
+    """Deserialize a value from an array of bytes.
+    
+    Args:
+        obj_type: The type of the value to deserialize.
+        bytes: The byte array to deserialize from.
+    
+    Returns:
+        The deserialized value and the remaining bytes.
+    """
     d = Deserializer(bytes)
+    result_value = None
 
     if obj_type is StructType:
-        return cast(T, deserialize_STRUCT_TYPE(d))
+        result_value = cast(T, deserialize_STRUCT_TYPE(d))
     elif obj_type is UnitStructType:
-        return cast(T, deserialize_UNIT_STRUCT_TYPE(d))
+        result_value = cast(T, deserialize_UNIT_STRUCT_TYPE(d))
     elif obj_type is TupleStructType:
-        return cast(T, deserialize_TUPLE_STRUCT_TYPE(d))
+        result_value = cast(T, deserialize_TUPLE_STRUCT_TYPE(d))
     elif obj_type is EnumType:
-        return cast(T, deserialize_ENUM_TYPE(d))
+        result_value = cast(T, deserialize_ENUM_TYPE(d))
     else:
         raise TypeError("{} not deserializable".format(obj_type))
+
+    return (result_value, d.release_bytes())

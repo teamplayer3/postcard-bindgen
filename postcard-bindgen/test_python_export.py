@@ -51,7 +51,9 @@ all_tests = AllTests(
             EnumContainer_A(),
             TupleContainer(123, StructContainer(
                 a=123, b=123, c=123, d=123), EnumContainer_A())
-        )
+        ),
+        vec_of_tuples=[(123, 123), (123, 123), (123, 123),
+                       (123, 123), (123, 123)],
     ),
     d=AllocTypes(
         a=[123, 123, 123, 123, 123, 123, 123, 123, 123, 123],
@@ -67,13 +69,13 @@ all_tests = AllTests(
 )
 
 ser = open("serialized.bytes", "rb").read()
-d = deserialize(AllTests, ser)
+d, _bytes = deserialize(AllTests, ser)
 print(d)
 
 ser_own = serialize(all_tests)
 print(ser_own)
 
-d_des = deserialize(AllTests, ser_own)
+d_des, _bytes = deserialize(AllTests, ser_own)
 print(d_des)
 
 assert ser == ser_own

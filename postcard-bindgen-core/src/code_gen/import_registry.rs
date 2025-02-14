@@ -54,6 +54,7 @@ pub enum Package {
     Extern(PathBuf<'static>),
     Intern(PathBuf<'static>),
     Relative(PathBuf<'static>),
+    Root,
 }
 
 impl PartialOrd for Package {
@@ -72,11 +73,16 @@ impl Ord for Package {
             Self::Intern(name) => match other {
                 Self::Extern(_) => std::cmp::Ordering::Greater,
                 Self::Intern(other_name) => name.cmp(other_name),
-                Self::Relative(_) => std::cmp::Ordering::Less,
+                Self::Relative(_) | Self::Root => std::cmp::Ordering::Less,
             },
             Self::Relative(name) => match other {
                 Self::Relative(other_name) => name.cmp(other_name),
                 _ => std::cmp::Ordering::Greater,
+            },
+            Self::Root => match other {
+                Self::Extern(_) => std::cmp::Ordering::Greater,
+                Self::Root => std::cmp::Ordering::Equal,
+                Self::Intern(_) | Self::Relative(_) => std::cmp::Ordering::Less,
             },
         }
     }

@@ -11,7 +11,7 @@ Structs and enums can be annotated with `PostcardBindings` to generate code. The
 
 ## Supported Languages
 
-* 🌐 **JavaScript**
+* 🌐 **JavaScript** (>= ES2021)
 * 🐍 **Python** (>= 3.9)
 
 ## Usage

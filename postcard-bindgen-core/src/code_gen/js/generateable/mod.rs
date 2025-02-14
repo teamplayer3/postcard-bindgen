@@ -1,6 +1,8 @@
 pub mod container;
 pub mod types;
 
+use core::borrow::Borrow;
+
 use container::BindingTypeGenerateable;
 use genco::{quote, quote_in, tokens::quoted};
 
@@ -12,7 +14,12 @@ use crate::{
     registry::{Container, ContainerCollection, Module},
 };
 
-pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
+use super::GenerationSettings;
+
+pub fn gen_ts_typings(
+    containers: &ContainerCollection,
+    gen_settings: impl Borrow<GenerationSettings>,
+) -> Tokens {
     quote!(
         $(gen_number_decls())
 
@@ -23,30 +30,48 @@ pub fn gen_ts_typings(containers: &ContainerCollection) -> Tokens {
         $(gen_type_decl(containers.all_containers()))
         $(gen_value_type_decl(containers.all_containers()))
 
-        $(gen_ser_des_decls())
+        $(gen_ser_des_decls(gen_settings.borrow().ser, gen_settings.borrow().des))
     )
 }
 
 fn gen_number_decls() -> Tokens {
-    quote!(
-        declare type u8 = number
-        declare type u16 = number
-        declare type u32 = number
-        declare type u64 = number
-        declare type u128 = number
-        declare type usize = number
-        declare type i8 = number
-        declare type i16 = number
-        declare type i32 = number
-        declare type i64 = number
-        declare type i128 = number
-        declare type isize = number
-    )
+    let types = [
+        ("u8", "number"),
+        ("u16", "number"),
+        ("u32", "number"),
+        ("u64", "bigint"),
+        ("u128", "bigint"),
+        ("usize", "bigint"),
+        ("i8", "number"),
+        ("i16", "number"),
+        ("i32", "number"),
+        ("i64", "bigint"),
+        ("i128", "bigint"),
+        ("isize", "bigint"),
+        ("NonZeroU8", "number"),
+        ("NonZeroU16", "number"),
+        ("NonZeroU32", "number"),
+        ("NonZeroU64", "bigint"),
+        ("NonZeroU128", "bigint"),
+        ("NonZeroUsize", "bigint"),
+        ("NonZeroI8", "number"),
+        ("NonZeroI16", "number"),
+        ("NonZeroI32", "number"),
+        ("NonZeroI64", "bigint"),
+        ("NonZeroI128", "bigint"),
+        ("NonZeroIsize", "bigint"),
+        ("f32", "number"),
+        ("f64", "number"),
+    ];
+    types
+        .into_iter()
+        .map(|(name, ty)| quote!(declare type $name = $ty))
+        .join_with_line_breaks()
 }
 
 fn gen_extra_types_decls() -> Tokens {
     quote!(
-        declare type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" |  "unshift"
+        declare type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" | "unshift"
         declare type FixedLengthArray<T, L extends number, TObj = [T, ...Array<T>]> =
             Pick<TObj, Exclude<keyof TObj, ArrayLengthMutationKeys>>
             & {
@@ -74,10 +99,20 @@ fn gen_value_type_decl(bindings: impl Iterator<Item = Container>) -> Tokens {
     quote!(declare type ValueType<T extends Type> = $if_cases : void)
 }
 
-fn gen_ser_des_decls() -> Tokens {
+fn gen_ser_des_decls(ser: bool, des: bool) -> Tokens {
     quote!(
-        export function serialize<T extends Type>(type: T, value: ValueType<T>): u8[]
-        export function deserialize<T extends Type>(type: T, bytes: u8[]): ValueType<T>
+        $(if ser {
+            export function serialize<T extends Type>(type: T, value: ValueType<T>): Uint8Array
+        })
+
+        $(if des {
+            export interface Result<T extends Type> {
+                value: ValueType<T>;
+                bytes: Uint8Array;
+            }
+
+            export function deserialize<T extends Type>(type: T, bytes: Uint8Array): Result<T>
+        })
     )
 }
 
