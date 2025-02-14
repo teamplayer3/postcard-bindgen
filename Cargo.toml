@@ -10,7 +10,7 @@ exclude = ["examples"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.3"
+version = "0.6.0"
 authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/teamplayer3/postcard-bindgen"
