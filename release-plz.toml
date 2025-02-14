@@ -2,6 +2,8 @@
 changelog_config = "cliff.toml"
 semver_check = true
 
+[[package]]
+name = "postcard-bindgen"
 
 [[package]]
 name = "postcard-bindgen-derive"
