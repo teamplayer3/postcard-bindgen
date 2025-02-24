@@ -68,6 +68,34 @@ function deserialize_ENUM_TYPE(d) {
     }
 }
 
+function deserialize_sub_module_ENUM_TYPE(d) {
+    switch (d.deserialize_number(U32_BYTES, false)) {
+    case 0:
+        return {
+            tag: "AVariant"
+        };
+    case 1:
+        return {
+            tag: "BVariant",
+            value: [
+                d.deserialize_number(U32_BYTES, false),
+                d.deserialize_string()
+            ]
+        };
+    case 2:
+        return {
+            tag: "CVariant",
+            value: {
+                field_1: d.deserialize_number(U32_BYTES, false),
+                field_2: d.deserialize_string(),
+                struct_type: deserialize_STRUCT_TYPE(d)
+            }
+        };
+    default:
+        throw "variant not implemented"
+    }
+}
+
 /**
  * Deserialize a value from an array of bytes.
  * @param {string} type - The type of the value to deserialize.
@@ -92,6 +120,9 @@ function deserialize(type, bytes) {
         break;
     case "EnumType":
         return_value = deserialize_ENUM_TYPE(d);
+        break;
+    case "sub_module.EnumType":
+        return_value = deserialize_sub_module_ENUM_TYPE(d);
         break;
     default:
         throw "type not implemented";

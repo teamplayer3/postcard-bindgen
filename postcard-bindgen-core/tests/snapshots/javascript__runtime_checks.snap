@@ -92,3 +92,22 @@ function is_ENUM_TYPE(v) {
          typeof v.value.field_2 === "string" &&
          is_STRUCT_TYPE(v.value.struct_type)))
 }
+
+function is_sub_module_ENUM_TYPE(v) {
+    return (typeof v === "object" &&
+         "tag" in v &&
+         v.tag === "AVariant") ||
+         (typeof v === "object" &&
+         "tag" in v &&
+         "value" in v &&
+         (v.tag === "BVariant" &&
+         Array.isArray(v.value) &&
+         v.value.length === 2 &&
+         check_integer_type(v.value[0], U32_BYTES, false, true) &&
+         typeof v.value[1] === "string") ||
+         (v.tag === "CVariant" &&
+         typeof v.value === "object" &&
+         check_integer_type(v.value.field_1, U32_BYTES, false, true) &&
+         typeof v.value.field_2 === "string" &&
+         is_STRUCT_TYPE(v.value.struct_type)))
+}

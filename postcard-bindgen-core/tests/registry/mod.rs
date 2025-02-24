@@ -73,7 +73,9 @@ pub fn init_registry() -> BindingsRegistry {
     fields.register_field::<DummyStructType>("struct_type");
     enum_type.register_unnamed_struct("CVariant", fields);
 
-    registry.register_enum_binding("EnumType", "main_crate", enum_type);
+    registry.register_enum_binding("EnumType", "main_crate", enum_type.clone());
+
+    registry.register_enum_binding("EnumType", "main_crate::sub_module", enum_type);
 
     registry
 }
