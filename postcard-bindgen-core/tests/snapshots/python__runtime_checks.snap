@@ -91,3 +91,25 @@ def assert_ENUM_TYPE(v):
         assert_CVariant(v)
     else:
         raise TypeError("variant {} not exists".format(v))
+
+def assert_sub_module_ENUM_TYPE(v):
+    def assert_AVariant(v):
+        pass
+    def assert_BVariant(v):
+        assert isinstance(v[0], int), "{} is not an int".format(v[0])
+        check_bounds(U32_BYTES, False, v[0], True)
+        assert isinstance(v[1], str), "{} is not a string".format(v[1])
+    def assert_CVariant(v):
+        assert isinstance(v.field_1, int), "{} is not an int".format(v.field_1)
+        check_bounds(U32_BYTES, False, v.field_1, True)
+        assert isinstance(v.field_2, str), "{} is not a string".format(v.field_2)
+        assert_STRUCT_TYPE(v.struct_type)
+
+    if isinstance(v, sub_module.EnumType_AVariant):
+        assert_AVariant(v)
+    elif isinstance(v, sub_module.EnumType_BVariant):
+        assert_BVariant(v)
+    elif isinstance(v, sub_module.EnumType_CVariant):
+        assert_CVariant(v)
+    else:
+        raise TypeError("variant {} not exists".format(v))

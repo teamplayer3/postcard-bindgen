@@ -68,6 +68,27 @@ function serialize_ENUM_TYPE(s, v) {
     }
 }
 
+function serialize_sub_module_ENUM_TYPE(s, v) {
+    switch (v.tag) {
+    case "AVariant":
+        s.serialize_number(U32_BYTES, false, 0);
+        break;
+    case "BVariant":
+        s.serialize_number(U32_BYTES, false, 1);
+        s.serialize_number(U32_BYTES, false, v.value[0]);
+        s.serialize_string(v.value[1]);
+        break;
+    case "CVariant":
+        s.serialize_number(U32_BYTES, false, 2);
+        s.serialize_number(U32_BYTES, false, v.value.field_1);
+        s.serialize_string(v.value.field_2);
+        serialize_STRUCT_TYPE(s, v.value.struct_type);
+        break;
+    default:
+        throw "variant not implemented"
+    }
+}
+
 /**
  * Serialize a value to an array of bytes.
  * @param {string} type - The type of the value to serialize.
@@ -106,6 +127,13 @@ function serialize(type, value) {
             serialize_ENUM_TYPE(s, value);
         } else {
             throw new Error("Value " + "EnumType" + " has wrong format");
+        }
+        break;
+    case "sub_module.EnumType":
+        if (is_sub_module_ENUM_TYPE(value)) {
+            serialize_sub_module_ENUM_TYPE(s, value);
+        } else {
+            throw new Error("Value " + "sub_module.EnumType" + " has wrong format");
         }
         break;
     default:

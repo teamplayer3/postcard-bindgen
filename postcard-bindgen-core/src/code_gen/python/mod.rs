@@ -156,8 +156,6 @@ pub fn generate(
     if gen_settings.ser {
         let serializer_code = gen_serializer_code();
         let ser_code = quote! {
-            from typing import Union
-
             from .types import *
             from .util import *
             from .serializer import Serializer

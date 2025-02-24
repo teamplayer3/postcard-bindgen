@@ -38,13 +38,16 @@ declare type FixedLengthArray<T, L extends number, TObj = [T, ...Array<T>]> =
         [Symbol.iterator]: () => IterableIterator<T>
     }
 
+export namespace sub_module {
+    export type EnumType = { tag: "AVariant" } | { tag: "BVariant", value: [u32, string] } | { tag: "CVariant", value: { field_1: u32, field_2: string, struct_type: StructType } }
+}
 export type StructType = { field_1: u32, field_2: string, field_3: u32[], field_4: StructType[], field_5: { start: u32, end: u32 }, field_6: {[key: string]: u32;}, field_7: Map<u32, u32>, field_8: u32 | undefined, field_9: boolean, field_10: [u32, string], field_11: FixedLengthArray<string, 3>, field_12: u32[], field_13: f32 }
 export type UnitStructType = { }
 export type TupleStructType = [u32, string]
 export type EnumType = { tag: "AVariant" } | { tag: "BVariant", value: [u32, string] } | { tag: "CVariant", value: { field_1: u32, field_2: string, struct_type: StructType } }
 
-export type Type = "StructType" | "UnitStructType" | "TupleStructType" | "EnumType"
-declare type ValueType<T extends Type> = T extends "StructType" ? StructType : T extends "UnitStructType" ? UnitStructType : T extends "TupleStructType" ? TupleStructType : T extends "EnumType" ? EnumType : void
+export type Type = "StructType" | "UnitStructType" | "TupleStructType" | "EnumType" | "sub_module.EnumType"
+declare type ValueType<T extends Type> = T extends "StructType" ? StructType : T extends "UnitStructType" ? UnitStructType : T extends "TupleStructType" ? TupleStructType : T extends "EnumType" ? EnumType : T extends "sub_module.EnumType" ? sub_module.EnumType : void
 
 export function serialize<T extends Type>(type: T, value: ValueType<T>): Uint8Array
 

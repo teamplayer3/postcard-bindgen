@@ -28,7 +28,18 @@ def deserialize_ENUM_TYPE(d) -> EnumType:
     else:
         raise TypeError("variant index {} not exists".format(variant_index))
 
-T = TypeVar("T", StructType, UnitStructType, TupleStructType, EnumType)
+def deserialize_sub_module_ENUM_TYPE(d) -> sub_module.EnumType:
+    variant_index = d.deserialize_number(U32_BYTES, False)
+    if variant_index == 0:
+        return sub_module.EnumType_AVariant()
+    elif variant_index == 1:
+        return sub_module.EnumType_BVariant(d.deserialize_number(U32_BYTES, False), d.deserialize_string())
+    elif variant_index == 2:
+        return sub_module.EnumType_CVariant(field_1 = d.deserialize_number(U32_BYTES, False), field_2 = d.deserialize_string(), struct_type = deserialize_STRUCT_TYPE(d))
+    else:
+        raise TypeError("variant index {} not exists".format(variant_index))
+
+T = TypeVar("T", StructType, UnitStructType, TupleStructType, EnumType, sub_module.EnumType)
 def deserialize(obj_type: Type[T], bytes: bytes) -> Tuple[T, bytes]:
     """Deserialize a value from an array of bytes.
     
@@ -50,6 +61,8 @@ def deserialize(obj_type: Type[T], bytes: bytes) -> Tuple[T, bytes]:
         result_value = cast(T, deserialize_TUPLE_STRUCT_TYPE(d))
     elif obj_type is EnumType:
         result_value = cast(T, deserialize_ENUM_TYPE(d))
+    elif obj_type is sub_module.EnumType:
+        result_value = cast(T, deserialize_sub_module_ENUM_TYPE(d))
     else:
         raise TypeError("{} not deserializable".format(obj_type))
 

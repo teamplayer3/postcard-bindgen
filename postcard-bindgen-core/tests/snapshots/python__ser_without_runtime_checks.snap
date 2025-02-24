@@ -59,7 +59,22 @@ def serialize_ENUM_TYPE(s, v):
     else:
         raise TypeError("variant {} not exists".format(v))
 
-def serialize(value: Union[StructType, UnitStructType, TupleStructType, EnumType]) -> bytes:
+def serialize_sub_module_ENUM_TYPE(s, v):
+    if isinstance(v, sub_module.EnumType_AVariant):
+        s.serialize_number(U32_BYTES, False, 0)
+    elif isinstance(v, sub_module.EnumType_BVariant):
+        s.serialize_number(U32_BYTES, False, 1)
+        s.serialize_number(U32_BYTES, False, v[0])
+        s.serialize_string(v[1])
+    elif isinstance(v, sub_module.EnumType_CVariant):
+        s.serialize_number(U32_BYTES, False, 2)
+        s.serialize_number(U32_BYTES, False, v.field_1)
+        s.serialize_string(v.field_2)
+        serialize_STRUCT_TYPE(s, v.struct_type)
+    else:
+        raise TypeError("variant {} not exists".format(v))
+
+def serialize(value: Union[StructType, UnitStructType, TupleStructType, EnumType, sub_module.EnumType]) -> bytes:
     s = Serializer()
 
     if isinstance(value, StructType):
@@ -70,6 +85,8 @@ def serialize(value: Union[StructType, UnitStructType, TupleStructType, EnumType
         serialize_TUPLE_STRUCT_TYPE(s, value)
     elif isinstance(value, EnumType):
         serialize_ENUM_TYPE(s, value)
+    elif isinstance(value, sub_module.EnumType):
+        serialize_sub_module_ENUM_TYPE(s, value)
     else:
         raise TypeError("{} not serializable".format(type(value)))
 
