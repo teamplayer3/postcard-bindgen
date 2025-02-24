@@ -1,4 +1,9 @@
-use genco::{lang::Python, prelude::python::Tokens, quote, quote_in, tokens::FormatInto};
+use genco::{
+    lang::{python, Python},
+    prelude::python::Tokens,
+    quote, quote_in,
+    tokens::FormatInto,
+};
 
 use crate::{
     code_gen::{
@@ -95,15 +100,18 @@ pub fn gen_serialize_func(
 ) -> Tokens {
     let all_bindings = containers
         .clone()
-        .map(|d| quote!($(d.name)))
+        .map(|container| {
+            quote!($(ContainerFullQualifiedTypeBuilder::from(&container)
+            .build()))
+        })
         .collect::<Vec<_>>();
 
     let type_check = if all_bindings.len() == 1 {
         quote!($(all_bindings.first().unwrap()))
     } else {
-        quote!(Union[$(containers.clone().map(|container|
-            quote!($(ContainerFullQualifiedTypeBuilder::from(&container)
-                .build()))).join_with_comma())])
+        let union_import = &python::import("typing", "Union");
+        quote!($union_import[$(all_bindings.iter().map(|binding|
+            quote!($binding)).join_with_comma())])
     };
 
     let ser_switch = containers

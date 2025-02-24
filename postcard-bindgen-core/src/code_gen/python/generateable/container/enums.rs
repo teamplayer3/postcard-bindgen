@@ -17,10 +17,11 @@ use super::{BindingTypeGenerateable, ContainerInfo};
 
 impl BindingTypeGenerateable for EnumType {
     fn gen_ser_body(&self, container_info: ContainerInfo<'_>) -> Tokens {
+        let fully_qualified = ContainerFullQualifiedTypeBuilder::from(&container_info).build();
         self.variants
             .iter()
             .map(|v| {
-                let variant_name = quote!($(container_info.name.as_ref())_$(v.name));
+                let variant_name = quote!($(&fully_qualified)_$(v.name));
 
                 let ser_fields = [quote!(s.serialize_number(U32_BYTES, False, $(v.index)))]
                     .into_iter()
@@ -65,6 +66,8 @@ impl BindingTypeGenerateable for EnumType {
             .variants
             .iter()
             .map(|v| {
+                let variant_name = quote!($(&fully_qualified)_$(v.name));
+
                 let constructor_args = match &v.inner_type {
                     EnumVariantType::Empty => quote!(),
                     EnumVariantType::NewType(fields) => fields.iter().map(
@@ -76,7 +79,7 @@ impl BindingTypeGenerateable for EnumType {
                 };
                 (
                     Some(quote!(variant_index == $(v.index))),
-                    quote!(return $(&fully_qualified)_$(v.name)($constructor_args)),
+                    quote!(return $variant_name($constructor_args)),
                 )
             })
             .chain([(
