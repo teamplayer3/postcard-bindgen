@@ -1,10 +1,10 @@
 # Example no_std
 
-Shows how to use this crate in a project to generate bindings.
+Demonstrates how to use this crate in a project to generate bindings.
 
 ## Setup
 
-The main project must be build up as a [cargo workspace](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html). The executable to generate the bindings is a member of it.
+The main project must be structured as a [Cargo workspace](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html). The executable responsible for generating the bindings must be a member of this workspace.
 
 ```toml
 [workspace]
@@ -13,38 +13,38 @@ members = [
 ]
 ```
 
-Important is to enable the `generating` feature in the `gen-bindings` crate. In the main library crate the feature is not enabled. This allows using this crate in a `no_std` and different target than this computer context.
+It is important to enable the `generating` feature in the `gen-bindings` crate. However, this feature should not be enabled in the main library crate. This setup allows the crate to be used in a `no_std` environment and on a different target than the development machine.
 
 Main `Cargo.toml`:
 ```toml
 [dependencies]
-postcard-bindgen = "0.1"
+postcard-bindgen = "0.6"
 
-serde = { version = "1", features = ["derive"]}
+serde = { version = "1", features = ["derive"] }
 ```
 
 Package `gen-bindings` `Cargo.toml`:
 ```toml
 [dependencies]
-postcard-bindgen = { version = "0.1", features = ["generating"] }
+postcard-bindgen = { version = "0.6", features = ["generating"] }
 
 no-std = { path = "../" }
 ```
 
 ## Usage
 
-To build the javascript bindings run one of the following scripts in the current directory:
+To build the JavaScript bindings, run one of the following scripts in the current directory:
 
-- Windows
+- Windows:
   ```bash
   gen-bindings.ps1
   ```
 
-- Linux
+- Linux:
   ```bash
   gen-bindings.sh
   ```
 
-## Good to know
+## Good to Know
 
-The target of the main binary (in this case no real usage for the `no_std` library) is another as for example linux or windows. To run the `gen-bindings` member of the main workspace on the current system, the `target` must be explicitly defined. This is done in the scripts `gen-bindings.*`.
+Generating the bindings requires features from the standard library. Because of this, the `gen-bindings` crate must be compiled for a different target. The required `target` must be explicitly defined, which is handled in the `gen-bindings.*` scripts.
