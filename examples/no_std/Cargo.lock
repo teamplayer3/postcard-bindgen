@@ -104,7 +104,7 @@ checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "postcard-bindgen"
-version = "0.4.0"
+version = "0.6.0"
 dependencies = [
  "postcard-bindgen-core",
  "postcard-bindgen-derive",
@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "postcard-bindgen-core"
-version = "0.4.0"
+version = "0.6.0"
 dependencies = [
  "convert_case",
  "genco",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "postcard-bindgen-derive"
-version = "0.4.0"
+version = "0.6.0"
 dependencies = [
  "convert_case",
  "genco",
@@ -264,18 +264,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.69"
+version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.69"
+version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -284,8 +284,9 @@ dependencies = [
 
 [[package]]
 name = "tree-ds"
-version = "0.1.5"
-source = "git+https://github.com/teamplayer3/tree-ds?branch=postcard-bindgen-changes#9e2589974b71dce5171d60b881e0322037b911b7"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07c2ad02d80bddffe921aaa54d21ab9905b8fbff24cf26112a7efb44a3caba4f"
 dependencies = [
  "lazy_static",
  "sequential_gen",
