@@ -28,7 +28,7 @@ proc-macro2 = "1.0"
 genco = "0.17.8"
 convert_case = "0.6.0"
 regex = "1.10.3"
-regex-macro = "0.2.0"
+regex-macro = "0.3.0"
 
 [dependencies.postcard-bindgen-core]
 version = "0.7.0"
