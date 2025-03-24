@@ -91,10 +91,10 @@ pub mod ser {
 
         Case::new(
             variant_name,
-            quote! {
+            quote! {{
                 s.serialize_number(U32_BYTES, false, $index);
                 $body
-            },
+            }},
         )
     }
 }
