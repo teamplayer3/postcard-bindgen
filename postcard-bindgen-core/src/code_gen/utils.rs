@@ -14,7 +14,7 @@ use crate::{
     type_info::ObjectMeta,
 };
 
-pub fn wrap_with_brackets_if_multi_line<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
+pub fn wrap_with_braces_if_multi_line<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
     let tokens = quote!($tokens);
     if tokens.is_empty() {
         return Tokens::new();
@@ -370,12 +370,12 @@ mod test {
     }
 
     #[test]
-    fn test_wrap_with_brackets_if_multi_line() {
+    fn test_wrap_with_braces_if_multi_line() {
         let line: Tokens<JavaScript> = quote!(
             var a = 1;
         );
 
-        let wrapped = wrap_with_brackets_if_multi_line(line);
+        let wrapped = wrap_with_braces_if_multi_line(line);
         assert_eq!(
             wrapped.to_file_string().unwrap(),
             "var a = 1;\n".to_string()
@@ -385,7 +385,7 @@ mod test {
             var b = 2;
             var c = 3;
         );
-        let wrapped_multi_line = wrap_with_brackets_if_multi_line(multi_line);
+        let wrapped_multi_line = wrap_with_braces_if_multi_line(multi_line);
         assert_eq!(
             wrapped_multi_line.to_file_string().unwrap(),
             "{\n    var a = 1;\n    var b = 2;\n    var c = 3;\n}\n".to_string()
