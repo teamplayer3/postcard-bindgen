@@ -40,6 +40,7 @@ pub mod ser {
                 JS_ENUM_VARIANT_VALUE,
             },
             switch_case::DefaultCase,
+            utils::wrap_with_braces_if_multi_line,
         },
         registry::{EnumVariant, EnumVariantType},
     };
@@ -91,10 +92,10 @@ pub mod ser {
 
         Case::new(
             variant_name,
-            quote! {{
+            wrap_with_braces_if_multi_line(quote! {
                 s.serialize_number(U32_BYTES, false, $index);
                 $body
-            }},
+            }),
         )
     }
 }
