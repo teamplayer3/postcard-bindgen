@@ -12,6 +12,27 @@ use postcard_bindgen_core::{
 
 use super::{PackageInfo, Version};
 
+/// Builds a pip module from [ContainerCollection].
+///
+/// # Example
+/// ```
+/// # use postcard_bindgen::{python::{build_package, GenerationSettings}, PackageInfo, PostcardBindings, generate_bindings};
+/// # use serde::Serialize;
+/// #[derive(Serialize, PostcardBindings)]
+/// struct Test {
+///    field: u8
+/// }
+///
+/// # fn main() {
+/// let parent_dir = std::env::current_dir().unwrap();
+/// let package_info = PackageInfo {
+///    name: "test_package".into(),
+///    version: "0.1.0".try_into().unwrap()
+/// };
+///
+/// build_package(parent_dir.as_path(), package_info, GenerationSettings::enable_all(), generate_bindings!(Test));
+/// # }
+/// ```
 pub fn build_pip_module(
     parent_dir: &Path,
     package_info: PackageInfo,

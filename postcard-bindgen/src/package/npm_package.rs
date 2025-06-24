@@ -13,7 +13,7 @@ use postcard_bindgen_core::{
 
 use super::{PackageInfo, Version};
 
-/// Builds a npm package from created language binding strings.
+/// Builds a npm package from [ContainerCollection].
 ///
 /// # Example
 /// ```
