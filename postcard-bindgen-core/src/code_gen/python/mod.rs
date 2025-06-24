@@ -382,7 +382,7 @@ impl FormatInto<Python> for Function {
                     .enumerate()
                     .map(|(i, f)| {
                         if i > 0 {
-                            format!("    {}", f)
+                            format!("    {f}")
                         } else {
                             f.to_string()
                         }
