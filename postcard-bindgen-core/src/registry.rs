@@ -403,7 +403,7 @@ impl Display for NodeType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             NodeType::Container(c) => write!(f, "Container({}, {})", c.name, c.path),
-            NodeType::Module(m) => write!(f, "Module({})", m),
+            NodeType::Module(m) => write!(f, "Module({m})"),
         }
     }
 }
