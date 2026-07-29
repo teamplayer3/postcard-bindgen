@@ -2,7 +2,7 @@
     "dependencies": {
         "js-test-bindings": "file:../js-test-bindings",
         "tslint": "^6.1.3",
-        "typescript": "^5.0.0"
+        "typescript": "^7.0.0"
     },
     "name": "test-bindings-proj",
     "version": "1.0.0",
