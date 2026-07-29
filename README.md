@@ -16,7 +16,7 @@ Structs and enums can be annotated with `PostcardBindings` to generate code. The
 
 ## Usage
 
-> :warning: Use rust nightly to run the crate that generates the bindings. This crate depends on [genco](https://github.com/udoprog/genco), which uses a nightly feature.
+> Rust 1.88 or later is required. Nightly Rust is no longer needed to generate bindings.
 
 Annotate structs and enums with `Serialize`/`Deserialize` from the [serde crate](https://github.com/serde-rs/serde) and the `PostcardBindings` macro from this crate.
 
