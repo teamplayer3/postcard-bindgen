@@ -1,5 +1,3 @@
-use core::ops::Deref;
-
 use convert_case::{Case, Casing};
 use genco::{
     lang::Lang,
@@ -14,7 +12,11 @@ use crate::{
     type_info::ObjectMeta,
 };
 
-pub fn wrap_with_braces_if_multi_line<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
+pub fn wrap_with_braces_if_multi_line<L>(tokens: impl FormatInto<L>) -> Tokens<L>
+where
+    L: Lang,
+    L::Item: PartialEq,
+{
     let tokens = quote!($tokens);
     if tokens.is_empty() {
         return Tokens::new();
@@ -26,7 +28,7 @@ pub fn wrap_with_braces_if_multi_line<L: Lang>(tokens: impl FormatInto<L>) -> To
     // and wrap it in curly braces.
     if tokens
         .iter()
-        .map(|t| matches!(t, Item::Push))
+        .map(|t| t == &Item::<L>::push())
         .filter(|v| *v)
         .count()
         > 1
@@ -45,14 +47,18 @@ pub fn wrap_with_braces_if_multi_line<L: Lang>(tokens: impl FormatInto<L>) -> To
     result
 }
 
-pub fn break_long_logical_lines<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
+pub fn break_long_logical_lines<L>(tokens: impl FormatInto<L>) -> Tokens<L>
+where
+    L: Lang,
+    L::Item: PartialEq,
+{
     let tokens = quote!($tokens);
     let mut result = Tokens::new();
     let mut intend = false;
 
     for token in tokens {
         let is_logical_operator =
-            matches!(&token, Item::Literal(l) if ["&&", "||"].contains(&l.deref()));
+            token == Item::<L>::static_("&&") || token == Item::<L>::static_("||");
         result.append(token);
         if is_logical_operator {
             result.push();

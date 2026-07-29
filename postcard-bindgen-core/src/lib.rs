@@ -31,7 +31,6 @@ impl ArchPointerLen {
 
 /// Helper struct to pass the generated language strings to an export function.
 #[cfg(feature = "generating")]
-#[derive(Debug)]
 pub struct Exports<L: genco::lang::Lang> {
     pub files: Vec<ExportFile<L>>,
 }
@@ -55,8 +54,34 @@ impl<L: genco::lang::Lang> Exports<L> {
 }
 
 #[cfg(feature = "generating")]
-#[derive(Debug)]
 pub struct ExportFile<L: genco::lang::Lang> {
     pub content_type: String,
     pub content: genco::Tokens<L>,
+}
+
+#[cfg(feature = "generating")]
+impl<L> core::fmt::Debug for Exports<L>
+where
+    L: genco::lang::Lang,
+    L::Item: core::fmt::Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Exports")
+            .field("files", &self.files)
+            .finish()
+    }
+}
+
+#[cfg(feature = "generating")]
+impl<L> core::fmt::Debug for ExportFile<L>
+where
+    L: genco::lang::Lang,
+    L::Item: core::fmt::Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ExportFile")
+            .field("content_type", &self.content_type)
+            .field("content", &self.content)
+            .finish()
+    }
 }
