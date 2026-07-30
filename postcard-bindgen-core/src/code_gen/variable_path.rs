@@ -56,7 +56,7 @@ pub enum VariableAccess {
 impl VariableAccess {
     fn into_string(self) -> String {
         match self {
-            Self::Indexed(i) => format!("{}", i),
+            Self::Indexed(i) => format!("{i}"),
             Self::Field(f) => f,
         }
     }

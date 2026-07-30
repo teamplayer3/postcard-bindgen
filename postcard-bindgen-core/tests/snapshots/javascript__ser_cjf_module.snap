@@ -1,6 +1,7 @@
 ---
 source: postcard-bindgen-core/tests/javascript.rs
 expression: ser_file
+snapshot_kind: text
 ---
 function serialize_STRUCT_TYPE(s, v) {
     s.serialize_number(U32_BYTES, false, v.field_1);
@@ -53,15 +54,19 @@ function serialize_ENUM_TYPE(s, v) {
         s.serialize_number(U32_BYTES, false, 0);
         break;
     case "BVariant":
-        s.serialize_number(U32_BYTES, false, 1);
-        s.serialize_number(U32_BYTES, false, v.value[0]);
-        s.serialize_string(v.value[1]);
+        {
+            s.serialize_number(U32_BYTES, false, 1);
+            s.serialize_number(U32_BYTES, false, v.value[0]);
+            s.serialize_string(v.value[1]);
+        }
         break;
     case "CVariant":
-        s.serialize_number(U32_BYTES, false, 2);
-        s.serialize_number(U32_BYTES, false, v.value.field_1);
-        s.serialize_string(v.value.field_2);
-        serialize_STRUCT_TYPE(s, v.value.struct_type);
+        {
+            s.serialize_number(U32_BYTES, false, 2);
+            s.serialize_number(U32_BYTES, false, v.value.field_1);
+            s.serialize_string(v.value.field_2);
+            serialize_STRUCT_TYPE(s, v.value.struct_type);
+        }
         break;
     default:
         throw "variant not implemented"
@@ -74,15 +79,19 @@ function serialize_sub_module_ENUM_TYPE(s, v) {
         s.serialize_number(U32_BYTES, false, 0);
         break;
     case "BVariant":
-        s.serialize_number(U32_BYTES, false, 1);
-        s.serialize_number(U32_BYTES, false, v.value[0]);
-        s.serialize_string(v.value[1]);
+        {
+            s.serialize_number(U32_BYTES, false, 1);
+            s.serialize_number(U32_BYTES, false, v.value[0]);
+            s.serialize_string(v.value[1]);
+        }
         break;
     case "CVariant":
-        s.serialize_number(U32_BYTES, false, 2);
-        s.serialize_number(U32_BYTES, false, v.value.field_1);
-        s.serialize_string(v.value.field_2);
-        serialize_STRUCT_TYPE(s, v.value.struct_type);
+        {
+            s.serialize_number(U32_BYTES, false, 2);
+            s.serialize_number(U32_BYTES, false, v.value.field_1);
+            s.serialize_string(v.value.field_2);
+            serialize_STRUCT_TYPE(s, v.value.struct_type);
+        }
         break;
     default:
         throw "variant not implemented"

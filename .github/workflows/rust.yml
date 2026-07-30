@@ -17,7 +17,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
           components: rustfmt
       - run: rustup component add rustfmt
       - run: cargo fmt -- --check
@@ -30,8 +29,6 @@ jobs:
       - name: typos-action      
         uses: crate-ci/typos@v1.28.4
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: nightly
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
         with:
@@ -45,7 +42,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
           components: clippy
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
@@ -59,8 +55,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: nightly
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-cache"

@@ -25,19 +25,20 @@ alloc = ["postcard-bindgen-core/alloc"]
 heapless = ["postcard-bindgen-core/heapless"]
 
 [dependencies.postcard-bindgen-core]
-version = "0.7.0"
+version = "0.7.1"
 path = "../postcard-bindgen-core"
 
 [dependencies.postcard-bindgen-derive]
-version = "0.7.0"
+version = "0.7.1"
 path = "../postcard-bindgen-derive"
 
 [dev-dependencies]
 postcard = "1.0.8"
 serde = { version = "1.0", features = ["derive"] }
-heapless = { version = "0.8.0", features = ["serde"] }
+
 tempfile = "3.20.0"
 insta = "1.41.1"
+heapless = { version = "0.9.0", features = ["serde"] }
 
 [[example]]
 name = "generate_bindings"

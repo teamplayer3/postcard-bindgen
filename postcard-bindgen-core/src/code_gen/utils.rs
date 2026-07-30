@@ -1,5 +1,3 @@
-use core::ops::Deref;
-
 use convert_case::{Case, Casing};
 use genco::{
     lang::Lang,
@@ -14,14 +12,53 @@ use crate::{
     type_info::ObjectMeta,
 };
 
-pub fn break_long_logical_lines<L: Lang>(tokens: impl FormatInto<L>) -> Tokens<L> {
+pub fn wrap_with_braces_if_multi_line<L>(tokens: impl FormatInto<L>) -> Tokens<L>
+where
+    L: Lang,
+    L::Item: PartialEq,
+{
+    let tokens = quote!($tokens);
+    if tokens.is_empty() {
+        return Tokens::new();
+    }
+
+    let mut result = Tokens::new();
+
+    // If the tokens include more than one line break, we assume it is a multi-line expression
+    // and wrap it in curly braces.
+    if tokens
+        .iter()
+        .map(|t| t == &Item::<L>::push())
+        .filter(|v| *v)
+        .count()
+        > 1
+    {
+        result.append("{");
+        result.indent();
+        result.append(tokens);
+        result.unindent();
+        result.append("}");
+    } else {
+        // If there are no line breaks, we can just append the tokens directly.
+        result.append(tokens);
+        return result;
+    }
+
+    result
+}
+
+pub fn break_long_logical_lines<L>(tokens: impl FormatInto<L>) -> Tokens<L>
+where
+    L: Lang,
+    L::Item: PartialEq,
+{
     let tokens = quote!($tokens);
     let mut result = Tokens::new();
     let mut intend = false;
 
     for token in tokens {
         let is_logical_operator =
-            matches!(&token, Item::Literal(l) if ["&&", "||"].contains(&l.deref()));
+            token == Item::<L>::static_("&&") || token == Item::<L>::static_("||");
         result.append(token);
         if is_logical_operator {
             result.push();
@@ -336,5 +373,28 @@ mod test {
         let break_line = break_long_logical_lines(line);
 
         assert_eq!(break_line.to_file_string().unwrap(), "a &&\n     b &&\n     c ||\n     d &&\n     e &&\n     f &&\n     g ||\n     h &&\n     i &&\n     j &&\n     k\n".to_string());
+    }
+
+    #[test]
+    fn test_wrap_with_braces_if_multi_line() {
+        let line: Tokens<JavaScript> = quote!(
+            var a = 1;
+        );
+
+        let wrapped = wrap_with_braces_if_multi_line(line);
+        assert_eq!(
+            wrapped.to_file_string().unwrap(),
+            "var a = 1;\n".to_string()
+        );
+        let multi_line: Tokens<JavaScript> = quote!(
+            var a = 1;
+            var b = 2;
+            var c = 3;
+        );
+        let wrapped_multi_line = wrap_with_braces_if_multi_line(multi_line);
+        assert_eq!(
+            wrapped_multi_line.to_file_string().unwrap(),
+            "{\n    var a = 1;\n    var b = 2;\n    var c = 3;\n}\n".to_string()
+        );
     }
 }
