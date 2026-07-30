@@ -1,6 +1,6 @@
 use derive_enum::derive_enum;
 use derive_struct::derive_struct;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use serde_derive_internals::{ast, Ctxt, Derive};
 use syn::DeriveInput;
@@ -17,7 +17,9 @@ fn derive_js_implementation(input: proc_macro::TokenStream) -> TokenStream {
     let input: DeriveInput = syn::parse(input).unwrap();
 
     let cx = Ctxt::new();
-    let container = ast::Container::from_ast(&cx, &input, Derive::Serialize).unwrap();
+    // `serde_derive_internals` uses this only when parsing deserialization helpers.
+    let private = Ident::new("__private", Span::call_site());
+    let container = ast::Container::from_ast(&cx, &input, Derive::Serialize, &private).unwrap();
 
     let body = match container.data {
         ast::Data::Enum(variants) => derive_enum(container.ident.to_owned(), variants),

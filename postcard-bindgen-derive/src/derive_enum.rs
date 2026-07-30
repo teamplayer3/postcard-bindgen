@@ -5,7 +5,7 @@ use serde_derive_internals::ast::{self, Style};
 pub fn derive_enum<'a>(ident: Ident, variants: impl AsRef<[ast::Variant<'a>]>) -> TokenStream {
     let enum_name = ident.to_string();
     let body = variants.as_ref().iter().map(|variant| {
-        let variant_name = variant.attrs.name().serialize_name();
+        let variant_name = &variant.attrs.name().serialize_name().value;
         derive_variant_style(&variant.style, variant_name, &variant.fields)
     });
     quote!(
