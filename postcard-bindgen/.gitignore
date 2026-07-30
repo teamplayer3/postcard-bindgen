@@ -1,5 +1,9 @@
 .env/
 serialized.bytes
 *-test-bindings/
+# doc test js package dir
 test-package/
+# doc test python package dir
+test_package/
+# doc test js package dir
 test-bindings/
