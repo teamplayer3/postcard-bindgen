@@ -10,7 +10,7 @@ exclude = ["examples"]
 resolver = "2"
 
 [workspace.package]
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Alexander Hübener <alex.teamplayer@gmail.com>"]
 edition = "2021"
 rust-version = "1.88"
