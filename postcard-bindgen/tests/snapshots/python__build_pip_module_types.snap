@@ -1,0 +1,10 @@
+---
+source: postcard-bindgen/tests/python.rs
+expression: type_file_content
+---
+from dataclasses import dataclass
+from halpi2_fw_i2c_postcard import basic_types
+
+@dataclass
+class Test:
+    field: basic_types.u8

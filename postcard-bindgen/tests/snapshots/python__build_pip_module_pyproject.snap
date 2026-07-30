@@ -1,0 +1,13 @@
+---
+source: postcard-bindgen/tests/python.rs
+expression: pyproject_content
+---
+
+[project]
+name = "halpi2_fw_i2c_postcard"
+version = "0.1.0"
+authors = [
+  { name="postcard-bindgen" },
+]
+description = "Auto generated bindings for postcard format serializing and deserializing python to and from bytes."
+requires-python = ">=3.8"

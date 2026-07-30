@@ -1,11 +1,10 @@
-use convert_case::{Case, Casing};
 use genco::quote;
 
 use crate::{
     code_gen::{
         import_registry::{ImportItem, Package},
         python::{FieldAccessor, ImportRegistry, Tokens, VariablePath},
-        utils::ContainerIdentifierBuilder,
+        utils::{snake_case, ContainerIdentifierBuilder},
     },
     type_info::ObjectMeta,
 };
@@ -37,7 +36,7 @@ impl PythonTypeGenerateable for ObjectMeta {
         container_path.pop_front();
 
         let mut import_path = container_path.clone();
-        import_path.push(format!("_{}", self.name.to_case(Case::Snake)));
+        import_path.push(format!("_{}", snake_case(self.name)));
 
         import_path.push_front("types");
 
