@@ -21,7 +21,7 @@ proc-macro = true
 
 [dependencies]
 quote = "1.0.35"
-serde_derive_internals = "0.29"
+serde_derive_internals = "0.30"
 syn = "3.0.0"
 serde = "1"
 proc-macro2 = "1.0"

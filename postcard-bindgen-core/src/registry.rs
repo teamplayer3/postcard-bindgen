@@ -227,16 +227,17 @@ impl ContainerCollection {
     ///
     /// Can be used to remove the module hierarchy.
     pub fn flatten(&mut self) {
-        let root_node_id = self.0.get_root_node().unwrap().get_node_id();
+        let root_node_id = self.0.get_root_node().unwrap().get_node_id().unwrap();
         let root_node = self.0.get_node_by_id(&root_node_id).unwrap();
 
         let root_mod_nodes = root_node
             .get_children_ids()
+            .unwrap()
             .iter()
             .filter_map(|i| {
                 let node = self.0.get_node_by_id(i).unwrap();
 
-                let node_value = node.get_value().unwrap();
+                let node_value = node.get_value().unwrap().unwrap();
                 if node_value.is_module() {
                     Some(node)
                 } else {
@@ -254,16 +255,16 @@ impl ContainerCollection {
 
             let node = mod_nodes.pop_front().unwrap();
 
-            let children = node.get_children_ids();
+            let children = node.get_children_ids().unwrap();
 
             for child in children {
                 let child_node = self.0.get_node_by_id(&child).unwrap();
-                let child_value = child_node.get_value().unwrap();
+                let child_value = child_node.get_value().unwrap().unwrap();
 
-                node.remove_child(child_node.clone());
+                node.remove_child(child_node.clone()).unwrap();
 
                 if child_value.is_container() {
-                    root_node.add_child(child_node);
+                    root_node.add_child(child_node).unwrap();
                 } else if child_value.is_module() {
                     mod_nodes.push_back(child_node);
                 }
@@ -273,7 +274,7 @@ impl ContainerCollection {
         for node in root_mod_nodes {
             self.0
                 .remove_node(
-                    &node.get_node_id(),
+                    &node.get_node_id().unwrap(),
                     NodeRemovalStrategy::RemoveNodeAndChildren,
                 )
                 .unwrap();
@@ -281,22 +282,25 @@ impl ContainerCollection {
 
         for node in root_node
             .get_children_ids()
+            .unwrap()
             .iter()
             .map(|node| self.0.get_node_by_id(node).unwrap())
         {
-            node.update_value(|v| v.as_mut().unwrap().container_mut().unwrap().flatten_paths());
+            node.update_value(|v| v.as_mut().unwrap().container_mut().unwrap().flatten_paths())
+                .unwrap();
         }
     }
 
     pub fn all_containers(&self) -> impl Iterator<Item = Container> + Clone + '_ {
-        self.0
-            .get_nodes()
-            .iter()
-            .filter_map(|node| node.get_value().unwrap().container().cloned())
+        self.0.get_nodes().iter().filter_map(|node| {
+            node.get_value()
+                .unwrap()
+                .and_then(|value| value.container().cloned())
+        })
     }
 
     pub fn containers_per_module(&self) -> (Vec<Container>, Vec<Module<'_>>) {
-        let root_node = self.0.get_root_node().unwrap().get_node_id();
+        let root_node = self.0.get_root_node().unwrap().get_node_id().unwrap();
         container_and_modules_per_mod(&self.0, &root_node)
     }
 }
@@ -325,9 +329,9 @@ impl<'a> Module<'a> {
         } else {
             let mut curr_node = self.tree.get_node_by_id(&self.node_id).unwrap();
             let mut path = Vec::new();
-            while let Some(id) = curr_node.get_parent_id() {
+            while let Some(id) = curr_node.get_parent_id().unwrap() {
                 let node = self.tree.get_node_by_id(&id).unwrap();
-                if let NodeType::Module(name) = node.get_value().unwrap() {
+                if let NodeType::Module(name) = node.get_value().unwrap().unwrap() {
                     if name != "::" {
                         path.push(name);
                         curr_node = node;
@@ -361,17 +365,19 @@ fn container_and_modules_per_mod<'a>(
         let b_height = tree.get_node_height(b).unwrap();
 
         a_height.cmp(&b_height).reverse()
-    });
+    })
+    .unwrap();
 
     let mut mods = Vec::new();
     let mut containers = Vec::new();
 
     for (id, child) in node
         .get_children_ids()
+        .unwrap()
         .iter()
         .map(|id| (id, tree.get_node_by_id(id).unwrap()))
     {
-        match child.get_value().unwrap() {
+        match child.get_value().unwrap().unwrap() {
             NodeType::Module(name) => mods.push(Module::new(tree, *id, name)),
             NodeType::Container(container) => containers.push(container.clone()),
         }
@@ -506,10 +512,10 @@ impl BindingsRegistry {
                 let is_last = parts.peek().is_none();
 
                 if let Some(part) = part {
-                    let node_ids = node.get_children_ids();
+                    let node_ids = node.get_children_ids().unwrap();
                     let child = node_ids.iter().find(|child| {
                         let node = self.0.get_node_by_id(child).unwrap();
-                        matches!(node.get_value(), Some(NodeType::Module(p)) if p == part)
+                        matches!(node.get_value(), Ok(Some(NodeType::Module(p))) if p == part)
                     });
 
                     if let Some(child) = child {
@@ -519,10 +525,10 @@ impl BindingsRegistry {
 
                         node = self.0.get_node_by_id(child).unwrap();
                     } else {
-                        break PathExists::Partly(node.get_node_id(), part.into());
+                        break PathExists::Partly(node.get_node_id().unwrap(), part.into());
                     }
                 } else {
-                    break PathExists::Full(node.get_node_id());
+                    break PathExists::Full(node.get_node_id().unwrap());
                 }
             };
 
