@@ -4,11 +4,13 @@ use std::{
 };
 
 use container::BindingTypeGenerateable;
-use convert_case::{Case, Casing};
 use genco::{quote, quote_in, tokens::quoted};
 
 use crate::{
-    code_gen::{python::ImportRegistry, utils::TokensIterExt},
+    code_gen::{
+        python::ImportRegistry,
+        utils::{snake_case, TokensIterExt},
+    },
     registry::{BindingType, Container, ContainerCollection, Module},
 };
 
@@ -73,7 +75,7 @@ fn generate_typings_for_mod<'a>(
 
     for container_export in container_exports {
         let export_items = container_export.join(", ");
-        quote_in!(tokens=> from ._$(container_export.first().unwrap().to_case(convert_case::Case::Snake)) import $export_items);
+        quote_in!(tokens=> from ._$(snake_case(container_export.first().unwrap())) import $export_items);
         tokens.push();
     }
 
@@ -99,7 +101,7 @@ fn generate_typings_for_mod<'a>(
 
         files.push(ExportFile {
             content_type: path
-                .join(format!("_{}", container.name.to_case(Case::Snake)))
+                .join(format!("_{}", snake_case(container.name)))
                 .to_string_lossy()
                 .into_owned(),
             content: quote! {

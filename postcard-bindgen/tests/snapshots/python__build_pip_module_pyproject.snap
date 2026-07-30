@@ -1,8 +1,8 @@
 ---
 source: postcard-bindgen/tests/python.rs
 expression: pyproject_content
-snapshot_kind: text
 ---
+
 [project]
 name = "halpi2_fw_i2c_postcard"
 version = "0.1.0"

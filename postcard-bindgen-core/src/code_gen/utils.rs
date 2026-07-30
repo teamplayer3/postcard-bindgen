@@ -1,4 +1,4 @@
-use convert_case::{Case, Casing};
+use convert_case::{Boundary, Case, Converter};
 use genco::{
     lang::Lang,
     quote,
@@ -79,8 +79,20 @@ pub trait StrExt {
 
 impl StrExt for &str {
     fn to_obj_identifier(&self) -> String {
-        self.to_case(Case::Snake).to_uppercase()
+        snake_case(self).to_uppercase()
     }
+}
+
+pub(crate) fn snake_case(value: &str) -> String {
+    Converter::new()
+        .set_boundaries(&[
+            Boundary::Hyphen,
+            Boundary::LowerUpper,
+            Boundary::Space,
+            Boundary::Underscore,
+        ])
+        .to_case(Case::Snake)
+        .convert(value)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -321,6 +333,14 @@ mod test {
     use genco::lang::JavaScript;
 
     use super::*;
+
+    #[test]
+    fn snake_case_only_splits_hyphens_and_lower_upper_transitions() {
+        assert_eq!(
+            snake_case("BadJalpi2-fw-i2c-postcardBindgen"),
+            "bad_jalpi2_fw_i2c_postcard_bindgen"
+        );
+    }
 
     #[test]
     fn test_container_identifier_builder() {

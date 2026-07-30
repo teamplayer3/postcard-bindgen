@@ -6,7 +6,6 @@ mod type_checks;
 
 use core::borrow::Borrow;
 
-use convert_case::{Case, Casing};
 use des::{gen_des_functions, gen_deserialize_func, gen_deserializer_code};
 use genco::{lang::python::Python, quote, quote_in, tokens::FormatInto};
 use general::gen_util;
@@ -20,7 +19,7 @@ use crate::{
 
 use super::{
     import_registry::{ImportItem, Package},
-    utils::{IfBranchedTemplate, TokensBranchedIterExt, TokensIterExt},
+    utils::{snake_case, IfBranchedTemplate, TokensBranchedIterExt, TokensIterExt},
 };
 
 const PYTHON_OBJECT_VARIABLE: &str = "v";
@@ -116,7 +115,7 @@ pub fn generate(
     gen_settings: impl Borrow<GenerationSettings>,
     generate_package_name: String,
 ) -> Exports<Python> {
-    let generate_package_name = generate_package_name.to_case(Case::Snake);
+    let generate_package_name = snake_case(&generate_package_name);
     let gen_settings = gen_settings.borrow();
 
     if !gen_settings.module_structure {

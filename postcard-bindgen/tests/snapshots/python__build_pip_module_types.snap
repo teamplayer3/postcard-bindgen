@@ -1,11 +1,9 @@
 ---
 source: postcard-bindgen/tests/python.rs
-assertion_line: 66
 expression: type_file_content
-snapshot_kind: text
 ---
 from dataclasses import dataclass
-from halpi_2_fw_i_2_c_postcard import basic_types
+from halpi2_fw_i2c_postcard import basic_types
 
 @dataclass
 class Test:
