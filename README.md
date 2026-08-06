@@ -64,6 +64,29 @@ const test = {
 const bytes = serialize("Test", test)
 ```
 
+## Test Bindings Fixture
+
+From the workspace directory, generate the JavaScript bindings and serialized
+fixture used by the TypeScript test project:
+
+```bash
+cargo +1.88 run -p postcard-bindgen --example generate_bindings --features="std generating heapless"
+```
+
+The example writes the `js-test-bindings` Node package to `postcard-bindgen/js-test-bindings` and the serialized Rust structs to `postcard-bindgen/serialized.bytes`, respectively. The TypeScript project at
+`postcard-bindgen/test-bindings-proj` uses `js-test-bindings` as a local
+dependency, loads `serialized.bytes`, and deserializes it with the generated
+bindings. It compares that result with the value produced by serializing and
+deserializing the same structure in JavaScript.
+
+Then run the TypeScript project:
+
+```bash
+cd postcard-bindgen/test-bindings-proj
+npm install
+npm run run
+```
+
 ## Type mappings
 
 <table>

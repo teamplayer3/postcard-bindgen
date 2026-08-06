@@ -116,8 +116,10 @@ mod e {
 }
 
 fn main() {
+    let package_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+
     javascript::build_package(
-        std::env::current_dir().unwrap().as_path(),
+        package_dir,
         PackageInfo {
             name: "js-test-bindings".into(),
             version: "0.1.0".try_into().unwrap(),
@@ -144,7 +146,7 @@ fn main() {
     .unwrap();
 
     python::build_package(
-        std::env::current_dir().unwrap().as_path(),
+        package_dir,
         PackageInfo {
             name: "py-test-bindings".into(),
             version: "0.1.0".try_into().unwrap(),
@@ -288,7 +290,6 @@ fn main() {
     };
 
     let postcard_bytes = postcard::to_vec::<_, 300>(&all_tests).expect("Failed to serialize");
-    let mut file =
-        std::fs::File::create(std::env::current_dir().unwrap().join("serialized.bytes")).unwrap();
+    let mut file = std::fs::File::create(package_dir.join("serialized.bytes")).unwrap();
     file.write_all(postcard_bytes.as_slice()).unwrap();
 }
