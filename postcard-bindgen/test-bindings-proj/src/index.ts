@@ -78,7 +78,7 @@ console.log(bytes)
 const { value: js_des } = deserialize("AllTests", bytes)
 console.log(js_des)
 
-const bytes_file = `${process.cwd()}/serialized.bytes`
+const bytes_file = `${process.cwd()}/../serialized.bytes`
 const loaded_bytes = readFileSync(bytes_file)
 const { value: rust_des } = deserialize("AllTests", new Uint8Array(loaded_bytes));
 console.log(rust_des)
