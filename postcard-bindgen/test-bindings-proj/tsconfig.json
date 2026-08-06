@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"module": "commonjs",
-		"moduleResolution": "node",
 		"lib": [
 			"ESNext"
 		],
@@ -25,7 +24,6 @@
 		"noUnusedParameters": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"downlevelIteration": true,
 		"declaration": true,
 		"pretty": true
 	},
