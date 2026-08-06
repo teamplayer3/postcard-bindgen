@@ -15,7 +15,9 @@ export default [
                 babelOptions: {
                     babelrc: false,
                     configFile: false,
-                    presets: ["@babel/preset-typescript"],
+                    parserOpts: {
+                        plugins: ["typescript"],
+                    },
                 },
                 requireConfigFile: false,
             },
