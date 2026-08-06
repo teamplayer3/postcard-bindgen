@@ -7,7 +7,7 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 license.workspace = true
-readme.workspace = true
+readme = "README.md"
 documentation.workspace = true
 
 description = "A crate to generate bindings for the postcard binary format for other languages than Rust."
