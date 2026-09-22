@@ -12,7 +12,7 @@ Structs and enums can be annotated with `PostcardBindings` to generate code. The
 ## Supported Languages
 
 * 🌐 **JavaScript** (>= ES2021)
-* 🐍 **Python** (>= 3.9)
+* 🐍 **Python** (>= 3.10)
 
 ## Usage
 
@@ -187,18 +187,17 @@ enum Enum {
 </td><td>
 
 ```python
-class Enum:
+class Enum_A:
     pass
 
-class Enum_A(Enum):
-    pass
-
-class Enum_B(Enum, tuple[u8]):
+class Enum_B(tuple[u8]):
     ...
 
 @dataclass
-class Enum_C(Enum)
+class Enum_C
     a: u8
+
+Enum = Enum_A | Enum_B | Enum_C
 
 a = Enum_A()
 b = Enum_B(23)
