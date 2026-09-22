@@ -157,17 +157,24 @@ impl BindingTypeGenerateable for EnumType {
         container_info: ContainerInfo<'_>,
         import_registry: &mut ImportRegistry,
     ) -> Tokens {
+        let enum_name = container_info.name.as_ref();
+
         let variants = self
             .variants
             .iter()
-            .map(|v| gen_variant_typings(container_info.name.as_ref(), v, import_registry))
+            .map(|v| gen_variant_typings(enum_name, v, import_registry))
             .join_with_empty_line();
 
-        quote! {
-            class $(container_info.name):
-                pass
+        let variant_names = self
+            .variants
+            .iter()
+            .map(|v| quote!($(enum_name)_$(v.name)))
+            .join_with_vertical_line();
 
+        quote! {
             $variants
+
+            $enum_name = $variant_names
         }
     }
 }
@@ -184,7 +191,7 @@ fn gen_variant_typings(
 
     match &variant.inner_type {
         EnumVariantType::Empty => quote! {
-            class $variant_name($enum_name):
+            class $variant_name:
                 pass
         },
         EnumVariantType::NewType(fields) => {
@@ -199,7 +206,7 @@ fn gen_variant_typings(
             );
             quote! {
                 @dataclass
-                class $variant_name($enum_name):
+                class $variant_name:
                     $fields
             }
         }
@@ -223,7 +230,7 @@ fn gen_variant_typings(
                 .join_with_comma_min_one();
 
             quote! {
-                class $(&variant_name)($enum_name, tuple[$types_comma_chained]):
+                class $(&variant_name)(tuple[$types_comma_chained]):
 
                     def __new__(cls, $(&constructor_args)):
                         return super($(&variant_name), cls).__new__(cls, ($pass_on_args))

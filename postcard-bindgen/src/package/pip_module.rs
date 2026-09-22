@@ -88,7 +88,7 @@ authors = [
   {{ name=\"postcard-bindgen\" }},
 ]
 description = \"Auto generated bindings for postcard format serializing and deserializing python to and from bytes.\"
-requires-python = \">=3.8\"
+requires-python = \">=3.10\"
 ",
     )
 }
