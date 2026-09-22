@@ -11,6 +11,7 @@ readme.workspace = true
 documentation.workspace = true
 
 description = "A crate to generate bindings for the postcard binary format for other languages than Rust."
+include = ["/src/**", "/README.md"]
 
 [features]
 default = []
