@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep genco below 0.20 until token formatting supports its new API",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["genco"],
+      "allowedVersions": "<0.20"
+    }
   ]
 }
